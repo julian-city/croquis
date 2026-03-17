@@ -1,11 +1,11 @@
 Package: croquis
 Title: Transit Sketch Planning with GTFS
-Version: 0.1,0
+Version: 0.1.0
 Authors@R: 
     person("Julian", "Villafuerte Diaz", , "contact@julian.city", role = c("aut", "cre"),
     comment=c(ORCID="0000-0001-6543-7105"))
 Description: Tools for rapidly creating detailed and realistic transit networks and schedules in GTFS format, including a front-end Shiny app called Croquis. Introduces the Simplified Speed and Frequency Structure (ssfs), a data structure that simplifies GTFS creation and editing. Includes functions for conversion between SSFS and GTFS formats. Includes a calibration engine which adjusts SSFS speeds based on a reference GTFS. Output GTFS are compatible with travel demand and accessibility analysis tools such as r5r.
-License: `use_mit_license()`
+License: MIT + file LICENSE
 URL: https://github.com/julian-city/croquis
 BugReports: https://github.com/julian-city/croquis/issues
 Depends: 
@@ -30,4 +30,4 @@ Imports:
     tidyr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.0.0
+RoxygenNote: 7.3.3
