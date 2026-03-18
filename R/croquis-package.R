@@ -81,5 +81,3 @@ NULL
 # gtfstools:   read_gtfs(), get_trip_speed(), write_gtfs()
 #
 # osrm:        osrmRoute()
-#
-# tools:       file_ext()  (base R, no import needed)

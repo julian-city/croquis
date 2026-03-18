@@ -34,7 +34,7 @@ croquis <- function() {
     # CSS and JavaScript in the head
     tags$head(
       tags$style(
-        HTML(
+        htmltools::HTML(
           "
       /* Light mode (default) */
       :root {
@@ -760,7 +760,7 @@ croquis <- function() {
     "
         )
       ),
-      tags$script(HTML(
+      tags$script(htmltools::HTML(
         "
     function toggleTheme() {
       const root = document.documentElement;
@@ -1044,13 +1044,13 @@ croquis <- function() {
           id = "theme-toggle",
           onclick = "toggleTheme()",
           class = "btn btn-default btn-sm",
-          HTML("&#9680;")
+          htmltools::HTML("&#9680;")
         )
       ),
 
       #home tab
       tabPanel(
-        tags$span(HTML("&#127968;")),
+        tags$span(htmltools::HTML("&#127968;")),
         #unicode house emoji
         fluidPage(
           titlePanel("Create or edit a GTFS"),
@@ -1061,7 +1061,7 @@ croquis <- function() {
             p(
               "Croquis is a transit sketch planning tool. Use it to create and edit transit networks and schedules in GTFS (General Transit Feed Specification) file format"
             ),
-            p(HTML(
+            p(htmltools::HTML(
               "This is a shiny app prototype by <a href='https://julian.city' target='_blank'>Julian Villafuerte Diaz</a>. This version was deployed in March 2026."
             )),
             p(
@@ -1070,7 +1070,7 @@ croquis <- function() {
             p(
               "This project is in active development. Please get in touch with your feedback and ideas for improvement !"
             ),
-            p(HTML(
+            p(htmltools::HTML(
               "<a href='https://julian.city' target='_blank'>Get in touch</a>"
             ))
           ),
@@ -1261,7 +1261,11 @@ croquis <- function() {
           # Agency map - top 30% of page
           div(
             style = "width: 100%; height: 30vh; min-height: 200px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden;",
-            leafletOutput("agency_map", height = "100%", width = "100%")
+            leaflet::leafletOutput(
+              "agency_map",
+              height = "100%",
+              width = "100%"
+            )
           ),
 
           # City selector and agency form side by side below the map
@@ -1385,7 +1389,7 @@ croquis <- function() {
               4,
               wellPanel(
                 h4("Agencies"),
-                DTOutput("agency_table")
+                DT::DTOutput("agency_table")
               )
             )
           )
@@ -1400,7 +1404,11 @@ croquis <- function() {
           div(
             class = "map-container",
             # Full-width map
-            leafletOutput("stops_map", height = "100%", width = "100%"),
+            leaflet::leafletOutput(
+              "stops_map",
+              height = "100%",
+              width = "100%"
+            ),
 
             # Floating control panel (left side)
             div(
@@ -1410,7 +1418,10 @@ croquis <- function() {
                 class = "floating-panel-header",
                 onclick = "togglePanel('stops-control-panel')",
                 h4("Stops"),
-                tags$button(class = "floating-panel-toggle", HTML("&minus;"))
+                tags$button(
+                  class = "floating-panel-toggle",
+                  htmltools::HTML("&minus;")
+                )
               ),
               div(
                 class = "floating-panel-content",
@@ -1440,7 +1451,10 @@ croquis <- function() {
                 class = "floating-panel-header",
                 onclick = "togglePanel('stops-import-export-panel')",
                 h4("Import / Export"),
-                tags$button(class = "floating-panel-toggle", HTML("&minus;"))
+                tags$button(
+                  class = "floating-panel-toggle",
+                  htmltools::HTML("&minus;")
+                )
               ),
               div(
                 class = "floating-panel-content",
@@ -1490,7 +1504,11 @@ croquis <- function() {
           div(
             class = "map-container",
             # Full-width map
-            leafletOutput("routes_map", height = "100%", width = "100%"),
+            leaflet::leafletOutput(
+              "routes_map",
+              height = "100%",
+              width = "100%"
+            ),
 
             # Floating panel: Routes list (top-left)
             div(
@@ -1500,7 +1518,10 @@ croquis <- function() {
                 class = "floating-panel-header",
                 onclick = "togglePanel('routes-control-panel')",
                 h4("Routes"),
-                tags$button(class = "floating-panel-toggle", HTML("&minus;"))
+                tags$button(
+                  class = "floating-panel-toggle",
+                  htmltools::HTML("&minus;")
+                )
               ),
               div(
                 class = "floating-panel-content",
@@ -1519,7 +1540,10 @@ croquis <- function() {
                 class = "floating-panel-header",
                 onclick = "togglePanel('routes-drawing-panel')",
                 h4("Drawing Mode"),
-                tags$button(class = "floating-panel-toggle", HTML("&minus;"))
+                tags$button(
+                  class = "floating-panel-toggle",
+                  htmltools::HTML("&minus;")
+                )
               ),
               div(
                 class = "floating-panel-content",
@@ -1546,11 +1570,14 @@ croquis <- function() {
                 class = "floating-panel-header",
                 onclick = "togglePanel('routes-stopseq-panel')",
                 h4("Stop Sequence"),
-                tags$button(class = "floating-panel-toggle", HTML("&minus;"))
+                tags$button(
+                  class = "floating-panel-toggle",
+                  htmltools::HTML("&minus;")
+                )
               ),
               div(
                 class = "floating-panel-content",
-                DTOutput("selected_stops_table")
+                DT::DTOutput("selected_stops_table")
               )
             )
           )
@@ -1615,7 +1642,7 @@ croquis <- function() {
               actionButton("clear_service", "Clear form", class = "btn-warning")
             ),
             mainPanel(
-              DTOutput("calendar_table"),
+              DT::DTOutput("calendar_table"),
               actionButton(
                 "delete_selected_service",
                 "Delete selected service",
@@ -1670,7 +1697,7 @@ croquis <- function() {
                 class = "btn-danger"
               )
             ),
-            mainPanel(DTOutput("spans_table"))
+            mainPanel(DT::DTOutput("spans_table"))
           )
         )
       ),
@@ -1829,7 +1856,7 @@ croquis <- function() {
             ),
             mainPanel(
               width = 8,
-              DTOutput("sp_table"),
+              DT::DTOutput("sp_table"),
               conditionalPanel(
                 condition = "input.sp_mode == 'new'",
                 helpText(
@@ -1930,7 +1957,7 @@ croquis <- function() {
                 )
               )
             ),
-            mainPanel(DTOutput("hsh_table"))
+            mainPanel(DT::DTOutput("hsh_table"))
           )
         )
       ),
@@ -1978,7 +2005,7 @@ croquis <- function() {
               )
             ),
             mainPanel(
-              plotlyOutput("sp_speed_plot", height = "350px"),
+              plotly::plotlyOutput("sp_speed_plot", height = "350px"),
               hr(),
               h4("Adjust Speed Factors"),
               uiOutput("sp_table_ui")
@@ -2197,7 +2224,7 @@ croquis <- function() {
         leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
         leaflet::addLayersControl(
           baseGroups = c("Positron", "Satellite", "OSM"),
-          options = layersControlOptions(collapsed = FALSE)
+          options = leaflet::layersControlOptions(collapsed = FALSE)
         )
     }
 
@@ -2340,7 +2367,7 @@ croquis <- function() {
       req(input$load_gtfs)
       tryCatch(
         {
-          loaded_gtfs <- read_gtfs(input$load_gtfs$datapath)
+          loaded_gtfs <- gtfstools::read_gtfs(input$load_gtfs$datapath)
 
           loaded_ssfs <- gtfs_to_ssfs(loaded_gtfs)
 
@@ -2748,7 +2775,7 @@ croquis <- function() {
       current_data <- ssfs()
 
       if (nrow(current_data$agency) == 0) {
-        return(datatable(
+        return(DT::datatable(
           data.frame(
             agency_id = character(),
             agency_name = character(),
@@ -2765,7 +2792,7 @@ croquis <- function() {
         ))
       }
 
-      datatable(
+      DT::datatable(
         current_data$agency,
         selection = 'single',
         rownames = FALSE,
@@ -2966,9 +2993,9 @@ croquis <- function() {
     # Agency map initialization
     output$agency_map <- leaflet::renderLeaflet({
       center <- map_center()
-      leaflet(options = leafletOptions(zoomControl = TRUE)) |>
+      leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
         addBaseMaps() |>
-        setView(lng = center$lng, lat = center$lat, zoom = 10)
+        leaflet::setView(lng = center$lng, lat = center$lat, zoom = 10)
     })
 
     # Agency map bounding box observer
@@ -3020,10 +3047,10 @@ croquis <- function() {
       )
 
       # Update map
-      proxy <- leafletProxy("agency_map") |>
-        clearShapes() |>
-        clearMarkers() |>
-        addPolygons(
+      proxy <- leaflet::leafletProxy("agency_map") |>
+        leaflet::clearShapes() |>
+        leaflet::clearMarkers() |>
+        leaflet::addPolygons(
           lng = bb_lngs,
           lat = bb_lats,
           color = "#000000",
@@ -3031,7 +3058,7 @@ croquis <- function() {
           fillOpacity = 0.05,
           group = "bbox"
         ) |>
-        fitBounds(
+        leaflet::fitBounds(
           lng1 = bbox_coords$lng1,
           lat1 = bbox_coords$lat1,
           lng2 = bbox_coords$lng2,
@@ -3067,9 +3094,9 @@ croquis <- function() {
     # Initialize stops map
     output$stops_map <- leaflet::renderLeaflet({
       center <- map_center()
-      leaflet(options = leafletOptions(zoomControl = TRUE)) |>
+      leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
         addBaseMaps() |>
-        setView(lng = center$lng, lat = center$lat, zoom = 12) |>
+        leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         htmlwidgets::onRender(
           "
       function(el, x) {
@@ -3092,9 +3119,9 @@ croquis <- function() {
       temp <- stops_temp_point()
       editing_id <- stops_editing_id()
 
-      proxy <- leafletProxy("stops_map") |>
-        clearMarkers() |>
-        clearShapes()
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearMarkers() |>
+        leaflet::clearShapes()
 
       # Add shapes if they exist
       if (nrow(current_data$itin) > 0) {
@@ -3119,7 +3146,7 @@ croquis <- function() {
           }
 
           proxy <- proxy |>
-            addPolylines(
+            leaflet::addPolylines(
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "shapes",
@@ -3175,7 +3202,7 @@ croquis <- function() {
           })
 
           proxy <- proxy |>
-            addCircleMarkers(
+            leaflet::addCircleMarkers(
               data = stops_to_show,
               layerId = ~stop_id,
               color = "white",
@@ -3185,7 +3212,7 @@ croquis <- function() {
               fillOpacity = 0.7,
               radius = calculateMarkerSize(current_zoom()),
               label = hover_labels,
-              labelOptions = labelOptions(
+              labelOptions = leaflet::labelOptions(
                 style = list("font-size" = "11px", "padding" = "3px 6px"),
                 direction = "top",
                 offset = c(0, -8)
@@ -3214,7 +3241,7 @@ croquis <- function() {
           URLencode(svg_string, reserved = TRUE)
         )
 
-        red_circle_icon <- makeIcon(
+        red_circle_icon <- leaflet::makeIcon(
           iconUrl = icon_url,
           iconWidth = icon_size,
           iconHeight = icon_size,
@@ -3223,12 +3250,12 @@ croquis <- function() {
         )
 
         proxy |>
-          addMarkers(
+          leaflet::addMarkers(
             lng = temp[1],
             lat = temp[2],
             layerId = "temp_drag",
             icon = red_circle_icon,
-            options = markerOptions(draggable = TRUE)
+            options = leaflet::markerOptions(draggable = TRUE)
           )
       }
     })
@@ -3299,7 +3326,7 @@ croquis <- function() {
             tags$button(
               class = "btn-save",
               onclick = "saveEditingStop()",
-              HTML("&#10003; Save")
+              htmltools::HTML("&#10003; Save")
             ),
             tags$button(
               class = "btn-cancel",
@@ -3317,7 +3344,7 @@ croquis <- function() {
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingStop()",
             title = "Add new stop",
-            HTML("+")
+            htmltools::HTML("+")
           ),
           span(style = "margin-left: 8px;", "Add new stop")
         )
@@ -3352,7 +3379,7 @@ croquis <- function() {
             tags$button(
               class = "btn-save",
               onclick = "saveEditingStop()",
-              HTML("&#10003; Save")
+              htmltools::HTML("&#10003; Save")
             ),
             tags$button(
               class = "btn-cancel",
@@ -3410,7 +3437,7 @@ croquis <- function() {
                     stop$stop_id
                   ),
                   title = "Edit",
-                  HTML("&#9998;")
+                  htmltools::HTML("&#9998;")
                 ),
                 tags$button(
                   class = "stop-action-btn delete-btn",
@@ -3419,7 +3446,7 @@ croquis <- function() {
                     stop$stop_id
                   ),
                   title = "Delete stop",
-                  HTML('<i class="fa-solid fa-trash"></i>')
+                  htmltools::HTML('<i class="fa-solid fa-trash"></i>')
                 )
               )
             )
@@ -3468,8 +3495,8 @@ croquis <- function() {
 
         # Center map on the stop with good zoom level
         edit_zoom <- max(current_zoom(), 16) # At least zoom 16 for editing
-        leafletProxy("stops_map") |>
-          setView(lng = point_lng, lat = point_lat, zoom = edit_zoom)
+        leaflet::leafletProxy("stops_map") |>
+          leaflet::setView(lng = point_lng, lat = point_lat, zoom = edit_zoom)
       }
     })
 
@@ -3487,8 +3514,8 @@ croquis <- function() {
 
         # Center map on the stop with good zoom level (but don't enter edit mode)
         view_zoom <- max(current_zoom(), 16)
-        leafletProxy("stops_map") |>
-          setView(lng = point_lng, lat = point_lat, zoom = view_zoom)
+        leaflet::leafletProxy("stops_map") |>
+          leaflet::setView(lng = point_lng, lat = point_lat, zoom = view_zoom)
       }
     })
 
@@ -3533,8 +3560,8 @@ croquis <- function() {
 
           # Center map on the stop with good zoom level
           edit_zoom <- max(current_zoom(), 16)
-          leafletProxy("stops_map") |>
-            setView(lng = point_lng, lat = point_lat, zoom = edit_zoom)
+          leaflet::leafletProxy("stops_map") |>
+            leaflet::setView(lng = point_lng, lat = point_lat, zoom = edit_zoom)
 
           # Scroll stop list to top so editing stop is visible
           shinyjs::runjs(
@@ -4036,7 +4063,7 @@ croquis <- function() {
               "https://gtfs.org/schedule/reference/#routestxt"
             )
           ),
-          HTML(paste0(
+          htmltools::HTML(paste0(
             '<select id="inline_agency_id">',
             agency_options,
             '</select>'
@@ -4072,7 +4099,7 @@ croquis <- function() {
               "https://gtfs.org/schedule/reference/#routestxt"
             )
           ),
-          HTML(paste0(
+          htmltools::HTML(paste0(
             '<select id="inline_route_type">',
             route_type_options,
             '</select>'
@@ -4108,7 +4135,7 @@ croquis <- function() {
             tags$button(
               class = "btn-save",
               onclick = "saveRouteFromForm()",
-              HTML("&#10003; Save")
+              htmltools::HTML("&#10003; Save")
             ),
             tags$button(
               class = "btn-cancel",
@@ -4125,7 +4152,7 @@ croquis <- function() {
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingRoute()",
             title = "Add new route",
-            HTML("+")
+            htmltools::HTML("+")
           ),
           span(style = "margin-left: 8px;", "Add new route")
         )
@@ -4220,7 +4247,7 @@ croquis <- function() {
                   "https://gtfs.org/schedule/reference/#routestxt"
                 )
               ),
-              HTML(paste0(
+              htmltools::HTML(paste0(
                 '<select id="inline_agency_id">',
                 agency_options_edit,
                 '</select>'
@@ -4256,7 +4283,7 @@ croquis <- function() {
                   "https://gtfs.org/schedule/reference/#routestxt"
                 )
               ),
-              HTML(paste0(
+              htmltools::HTML(paste0(
                 '<select id="inline_route_type">',
                 rt_options,
                 '</select>'
@@ -4303,7 +4330,11 @@ croquis <- function() {
             )
           } else {
             # Normal route row
-            expand_icon <- if (is_expanded) HTML("&#9660;") else HTML("&#9654;")
+            expand_icon <- if (is_expanded) {
+              htmltools::HTML("&#9660;")
+            } else {
+              htmltools::HTML("&#9654;")
+            }
 
             rows[[length(rows) + 1]] <- div(
               class = paste0(
@@ -4340,7 +4371,7 @@ croquis <- function() {
                     route$route_id
                   ),
                   title = "Edit route",
-                  HTML("&#9998;")
+                  htmltools::HTML("&#9998;")
                 ),
                 tags$button(
                   class = "route-action-btn delete-btn",
@@ -4349,7 +4380,7 @@ croquis <- function() {
                     route$route_id
                   ),
                   title = "Delete route",
-                  HTML('<i class="fa-solid fa-trash"></i>')
+                  htmltools::HTML('<i class="fa-solid fa-trash"></i>')
                 )
               )
             )
@@ -4406,7 +4437,7 @@ croquis <- function() {
                   value = default_itin_id
                 ),
                 tags$label("Direction"),
-                HTML(paste0(
+                htmltools::HTML(paste0(
                   '<select id="inline_direction_id" onchange="onDirectionChanged()">',
                   '<option value="0"',
                   dir_sel_0,
@@ -4449,7 +4480,7 @@ croquis <- function() {
                     route$route_id
                   ),
                   title = "Add new itinerary",
-                  HTML("+")
+                  htmltools::HTML("+")
                 ),
                 span(
                   style = "margin-left: 6px; font-size: 12px;",
@@ -4490,7 +4521,7 @@ croquis <- function() {
                     ),
                     tags$label("Direction"),
                     #onchange handler added to direction select element
-                    HTML(paste0(
+                    htmltools::HTML(paste0(
                       '<select id="inline_direction_id" onchange="onDirectionChanged()">',
                       '<option value="0"',
                       dir_sel_0,
@@ -4511,7 +4542,7 @@ croquis <- function() {
                       tags$button(
                         class = "btn-save",
                         onclick = "saveItinFromForm()",
-                        HTML("&#10003; Save")
+                        htmltools::HTML("&#10003; Save")
                       ),
                       tags$button(
                         class = "btn-cancel",
@@ -4551,7 +4582,7 @@ croquis <- function() {
                           itin$itin_id
                         ),
                         title = "Edit itinerary",
-                        HTML("&#9998;")
+                        htmltools::HTML("&#9998;")
                       ),
                       tags$button(
                         class = "route-action-btn",
@@ -4560,7 +4591,7 @@ croquis <- function() {
                           itin$itin_id
                         ),
                         title = "Duplicate itinerary",
-                        HTML('<i class="fa-solid fa-clone"></i>') #fontawesome clone icon
+                        htmltools::HTML('<i class="fa-solid fa-clone"></i>') #fontawesome clone icon
                       ),
                       tags$button(
                         class = "route-action-btn delete-btn",
@@ -4569,7 +4600,7 @@ croquis <- function() {
                           itin$itin_id
                         ),
                         title = "Delete itinerary",
-                        HTML('<i class="fa-solid fa-trash"></i>')
+                        htmltools::HTML('<i class="fa-solid fa-trash"></i>')
                       )
                     )
                   )
@@ -4760,8 +4791,8 @@ croquis <- function() {
       selected_itin <- current_data$itin[current_data$itin$itin_id == itin_id, ]
       if (nrow(selected_itin) > 0) {
         bbox <- st_bbox(selected_itin$geometry)
-        leafletProxy("routes_map") |>
-          fitBounds(
+        leaflet::leafletProxy("routes_map") |>
+          leaflet::fitBounds(
             lng1 = bbox[["xmin"]],
             lat1 = bbox[["ymin"]],
             lng2 = bbox[["xmax"]],
@@ -4869,8 +4900,8 @@ croquis <- function() {
 
       # Center map on itinerary
       bbox <- st_bbox(shape_data$geometry)
-      leafletProxy("routes_map") |>
-        fitBounds(
+      leaflet::leafletProxy("routes_map") |>
+        leaflet::fitBounds(
           lng1 = bbox[["xmin"]],
           lat1 = bbox[["ymin"]],
           lng2 = bbox[["xmax"]],
@@ -5242,7 +5273,11 @@ croquis <- function() {
             )
             to_sf <- st_sf(geometry = st_sfc(st_point(to_point), crs = 4326))
 
-            route <- osrmRoute(src = from_sf, dst = to_sf, overview = "full")
+            route <- osrm::osrmRoute(
+              src = from_sf,
+              dst = to_sf,
+              overview = "full"
+            )
             route_coords <- st_coordinates(route$geometry)
 
             # Add all points from route
@@ -5357,19 +5392,19 @@ croquis <- function() {
     # Initialize routes map
     output$routes_map <- leaflet::renderLeaflet({
       center <- map_center()
-      leaflet(options = leafletOptions(zoomControl = TRUE)) |>
-        addProviderTiles("CartoDB.Positron", group = "Positron") |>
-        addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
-        addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
-        setView(lng = center$lng, lat = center$lat, zoom = 12) |>
-        addLayersControl(
+      leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
+        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
+        leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
+        leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
+        leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
+        leaflet::addLayersControl(
           baseGroups = c("Positron", "Satellite", "OSM"),
           position = "bottomright",
-          options = layersControlOptions(collapsed = FALSE)
+          options = leaflet::layersControlOptions(collapsed = FALSE)
         ) |>
-        showGroup("stops") |>
-        showGroup("routes") |>
-        showGroup("current_route") |>
+        leaflet::showGroup("stops") |>
+        leaflet::showGroup("routes") |>
+        leaflet::showGroup("current_route") |>
         htmlwidgets::onRender(
           "
       function(el, x) {
@@ -5400,11 +5435,11 @@ croquis <- function() {
       curr_points <- route_points()
       current_data <- ssfs()
 
-      proxy <- leafletProxy("routes_map") |>
-        clearGroup("stops") |>
-        clearGroup("routes") |>
-        clearGroup("current_route") |>
-        clearGroup("route_nodes")
+      proxy <- leaflet::leafletProxy("routes_map") |>
+        leaflet::clearGroup("stops") |>
+        leaflet::clearGroup("routes") |>
+        leaflet::clearGroup("current_route") |>
+        leaflet::clearGroup("route_nodes")
 
       # Add existing routes (except current one being edited)
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
@@ -5437,7 +5472,7 @@ croquis <- function() {
           }
 
           proxy <- proxy |>
-            addPolylines(
+            leaflet::addPolylines(
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "routes",
@@ -5463,7 +5498,7 @@ croquis <- function() {
         )
 
         proxy <- proxy |>
-          addCircleMarkers(
+          leaflet::addCircleMarkers(
             data = current_data$stops,
             radius = marker_size,
             color = "white",
@@ -5480,7 +5515,7 @@ croquis <- function() {
       # Add current route being edited
       if (nrow(curr_points) > 1) {
         proxy <- proxy |>
-          addPolylines(
+          leaflet::addPolylines(
             lng = curr_points$lng,
             lat = curr_points$lat,
             group = "current_route",
@@ -5496,7 +5531,7 @@ croquis <- function() {
         stop_nodes <- curr_nodes[curr_nodes$is_stop, ]
         if (nrow(stop_nodes) > 0) {
           proxy <- proxy |>
-            addCircleMarkers(
+            leaflet::addCircleMarkers(
               lng = stop_nodes$lng,
               lat = stop_nodes$lat,
               group = "route_nodes",
@@ -5515,7 +5550,7 @@ croquis <- function() {
         waypoint_nodes <- curr_nodes[!curr_nodes$is_stop, ]
         if (nrow(waypoint_nodes) > 0) {
           proxy <- proxy |>
-            addCircleMarkers(
+            leaflet::addCircleMarkers(
               lng = waypoint_nodes$lng,
               lat = waypoint_nodes$lat,
               group = "route_nodes",
@@ -5537,7 +5572,7 @@ croquis <- function() {
           ]
           if (nrow(selected_node) > 0) {
             proxy <- proxy |>
-              addCircleMarkers(
+              leaflet::addCircleMarkers(
                 lng = selected_node$lng,
                 lat = selected_node$lat,
                 group = "route_nodes",
@@ -6671,7 +6706,7 @@ croquis <- function() {
     output$selected_stops_table <- DT::renderDT({
       req(current_sequence())
 
-      datatable(
+      DT::datatable(
         current_sequence(),
         selection = 'single',
         rownames = FALSE,
@@ -6738,7 +6773,7 @@ croquis <- function() {
     # Calendar table display
     output$calendar_table <- DT::renderDT({
       current_data <- ssfs()
-      datatable(
+      DT::datatable(
         current_data$calendar,
         selection = 'single',
         rownames = FALSE,
@@ -6959,7 +6994,7 @@ croquis <- function() {
     # Spans table display
     output$spans_table <- DT::renderDT({
       current_data <- ssfs()
-      datatable(
+      DT::datatable(
         current_data$span,
         selection = 'single',
         rownames = FALSE,
@@ -7338,7 +7373,7 @@ croquis <- function() {
         # Show loaded pattern data
         data <- loaded_sp_data()
         if (is.null(data) || nrow(data) == 0) {
-          return(datatable(
+          return(DT::datatable(
             data.frame(hour = character(), headway = integer()),
             selection = "single",
             rownames = FALSE,
@@ -7347,7 +7382,7 @@ croquis <- function() {
           ))
         }
 
-        datatable(
+        DT::datatable(
           data,
           selection = "single",
           rownames = FALSE,
@@ -7363,7 +7398,7 @@ croquis <- function() {
         # Show new pattern being created
         data <- new_sp_data()
         if (nrow(data) == 0) {
-          return(datatable(
+          return(DT::datatable(
             data.frame(hour = character(), headway = integer()),
             selection = "single",
             rownames = FALSE,
@@ -7372,7 +7407,7 @@ croquis <- function() {
           ))
         }
 
-        datatable(
+        DT::datatable(
           data,
           selection = "single",
           rownames = FALSE,
@@ -7816,7 +7851,7 @@ croquis <- function() {
       # Create display data frame without itin_id and service_id
       display_data <- filtered_data[, c("hour_dep", "headway", "speed")]
 
-      datatable(
+      DT::datatable(
         display_data,
         selection = 'single',
         rownames = FALSE,
@@ -8396,7 +8431,7 @@ croquis <- function() {
         stop_name = stop_labels
       )
 
-      plot_ly(
+      plotly::plot_ly(
         plot_data,
         x = ~stop_seq,
         y = ~speed,
@@ -8417,7 +8452,7 @@ croquis <- function() {
         marker = list(size = 12, color = '#124559'),
         line = list(color = '#124559', width = 2)
       ) |>
-        layout(
+        plotly::layout(
           title = paste0(
             "Speed profile (base: ",
             base_speed,
@@ -8442,7 +8477,7 @@ croquis <- function() {
             fixedrange = TRUE
           )
         ) |>
-        config(displayModeBar = FALSE)
+        plotly::config(displayModeBar = FALSE)
     })
 
     # Display average speed factor
