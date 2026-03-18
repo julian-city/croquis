@@ -773,7 +773,7 @@ croquis <- function() {
       
       // Update button text
       const btn = document.getElementById('theme-toggle');
-      btn.innerHTML = '◑';
+      btn.innerHTML = '\u25d1';
     }
 
     // Set initial theme from stored preference
@@ -781,7 +781,7 @@ croquis <- function() {
       const storedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-bs-theme', storedTheme);
       const btn = document.getElementById('theme-toggle');
-      btn.innerHTML = '◑';
+      btn.innerHTML = '\u25d1';
       
       // Add right-click handling for the routes map (add this part)
       $(document).on('contextmenu', '#routes_map', function(e) {
@@ -834,7 +834,7 @@ croquis <- function() {
       var icon = panel.querySelector('.floating-panel-toggle');
       if (panel.classList.contains('collapsed')) {
         panel.classList.remove('collapsed');
-        icon.innerHTML = '−';
+        icon.innerHTML = '\u2212';
       } else {
         panel.classList.add('collapsed');
         icon.innerHTML = '+';
@@ -1320,7 +1320,7 @@ croquis <- function() {
                       "https://gtfs.org/schedule/reference/#agencytxt"
                     )
                   ),
-                  placeholder = "e.g., Société de transport de Montréal"
+                  placeholder = "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
                 ),
                 textInput(
                   "ag_agency_url",
@@ -2153,15 +2153,6 @@ croquis <- function() {
 
     # Reactive values for map center and agency info
     map_center <- reactiveVal(list(lng = -73.567, lat = 45.5017)) # Montreal default
-
-    #AGENCY INFO TO BE REPLACED WITH AGENCY SSFS REACTIVE
-
-    #agency_info <- reactiveVal(list(
-    #  agency_id = "STM",
-    #  agency_name = "Société de transport de Montréal",
-    #  agency_url = "http://www.stm.info",
-    #  agency_timezone = "America/Montreal"
-    #))
 
     # Filtered cities for autocomplete
     filtered_cities <- reactiveVal(data.frame())
@@ -3007,7 +2998,7 @@ croquis <- function() {
       # Determine bounding box
       if (
         nrow(current_data$stops) > 0 &&
-          !all(st_is_empty(current_data$stops$geometry))
+          !all(sf::st_is_empty(current_data$stops$geometry))
       ) {
         # Use stops bounding box
         bbox <- st_bbox(current_data$stops)
@@ -3019,7 +3010,7 @@ croquis <- function() {
         )
       } else {
         # Default 30km wide x 15km high box around center
-        # At ~45° latitude: 1° lng ≈ 78.7km, 1° lat ≈ 111km
+        # At ~45° latitude: 1° lng is approx 78.7km, 1° lat is approx 111km
         lng_offset <- 15 / 78.7 # half of 30km in degrees longitude
         lat_offset <- 7.5 / 111 # half of 15km in degrees latitude
         bbox_coords <- list(
@@ -3193,7 +3184,7 @@ croquis <- function() {
               "<span style='font-size:11px;'>",
               "<b>",
               htmltools::htmlEscape(sid),
-              "</b> — ",
+              "</b> \u2014 ",
               htmltools::htmlEscape(sname),
               "<br>Itineraries: ",
               htmltools::htmlEscape(itin_text),
@@ -4801,7 +4792,7 @@ croquis <- function() {
       }
     })
 
-    # Edit itinerary (pencil icon) — loads it for map editing and displays inline edit
+    # Edit itinerary (pencil icon) : loads it for map editing and displays inline edit
     observeEvent(input$itin_list_edit_click, {
       itin_id <- input$itin_list_edit_click$id
       current_ssfs_data <- ssfs()
@@ -4815,7 +4806,7 @@ croquis <- function() {
         return()
       }
 
-      # Set editing mode — show inline form by setting itin_editing_id
+      # Set editing mode : show inline form by setting itin_editing_id
       editing_existing_itin(TRUE)
       itin_editing_id(itin_id) # THIS shows the inline edit form
       itin_adding_for_route(NULL)
