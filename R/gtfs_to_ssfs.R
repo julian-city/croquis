@@ -4,7 +4,7 @@
 #' @param routes A character vector of the route id(s) you wish to convert to ssfs. Leave as NULL to convert all routes to SSFS
 #' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS
 #'
-#' @returns An SSFS list
+#' @returns A SSFS list
 #'
 #' @export
 #' @examples
@@ -25,18 +25,18 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
   if (is.null(routes)) {
     route_service_ids <-
-      gtfs$trips %>%
-      pull(service_id) %>%
+      gtfs$trips |>
+      pull(service_id) |>
       unique()
 
     #routes is frequently used in the script, so assigning this with all the routes
     #is the simplest thing to do
-    routes <- gtfs$routes %>% pull(route_id)
+    routes <- gtfs$routes |> pull(route_id)
   } else {
     route_service_ids <-
-      gtfs$trips %>%
-      filter(route_id %in% routes) %>%
-      pull(service_id) %>%
+      gtfs$trips |>
+      filter(route_id %in% routes) |>
+      pull(service_id) |>
       unique()
   }
 
@@ -57,13 +57,13 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     min_date <- max_date - days(7)
 
     route_calendar <-
-      gtfs$calendar %>%
+      gtfs$calendar |>
       #only include service ids associated with the route(s) of interest
-      filter(service_id %in% route_service_ids) %>%
+      filter(service_id %in% route_service_ids) |>
       filter(
         start_date < max_date &
           end_date > min_date
-      ) %>%
+      ) |>
       #filter out any services that are totally inactive
       filter(
         monday == 1 |
@@ -80,20 +80,20 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     #if max_date is NULL, then we assign the last day of service described in the gtfs
     #as the max date
     max_date <-
-      gtfs$calendar %>%
-      summarise(max_date = max(end_date)) %>%
+      gtfs$calendar |>
+      summarise(max_date = max(end_date)) |>
       pull(max_date)
 
     min_date <- max_date - days(7)
 
     route_calendar <-
-      gtfs$calendar %>%
+      gtfs$calendar |>
       #only include service ids associated with the route(s) of interest
-      filter(service_id %in% route_service_ids) %>%
+      filter(service_id %in% route_service_ids) |>
       filter(
         start_date < max_date &
           end_date > min_date
-      ) %>%
+      ) |>
       #filter out any services that are totally inactive
       filter(
         monday == 1 |
@@ -117,28 +117,28 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
   for (i in day) {
     service_ids_byday[[i]] <-
-      route_calendar %>%
-      filter(!!sym(i) == 1) %>% # this enables us to index the column / vector based on i (day of week)
+      route_calendar |>
+      filter(!!sym(i) == 1) |> # this enables us to index the column / vector based on i (day of week)
       select(service_id)
   }
 
   #we can now override route_service_ids with another one based on the above
   #which only includes the latest by day of week
 
-  route_service_ids <- service_ids_byday %>%
-    purrr::map_df(~.x) %>% # Combine all data frames into one
-    distinct(service_id) %>% # Get distinct service_id
+  route_service_ids <- service_ids_byday |>
+    purrr::map_df(~.x) |> # Combine all data frames into one
+    distinct(service_id) |> # Get distinct service_id
     pull(service_id) # Convert to a vector
 
   #the trips that interest us, based on service_id and route_id
 
   trips <-
-    gtfs$trips %>%
+    gtfs$trips |>
     filter(route_id %in% routes, service_id %in% route_service_ids)
 
   #force add direction_id if it is absent from trips
 
-  trips_colnames <- trips %>% colnames()
+  trips_colnames <- trips |> colnames()
 
   if (!"direction_id" %in% trips_colnames) {
     trips$direction_id <- 0
@@ -151,11 +151,11 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #(for example, King County Metro gtfs September 2025)
 
   stop_times <-
-    gtfs$stop_times %>%
-    filter(trip_id %in% trips$trip_id) %>%
-    arrange(trip_id, stop_sequence) %>%
-    group_by(trip_id) %>%
-    mutate(stop_sequence = row_number()) %>%
+    gtfs$stop_times |>
+    filter(trip_id %in% trips$trip_id) |>
+    arrange(trip_id, stop_sequence) |>
+    group_by(trip_id) |>
+    mutate(stop_sequence = row_number()) |>
     ungroup()
 
   # 2. Define carried-over tables----------------
@@ -168,43 +168,43 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
   #consolidating services that occur on the same day of the week
   service_combos <-
-    service_ids_byday %>%
-    map(~ .x$service_id) %>% # Extract service_ids for each day
-    enframe(name = "day", value = "service_combo") %>% # Convert to a tibble with day and combination
-    group_by(service_combo) %>%
-    summarise(days = list(day)) %>% #identify days of week associated with each service combo
+    service_ids_byday |>
+    map(~ .x$service_id) |> # Extract service_ids for each day
+    enframe(name = "day", value = "service_combo") |> # Convert to a tibble with day and combination
+    group_by(service_combo) |>
+    summarise(days = list(day)) |> #identify days of week associated with each service combo
     mutate(service_combo_id = paste0("S", row_number())) #defining the service combo id
 
   service_combo_to_service_id <-
-    service_combos %>%
-    select(service_combo, service_combo_id) %>%
-    unnest(service_combo) %>%
+    service_combos |>
+    select(service_combo, service_combo_id) |>
+    unnest(service_combo) |>
     rename(service_id = service_combo)
   #this can be used for rewriting service ids
 
   #service_combo_to_day <-
-  #  service_combos %>%
-  #  select(service_combo_id,days) %>%
-  #  unnest(days) %>%
+  #  service_combos |>
+  #  select(service_combo_id,days) |>
+  #  unnest(days) |>
   #  rename(day=days)
   #this could be used for writing the calendar
 
   calendar <-
-    route_calendar %>%
+    route_calendar |>
     left_join(
       service_combo_to_service_id,
       by = "service_id"
-    ) %>%
-    select(service_combo_id, start_date, end_date) %>%
-    group_by(service_combo_id) %>%
-    summarise(start_date = min(start_date), end_date = max(end_date)) %>%
-    left_join(service_combos %>% select(-service_combo)) %>%
+    ) |>
+    select(service_combo_id, start_date, end_date) |>
+    group_by(service_combo_id) |>
+    summarise(start_date = min(start_date), end_date = max(end_date)) |>
+    left_join(service_combos |> select(-service_combo)) |>
     rename(service_id = service_combo_id)
 
   calendar <-
-    calendar %>%
+    calendar |>
     #convert days (list) into a single string for each entry
-    mutate(days = sapply(days, function(x) paste(x, collapse = ","))) %>%
+    mutate(days = sapply(days, function(x) paste(x, collapse = ","))) |>
     mutate(
       monday = if_else(str_detect(days, "monday"), 1, 0),
       tuesday = if_else(str_detect(days, "tuesday"), 1, 0),
@@ -213,12 +213,12 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
       friday = if_else(str_detect(days, "friday"), 1, 0),
       saturday = if_else(str_detect(days, "saturday"), 1, 0),
       sunday = if_else(str_detect(days, "sunday"), 1, 0)
-    ) %>%
-    mutate(across(monday:sunday, as.integer)) %>%
+    ) |>
+    mutate(across(monday:sunday, as.integer)) |>
     mutate(
       start_date = as.character(start_date),
       end_date = as.character(end_date)
-    ) %>%
+    ) |>
     select(
       service_id,
       monday,
@@ -243,14 +243,14 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #the value to 1
   if (!"agency_id" %in% routes_colnames) {
     gtfs$routes <-
-      gtfs$routes %>%
+      gtfs$routes |>
       mutate(agency_id = "1")
   }
 
   #if there is no route short name in colnames, then give route_short_name route_id
   if (!"route_short_name" %in% routes_colnames) {
     gtfs$routes <-
-      gtfs$routes %>%
+      gtfs$routes |>
       mutate(route_short_name = route_id)
   }
 
@@ -259,7 +259,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   # in any case, this code will fix GTFS files where both are missing
   if (!"route_long_name" %in% routes_colnames) {
     gtfs$routes <-
-      gtfs$routes %>%
+      gtfs$routes |>
       mutate(route_long_name = route_short_name)
   }
 
@@ -269,8 +269,8 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     "route_color" %in% routes_colnames & "route_text_color" %in% routes_colnames
   ) {
     route_info <-
-      gtfs$routes %>%
-      filter(route_id %in% routes) %>%
+      gtfs$routes |>
+      filter(route_id %in% routes) |>
       select(
         route_id,
         agency_id,
@@ -279,7 +279,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         route_type,
         route_color,
         route_text_color
-      ) %>%
+      ) |>
       mutate(
         route_color = case_when(
           #handle for when route color column exists but it's blank
@@ -309,9 +309,9 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     #else, choose route_color and route_text_color based on route_type
   } else {
     route_info <-
-      gtfs$routes %>%
-      filter(route_id %in% routes) %>%
-      mutate(route_type = as.integer(route_type)) %>% #just in case
+      gtfs$routes |>
+      filter(route_id %in% routes) |>
+      mutate(route_type = as.integer(route_type)) |> #just in case
       mutate(
         route_color = case_when(
           # subways, metros and monorails, use darkest blue
@@ -334,7 +334,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
           route_type %in% c(3, 11) ~ "000000",
           TRUE ~ "F7F7F7"
         )
-      ) %>%
+      ) |>
       select(
         route_id,
         agency_id,
@@ -353,33 +353,33 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #if agency_id is missing from the agency table, then add it and assign "1"
   if (!"agency_id" %in% agency_colnames) {
     agency <-
-      gtfs$agency %>%
-      mutate(agency_id = "1") %>%
+      gtfs$agency |>
+      mutate(agency_id = "1") |>
       select(agency_id, agency_name, agency_url, agency_timezone)
 
     #else, identify the agency_ids retained in route_info
     #and filter agency based on this
   } else {
     agency_ids <-
-      route_info %>% pull(agency_id) %>% unique()
+      route_info |> pull(agency_id) |> unique()
 
     agency <-
-      gtfs$agency %>%
-      filter(agency_id %in% agency_ids) %>%
+      gtfs$agency |>
+      filter(agency_id %in% agency_ids) |>
       select(agency_id, agency_name, agency_url, agency_timezone)
   }
 
   # STOPS
 
   stop_ids <-
-    stop_times %>%
-    pull(stop_id) %>%
+    stop_times |>
+    pull(stop_id) |>
     unique()
 
   stops <-
-    gtfs$stops %>%
-    filter(stop_id %in% stop_ids) %>%
-    select(stop_id, stop_name, stop_lat, stop_lon) %>%
+    gtfs$stops |>
+    filter(stop_id %in% stop_ids) |>
+    select(stop_id, stop_name, stop_lat, stop_lon) |>
     st_as_sf(
       coords = c("stop_lon", "stop_lat"),
       crs = 4269
@@ -392,24 +392,24 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #first step towards writing itin and stop_seq. Necessary for writing shapes
 
   itin_to_stop_seq <-
-    stop_times %>%
-    select(trip_id, stop_id, stop_sequence) %>%
+    stop_times |>
+    select(trip_id, stop_id, stop_sequence) |>
     left_join(
-      trips %>%
+      trips |>
         select(route_id, trip_id, direction_id),
       by = "trip_id"
-    ) %>%
-    group_by(route_id, trip_id, direction_id) %>%
-    summarise(stop_pattern = list(data.frame(stop_id, stop_sequence))) %>% #stop_id & stop_sequence pattern of each trip
-    ungroup() %>%
-    group_by(route_id, direction_id, stop_pattern) %>%
+    ) |>
+    group_by(route_id, trip_id, direction_id) |>
+    summarise(stop_pattern = list(data.frame(stop_id, stop_sequence))) |> #stop_id & stop_sequence pattern of each trip
+    ungroup() |>
+    group_by(route_id, direction_id, stop_pattern) |>
     summarise(
       trip_ids = list(c(trip_id)), #trip ids by unique stop_id & stop_sequence pattern
       count = n()
-    ) %>%
-    ungroup() %>%
-    group_by(route_id, direction_id) %>%
-    arrange(-count) %>% #so that the primary itin_id by direction receives suffix _1
+    ) |>
+    ungroup() |>
+    group_by(route_id, direction_id) |>
+    arrange(-count) |> #so that the primary itin_id by direction receives suffix _1
     #row number takes into account position within the group (direction_id) so it is possible to define distinct itin_id
     mutate(
       itin_id = paste0(
@@ -419,21 +419,21 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         "_",
         row_number()
       )
-    ) %>%
+    ) |>
     ungroup()
 
   trip_id_to_itin_id <-
-    itin_to_stop_seq %>%
-    select(trip_ids, itin_id) %>%
-    unnest(trip_ids) %>% #lengthens the tibble for a 1 to 1 association of trip_id to rvar_id
+    itin_to_stop_seq |>
+    select(trip_ids, itin_id) |>
+    unnest(trip_ids) |> #lengthens the tibble for a 1 to 1 association of trip_id to rvar_id
     rename(trip_id = trip_ids)
 
   #will be used later to calculate interstop distances and create stop_seq
   stop_seq_proto <-
-    itin_to_stop_seq %>%
-    select(itin_id, stop_pattern) %>%
-    arrange(itin_id) %>%
-    unnest(stop_pattern) %>%
+    itin_to_stop_seq |>
+    select(itin_id, stop_pattern) |>
+    arrange(itin_id) |>
+    unnest(stop_pattern) |>
     mutate(
       stop_seq_id = str_c(
         itin_id,
@@ -462,7 +462,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
     #IDENTIFY UNIQUE ITIN IDS FOR WHICH TO GENERATE SHAPES
     unique_itin_ids <-
-      stop_seq_proto %>% pull(itin_id) %>% unique()
+      stop_seq_proto |> pull(itin_id) |> unique()
 
     #CREATE EMPTY SHAPES
     shapes <- data.table(
@@ -475,59 +475,59 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     #
     for (itin_id_i in unique_itin_ids) {
       stops_itin_i <-
-        stop_seq_proto %>%
-        filter(itin_id == itin_id_i) %>%
-        arrange(stop_sequence) %>%
-        select(stop_id) %>%
-        left_join(stops %>% as_tibble(), by = "stop_id") %>%
+        stop_seq_proto |>
+        filter(itin_id == itin_id_i) |>
+        arrange(stop_sequence) |>
+        select(stop_id) |>
+        left_join(stops |> as_tibble(), by = "stop_id") |>
         st_as_sf()
 
       #return route type of itin_id_i
 
       route_id_i <-
-        itin_to_stop_seq %>%
-        filter(itin_id == itin_id_i) %>%
-        pull(route_id) %>%
+        itin_to_stop_seq |>
+        filter(itin_id == itin_id_i) |>
+        pull(route_id) |>
         unique()
 
       route_type_i <-
-        route_info %>%
-        filter(route_id == route_id_i) %>%
-        pull(route_type) %>%
+        route_info |>
+        filter(route_id == route_id_i) |>
+        pull(route_type) |>
         unique()
 
       if (route_type_i %in% c(3, 5, 11)) {
         shape_i <-
-          osrmRoute(loc = stops_itin_i, overview = "full")
+          osrm::osrmRoute(loc = stops_itin_i, overview = "full")
 
         shapes_i <-
-          shape_i %>%
-          select(geometry) %>%
-          st_cast("POINT") %>%
-          mutate(coords = st_coordinates(geometry)) %>%
+          shape_i |>
+          select(geometry) |>
+          st_cast("POINT") |>
+          mutate(coords = st_coordinates(geometry)) |>
           mutate(
             shape_pt_lon = coords[, "X"],
             shape_pt_lat = coords[, "Y"],
             shape_pt_sequence = row_number(),
             shape_id = itin_id_i
-          ) %>%
-          as.data.table() %>%
+          ) |>
+          as.data.table() |>
           select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
       } else {
         #else (for example, if metro or ferry or light rail),
         #shapes is only made up of points that are also stops
 
         shapes_i <-
-          stops_itin_i %>%
-          select(geometry) %>%
-          mutate(coords = st_coordinates(geometry)) %>%
+          stops_itin_i |>
+          select(geometry) |>
+          mutate(coords = st_coordinates(geometry)) |>
           mutate(
             shape_pt_lon = coords[, "X"],
             shape_pt_lat = coords[, "Y"],
             shape_pt_sequence = row_number(),
             shape_id = itin_id_i
-          ) %>%
-          as.data.table() %>%
+          ) |>
+          as.data.table() |>
           select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
       }
 
@@ -542,31 +542,31 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     #add shape id to trip_id and trips
 
     gtfs$trips <-
-      gtfs$trips %>%
-      left_join(trip_id_to_itin_id, by = "trip_id") %>%
-      mutate(shape_id = itin_id) %>%
+      gtfs$trips |>
+      left_join(trip_id_to_itin_id, by = "trip_id") |>
+      mutate(shape_id = itin_id) |>
       select(-itin_id)
 
     trips <-
-      trips %>%
-      left_join(trip_id_to_itin_id, by = "trip_id") %>%
-      mutate(shape_id = itin_id) %>%
+      trips |>
+      left_join(trip_id_to_itin_id, by = "trip_id") |>
+      mutate(shape_id = itin_id) |>
       select(-itin_id)
   } else {
     #else shapes exist, we just need to ensure that they are properly ordered
 
     #Necessary to get get_trip_speed to work properly
     gtfs$shapes <-
-      gtfs$shapes %>%
+      gtfs$shapes |>
       arrange(shape_id, shape_pt_sequence)
   }
 
   #refining trip details : based on new service ids------
 
-  trips_colnames <- trips %>% colnames()
+  trips_colnames <- trips |> colnames()
 
   if ("trip_headsign" %in% trips_colnames) {
-    trips <- trips %>%
+    trips <- trips |>
       left_join(
         service_combo_to_service_id,
         by = "service_id",
@@ -576,10 +576,10 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         #and trips need to be duplicated in this case
 
         relationship = "many-to-many"
-      ) %>%
-      select(-service_id) %>%
-      rename(service_id = service_combo_id) %>%
-      left_join(trip_id_to_itin_id, by = "trip_id") %>%
+      ) |>
+      select(-service_id) |>
+      rename(service_id = service_combo_id) |>
+      left_join(trip_id_to_itin_id, by = "trip_id") |>
       select(
         trip_id,
         route_id,
@@ -588,11 +588,11 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         trip_headsign,
         service_id,
         shape_id
-      ) %>%
+      ) |>
       arrange(service_id, itin_id)
   } else {
     #if no trip headsign, use route_long_name from route_info to add one
-    trips <- trips %>%
+    trips <- trips |>
       left_join(
         service_combo_to_service_id,
 
@@ -601,16 +601,16 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         #and trips need to be duplicated in this case
 
         relationship = "many-to-many"
-      ) %>%
-      select(-service_id) %>%
-      rename(service_id = service_combo_id) %>%
-      left_join(trip_id_to_itin_id, by = "trip_id") %>%
+      ) |>
+      select(-service_id) |>
+      rename(service_id = service_combo_id) |>
+      left_join(trip_id_to_itin_id, by = "trip_id") |>
       left_join(
-        route_info %>%
-          select(route_id, route_long_name) %>%
+        route_info |>
+          select(route_id, route_long_name) |>
           rename(trip_headsign = route_long_name),
         by = "route_id"
-      ) %>%
+      ) |>
       select(
         trip_id,
         route_id,
@@ -619,17 +619,17 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         trip_headsign,
         service_id,
         shape_id
-      ) %>%
+      ) |>
       arrange(service_id, itin_id)
   }
 
   trips_speed <-
-    get_trip_speed(gtfs = gtfs, trip_id = trips$trip_id) %>%
-    as.data.frame() %>%
+    gtfstools::get_trip_speed(gtfs = gtfs, trip_id = trips$trip_id) |>
+    as.data.frame() |>
     select(trip_id, speed)
 
   trips <-
-    trips %>%
+    trips |>
     left_join(trips_speed, by = "trip_id")
 
   #defining shapes------------------------------------------
@@ -640,86 +640,86 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #and applied to all associated rvar_id
 
   unique_shape_id <-
-    trips %>%
-    pull(shape_id) %>%
+    trips |>
+    pull(shape_id) |>
     unique()
 
   shapes <-
-    gtfs$shapes %>%
-    as_tibble() %>%
-    filter(shape_id %in% unique_shape_id) %>%
+    gtfs$shapes |>
+    as_tibble() |>
+    filter(shape_id %in% unique_shape_id) |>
     st_as_sf(
       coords = c("shape_pt_lon", "shape_pt_lat"),
       crs = 4269
-    ) %>%
-    #arrange(shape_id,shape_pt_sequence) %>% #already arranged above
-    group_by(shape_id) %>%
-    summarise(do_union = FALSE) %>% #ensures that point geometries are not merged
-    st_cast("LINESTRING") %>%
-    mutate(length = st_length(geometry)) %>%
+    ) |>
+    #arrange(shape_id,shape_pt_sequence) |> #already arranged above
+    group_by(shape_id) |>
+    summarise(do_union = FALSE) |> #ensures that point geometries are not merged
+    st_cast("LINESTRING") |>
+    mutate(length = st_length(geometry)) |>
     mutate(length = as.numeric(length)) #length in meters
 
   itin_to_shortest_shape_id <-
-    trips %>%
-    select(itin_id, shape_id) %>%
-    distinct() %>%
-    left_join(shapes %>% as_tibble() %>% select(-geometry), by = "shape_id") %>%
-    group_by(itin_id) %>%
-    mutate(min_length = min(length)) %>%
-    ungroup() %>%
-    filter(length == min_length) %>%
-    select(itin_id, shape_id) %>%
-    rename(shape_id_shortest = shape_id) %>%
+    trips |>
+    select(itin_id, shape_id) |>
+    distinct() |>
+    left_join(shapes |> as_tibble() |> select(-geometry), by = "shape_id") |>
+    group_by(itin_id) |>
+    mutate(min_length = min(length)) |>
+    ungroup() |>
+    filter(length == min_length) |>
+    select(itin_id, shape_id) |>
+    rename(shape_id_shortest = shape_id) |>
     #critical in case these are shapes with identical lengths
     distinct(itin_id, .keep_all = TRUE)
 
   #overwrite shape id with shortest shape id associated with each itin_id
   trips <-
-    trips %>%
-    left_join(itin_to_shortest_shape_id, by = "itin_id") %>%
-    select(-shape_id) %>% #remove existing shape_id column
+    trips |>
+    left_join(itin_to_shortest_shape_id, by = "itin_id") |>
+    select(-shape_id) |> #remove existing shape_id column
     rename(shape_id = shape_id_shortest) #define the new shape_id column as the current
 
   #unique shape_id may have changed now
   unique_shape_id <-
-    trips %>%
-    pull(shape_id) %>%
+    trips |>
+    pull(shape_id) |>
     unique()
 
   #limit the extent of shapes to the ones that we are retaining
   shapes <-
-    shapes %>%
-    filter(shape_id %in% unique_shape_id) %>%
+    shapes |>
+    filter(shape_id %in% unique_shape_id) |>
     select(-length)
 
   #create shape points, which we will need later to calculate interstop distances
   #replace shape_id with itin_id
 
   shapes_points <-
-    gtfs$shapes %>%
-    as_tibble() %>%
-    filter(shape_id %in% unique_shape_id) %>%
+    gtfs$shapes |>
+    as_tibble() |>
+    filter(shape_id %in% unique_shape_id) |>
     left_join(
-      itin_to_shortest_shape_id %>%
-        select(shape_id_shortest, itin_id) %>%
+      itin_to_shortest_shape_id |>
+        select(shape_id_shortest, itin_id) |>
         rename(shape_id = shape_id_shortest),
       by = "shape_id"
-    ) %>%
+    ) |>
     st_as_sf(
       coords = c("shape_pt_lon", "shape_pt_lat"),
       crs = 4269
-    ) %>%
-    arrange(shape_id, shape_pt_sequence) %>%
+    ) |>
+    arrange(shape_id, shape_pt_sequence) |>
     select(itin_id, shape_pt_sequence, geometry) #INCLUDE shape_dist_traveled eventually
 
   #define itin------------------------------
 
   itin <-
-    trips %>%
-    select(itin_id, route_id, direction_id, trip_headsign, shape_id) %>%
-    left_join(shapes %>% as_tibble(), by = "shape_id") %>%
-    distinct() %>%
-    select(itin_id, route_id, direction_id, trip_headsign, geometry) %>%
+    trips |>
+    select(itin_id, route_id, direction_id, trip_headsign, shape_id) |>
+    left_join(shapes |> as_tibble(), by = "shape_id") |>
+    distinct() |>
+    select(itin_id, route_id, direction_id, trip_headsign, geometry) |>
     st_as_sf()
 
   #define stop_seq by itin_id-----------------------------
@@ -731,7 +731,6 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   stop_seq_proto$interstop_dist <- NA
 
   for (i in c(1:(length(stop_seq_proto$stop_seq_id) - 1))) {
-
     #Cat message must eventually be converted to cli_progress_bar or similar!
 
     cat(
@@ -753,24 +752,24 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
       itin_id_i <- stop_seq_proto$itin_id[i]
 
       #shape_id_i <-
-      #  itin %>%
-      #  filter(itin_id==itin_id_i) %>%
+      #  itin |>
+      #  filter(itin_id==itin_id_i) |>
       #  pull(shape_id)
 
       #shapes points for only the shape_id associated with the rvar_id associated with stop i
       shapes_points_i <-
-        shapes_points %>%
+        shapes_points |>
         filter(itin_id == itin_id_i)
 
       current_stop_id <- stop_seq_proto$stop_id[i]
       next_stop_id <- stop_seq_proto$stop_id[i + 1]
 
       current_stop <-
-        stops %>%
+        stops |>
         filter(stop_id == current_stop_id)
 
       next_stop <-
-        stops %>%
+        stops |>
         filter(stop_id == next_stop_id)
 
       #nearest points along shapes_points to current and next stops
@@ -785,9 +784,9 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
       interstop_dist_i <-
         as.numeric(
-          interstop_segment_points %>%
-            summarise(do_union = FALSE) %>% #do_union retains the order of the points
-            st_cast("LINESTRING") %>%
+          interstop_segment_points |>
+            summarise(do_union = FALSE) |> #do_union retains the order of the points
+            st_cast("LINESTRING") |>
             st_length()
         )
 
@@ -800,11 +799,11 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #REWRITE STOP TIMES to handle sequential stops with the same stop time
 
   stop_times_revised <-
-    stop_times %>%
+    stop_times |>
     left_join(
-      trips %>% select(trip_id, itin_id, service_id),
+      trips |> select(trip_id, itin_id, service_id),
       by = "trip_id"
-    ) %>%
+    ) |>
     select(
       itin_id,
       service_id,
@@ -812,28 +811,28 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
       departure_time,
       stop_id,
       stop_sequence
-    ) %>%
+    ) |>
     left_join(
-      stop_seq_proto %>%
+      stop_seq_proto |>
         select(itin_id, stop_id, stop_sequence, interstop_dist),
       by = c("itin_id", "stop_id", "stop_sequence")
-    ) %>%
+    ) |>
     mutate(
       departure_time = as.numeric(as.duration(hms(departure_time))),
       lag_interstop_dist = lag(interstop_dist)
-    ) %>% #necessary input for adjustment of last stop times
+    ) |> #necessary input for adjustment of last stop times
     #if the last stop times of a trip are identical and need to be adjusted backward
     #as opposed to forward
     #identify groups of stops within the same trip that are made at the same time
     #in the GTFS that need to be adjusted based on distance covered within that same minute
 
     #WINDSOR TESTS
-    #filter(trip_id=="1261767") %>%
-    #filter(trip_id%in%c("1261875","1261876","1261877")) %>%
+    #filter(trip_id=="1261767") |>
+    #filter(trip_id%in%c("1261875","1261876","1261877")) |>
 
-    group_by(trip_id) %>%
-    mutate(trip_max_stop_seq = max(stop_sequence)) %>%
-    group_by(itin_id, trip_id, departure_time) %>%
+    group_by(trip_id) |>
+    mutate(trip_max_stop_seq = max(stop_sequence)) |>
+    group_by(itin_id, trip_id, departure_time) |>
     mutate(
       ord = row_number(),
       group_n = n(),
@@ -842,8 +841,8 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
       group_dist_cov = lag(cumsum(interstop_dist), default = 0),
       group_dist_cov_back = cumsum(lag_interstop_dist),
       group_max_stop_seq = max(stop_sequence)
-    ) %>%
-    ungroup() %>%
+    ) |>
+    ungroup() |>
     mutate(
       next_departure_time = case_when(
         #in reality, the next departure time or the last one of the trip
@@ -861,8 +860,8 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         ord == group_n ~ lead(departure_time),
         TRUE ~ NA_real_
       )
-    ) %>%
-    fill(next_departure_time, .direction = "up") %>%
+    ) |>
+    fill(next_departure_time, .direction = "up") |>
     mutate(
       departure_time = case_when(
         #Backward cases : several stops with same time at end of trip
@@ -893,26 +892,26 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
           ),
         TRUE ~ departure_time #otherwise, departure_time unchanged.
       )
-    ) %>%
+    ) |>
     select(itin_id, trip_id, service_id, stop_id, stop_sequence, departure_time)
 
   #Calculate interstop times
 
   interstop_times <-
-    stop_times_revised %>%
-    arrange(itin_id, trip_id, stop_sequence) %>%
+    stop_times_revised |>
+    arrange(itin_id, trip_id, stop_sequence) |>
     mutate(
       interstop_time = if_else(
         lead(stop_sequence) == stop_sequence + 1,
         lead(departure_time) - departure_time, #interstop_time in seconds
         NA_real_ #NA in numeric format
       )
-    ) %>%
-    select(itin_id, stop_id, stop_sequence, interstop_time) %>%
-    group_by(itin_id, stop_id, stop_sequence) %>%
-    summarise(mean_interstop_time = mean(interstop_time)) %>%
-    ungroup() %>%
-    arrange(itin_id, stop_sequence) %>%
+    ) |>
+    select(itin_id, stop_id, stop_sequence, interstop_time) |>
+    group_by(itin_id, stop_id, stop_sequence) |>
+    summarise(mean_interstop_time = mean(interstop_time)) |>
+    ungroup() |>
+    arrange(itin_id, stop_sequence) |>
     mutate(
       stop_seq_id = str_c(
         itin_id,
@@ -929,22 +928,22 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #overall average speed by itin
 
   itin_speeds_overall <-
-    trips %>%
-    group_by(itin_id) %>%
+    trips |>
+    group_by(itin_id) |>
     summarise(itin_speed = mean(speed))
 
   stop_seq <-
-    stop_seq_proto %>%
+    stop_seq_proto |>
     left_join(
-      interstop_times %>% select(stop_seq_id, mean_interstop_time),
+      interstop_times |> select(stop_seq_id, mean_interstop_time),
       by = "stop_seq_id"
-    ) %>%
+    ) |>
     left_join(
       itin_speeds_overall,
       by = "itin_id"
-    ) %>%
-    mutate(interstop_speed = (interstop_dist / mean_interstop_time) * 3.6) %>%
-    mutate(speed_factor = round((interstop_speed / itin_speed), 1)) %>%
+    ) |>
+    mutate(interstop_speed = (interstop_dist / mean_interstop_time) * 3.6) |>
+    mutate(speed_factor = round((interstop_speed / itin_speed), 1)) |>
     select(itin_id, stop_id, stop_sequence, speed_factor)
 
   #this writes a gtfs where
@@ -957,20 +956,20 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #now includes service_windows
 
   span <-
-    stop_times_revised %>%
-    filter(stop_sequence == 1) %>%
-    arrange(service_id, itin_id, departure_time) %>%
-    group_by(itin_id, service_id) %>%
+    stop_times_revised |>
+    filter(stop_sequence == 1) |>
+    arrange(service_id, itin_id, departure_time) |>
+    group_by(itin_id, service_id) |>
     #7200 : if gap is more than two hours, then define new service window
     #Every time there's a gap larger than 7200, we increment the group number.
     #The first observation always starts group 1 (the first TRUE)
     #and we stay in the same group until we hit a gap > 7200.
-    mutate(service_window = cumsum(c(TRUE, diff(departure_time) > 7200))) %>%
-    group_by(itin_id, service_id, service_window) %>%
+    mutate(service_window = cumsum(c(TRUE, diff(departure_time) > 7200))) |>
+    group_by(itin_id, service_id, service_window) |>
     summarise(
       first_dep = min(departure_time),
       last_dep = max(departure_time)
-    ) %>%
+    ) |>
     mutate(
       #sprintf in order to handle times past 24:00:00
       first_dep = sprintf(
@@ -986,7 +985,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         last_dep %% 60
       ) #,
       #service_window=as.character(service_window)
-    ) %>%
+    ) |>
     ungroup()
 
   #define hsh--------------------------
@@ -995,14 +994,14 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
   #we just want the first stop time per trip to define this
 
   hsh <-
-    stop_times_revised %>%
-    filter(stop_sequence == 1) %>%
-    left_join(trips %>% select(trip_id, speed), by = "trip_id") %>%
+    stop_times_revised |>
+    filter(stop_sequence == 1) |>
+    left_join(trips |> select(trip_id, speed), by = "trip_id") |>
     mutate(
       hour_dep = sprintf("%02d:00:00", as.numeric(floor(departure_time / 3600)))
-    ) %>%
-    select(itin_id, service_id, hour_dep, departure_time, speed) %>%
-    arrange(itin_id, service_id, departure_time) %>%
+    ) |>
+    select(itin_id, service_id, hour_dep, departure_time, speed) |>
+    arrange(itin_id, service_id, departure_time) |>
     mutate(
       interval_to_next = if_else(
         #in minutes
@@ -1010,7 +1009,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         as.numeric(floor(lead(departure_time) - departure_time) / 60),
         NA_real_
       )
-    ) %>% #turn interval_to_next values above 60 to NA
+    ) |> #turn interval_to_next values above 60 to NA
     #this will mean that if there is an hour_dep associated with the
     #itin_id to service_id combo but interval to next is NA
     #then either only one trip will be created starting at the hour OR the only
@@ -1022,9 +1021,9 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         NA_real_,
         interval_to_next
       )
-    ) %>%
-    group_by(itin_id, service_id, hour_dep) %>%
-    arrange(interval_to_next) %>%
+    ) |>
+    group_by(itin_id, service_id, hour_dep) |>
+    arrange(interval_to_next) |>
     summarise(
       headway = interval_to_next[ceiling((length(interval_to_next) / 2) + 0.5)],
       #old way of creating headway, problematic when trying to generate accurate
@@ -1037,21 +1036,21 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
       #headway=round(median(interval_to_next,na.rm=TRUE),0),
       speed = round(mean(speed), 1)
-    ) %>%
-    mutate(headway = as.integer(headway)) %>%
+    ) |>
+    mutate(headway = as.integer(headway)) |>
     ungroup()
 
   #return ssfs-----------------------
 
   ssfs <- list(
-    agency = agency %>% as.data.frame(),
-    routes = route_info %>% as.data.frame(),
+    agency = agency |> as.data.frame(),
+    routes = route_info |> as.data.frame(),
     stops = stops,
     itin = itin,
-    stop_seq = stop_seq %>% as.data.frame(),
-    span = span %>% as.data.frame(),
-    hsh = hsh %>% as.data.frame(),
-    calendar = calendar %>% as.data.frame()
+    stop_seq = stop_seq |> as.data.frame(),
+    span = span |> as.data.frame(),
+    hsh = hsh |> as.data.frame(),
+    calendar = calendar |> as.data.frame()
   )
 
   return(ssfs)

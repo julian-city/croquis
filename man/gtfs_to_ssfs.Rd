@@ -14,7 +14,7 @@ gtfs_to_ssfs(gtfs, routes = NULL, max_date = NULL)
 \item{max_date}{A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS}
 }
 \value{
-An SSFS list
+A SSFS list
 }
 \description{
 Convert a GTFS to a SSFS

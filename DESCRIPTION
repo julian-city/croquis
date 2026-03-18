@@ -22,6 +22,7 @@ Imports:
     osrm,
     plotly,
     purrr,
+    rlang,
     sf,
     shiny,
     shinyjs,
