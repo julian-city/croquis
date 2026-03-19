@@ -11,6 +11,7 @@ BugReports: https://github.com/julian-city/croquis/issues
 Depends: 
     R (>= 4.1.0)
 Imports: 
+    cli,
     data.table,
     dplyr,
     DT,

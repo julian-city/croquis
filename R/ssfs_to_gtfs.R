@@ -24,6 +24,13 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       trip_dep = as.character()
     )
 
+  # initialize progress bar
+  cli::cli_progress_bar(
+    total = nrow(ssfs$span),
+    format = "Calculating trips for route {route_id_i} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}",
+    clear = FALSE
+  )
+
   for (i in 1:nrow(ssfs$span)) {
     itin_id_i <- ssfs$span[i, ]$itin_id
 
@@ -36,7 +43,8 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       filter(itin_id == itin_id_i) |>
       pull(route_id)
 
-    cat("\rCalculating trips for route", route_id_i)
+    #initialize cli progress bar
+    cli::cli_progress_update()
 
     trip_headsign_i <-
       ssfs$itin |>
@@ -234,12 +242,13 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
     #first one is always 0
     shapes_points$shape_dist_traveled[1] <- 0
 
+    cli::cli_progress_bar(
+      "Calculating shape_dist_traveled.",
+      total = nrow(shapes_points)
+    )
+
     for (i in 2:(nrow(shapes_points))) {
-      cat(
-        "\rCalculating shape_dist_traveled. Progress: ",
-        round((i / nrow(shapes_points)) * 100, 1),
-        "%"
-      )
+      cli::cli_progress_update()
 
       if (
         (shapes_points$shape_pt_sequence[i] - 1 ==
@@ -265,12 +274,14 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       }
     }
 
+    cli::cli_progress_bar(
+      "Calculating interstop distance.",
+      total = nrow(stop_seq) - 1
+    )
+
     for (i in 1:(nrow(stop_seq) - 1)) {
-      cat(
-        "\rCalculating interstop distance. Progress:",
-        round((i / nrow(stop_seq)) * 100, 1),
-        "%"
-      )
+      cli::cli_progress_update()
+
       #CONDITIONS
       #next stop needs to be part of the same sequence AND
       #part of the same rvar_id (just another way of verifying the same stop sequence)
@@ -322,12 +333,13 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
     #else no shape_dist_traveled, calculate interstop distance directly from
     #shapes and stop seq
 
+    cli::cli_progress_bar(
+      "Calculating interstop distance.",
+      total = nrow(stop_seq) - 1
+    )
+
     for (i in 1:(nrow(stop_seq) - 1)) {
-      cat(
-        "\rCalculating interstop distance. Progress: ",
-        round((i / nrow(stop_seq)) * 100, 1),
-        "%"
-      )
+      cli::cli_progress_update()
       #CONDITIONS
       #next stop needs to be part of the same sequence AND
       #part of the same rvar_id (just another way of verifying the same stop sequence)
@@ -425,6 +437,13 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
 
   #use $span for the loop as each row represents a unique itin_id * service id * service window combo
 
+  #initialize progress bar
+  cli::cli_progress_bar(
+    total = length(ssfs$span$itin_id),
+    format = "Calculating stop times for itin_id {itin_id_i},service_id {service_id_i} and service_window {service_window_i} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}",
+    clear = FALSE
+  )
+
   for (i in 1:length(ssfs$span$itin_id)) {
     itin_id_i <- ssfs$span[i, ]$itin_id
 
@@ -432,17 +451,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
 
     service_window_i <- ssfs$span[i, ]$service_window
 
-    cat(
-      "\rCalculating stop times for itin_id",
-      itin_id_i,
-      ", service_id",
-      service_id_i,
-      "and service window",
-      service_window_i,
-      "(Progress : ",
-      round((i / length(ssfs$span$itin_id)) * 100, 1),
-      "%)"
-    )
+    cli::cli_progress_update()
 
     #hsh for rvar_id and service_id combo
 

@@ -730,15 +730,27 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
   stop_seq_proto$interstop_dist <- NA
 
+  #initialize cli
+  # Before the loop:
+  cli::cli_progress_bar(
+    "Calculating interstop distance",
+    total = length(stop_seq_proto$stop_seq_id) - 1
+  )
+
   for (i in c(1:(length(stop_seq_proto$stop_seq_id) - 1))) {
     #Cat message must eventually be converted to cli_progress_bar or similar!
 
-    cat(
-      "\rCalculating interstop distance",
-      i,
-      "of",
-      length(stop_seq_proto$stop_seq_id) - 1
-    )
+    #old cat() call for progress
+    #cat(
+    #  "\rCalculating interstop distance",
+    #  i,
+    #  "of",
+    #  length(stop_seq_proto$stop_seq_id) - 1
+    #)
+
+    #replaced with new cli functions
+    cli::cli_progress_update()
+
     #CONDITIONS
     #next stop needs to be part of the same sequence AND
     #part of the same rvar_id (just another way of verifying the same stop sequence)
