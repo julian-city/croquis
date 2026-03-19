@@ -2018,11 +2018,11 @@ croquis <- function() {
       tabPanel(
         "export",
         fluidPage(
-          titlePanel("Export or save your project"),
+          titlePanel("export or save your project"),
 
           # Export gtfs
           wellPanel(
-            h3("export gtfs"),
+            h3("Export GTFS"),
             textInput("exportgtfs_filename", "Filename:", value = "gtfs.zip"),
             checkboxInput(
               "include_dist_traveled",
@@ -2045,12 +2045,12 @@ croquis <- function() {
           wellPanel(
             h3("Export raw project file (ssfs)"),
             p(
-              "If you want to export your project and continue working later, export .rds file:"
+              "If you want to save your project and continue working later, export .rds file:"
             ),
             textInput(
               "exportssfs_filename",
               "Filename:",
-              value = "transit_system.rds"
+              value = "croquis.rds"
             ),
             downloadButton(
               "download_ssfs",

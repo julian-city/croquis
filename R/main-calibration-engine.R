@@ -152,13 +152,14 @@ apply_gtfs_speeds_to_ssfs <- function(
     interstops$cntr_pt_lat <- NA
     interstops$cntr_pt_lon <- NA
 
+    cli::cli_progress_bar(
+      total = nrow(interstops),
+      format = "Producing interstop matrix points for {service_id_i} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}",
+      clear = FALSE
+    )
+
     for (i in c(1:nrow(interstops))) {
-      cat(paste(
-        "\rProduction of interstop matrix points for",
-        service_id_i,
-        round((i / nrow(interstops)) * 100, 1),
-        "% complete"
-      ))
+      cli::cli_progress_update()
 
       shape_id_i <- interstops$shape_id[i]
 
@@ -363,7 +364,7 @@ apply_gtfs_speeds_to_ssfs <- function(
     distinct() |>
     st_as_sf()
 
-  cat(paste("\rGenerating interstop point buffers"))
+  message("Generating interstop point buffers")
 
   interstop_buffers <- st_buffer(interstop_points, dist = buffer_dist)
 
@@ -404,8 +405,13 @@ apply_gtfs_speeds_to_ssfs <- function(
   shapes_points <-
     ssfs$itin |> select(itin_id, geometry) |> st_cast("POINT")
 
+  cli::cli_progress_bar(
+    "Writing ssfs interstops",
+    total = nrow(ssfs$span)
+  )
+
   for (i in 1:nrow(ssfs_interstops)) {
-    cat(paste("\rWriting ssfs interstop", i, "of", nrow(ssfs_interstops)))
+    cli::cli_progress_update()
 
     stop_id_a <-
       ssfs_interstops$stop_id[i]
@@ -513,7 +519,7 @@ apply_gtfs_speeds_to_ssfs <- function(
       pull(itin_id) |>
       unique()
 
-    cat(paste(
+    message(paste(
       "\rIntersecting ssfs interstops with gtfs matrix for service_id",
       service_id_i
     ))
@@ -563,15 +569,15 @@ apply_gtfs_speeds_to_ssfs <- function(
 
     #now, launch the algorithm
 
+    # initialize progress bar
+    cli::cli_progress_bar(
+      total = nrow(ssfs_interstops_h),
+      format = "Calculating interstop speeds (service_id {service_id_i}) {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}",
+      clear = FALSE
+    )
+
     for (i in c(1:nrow(ssfs_interstops_h))) {
-      cat(paste(
-        "\rCalculating interstop speed for interstop",
-        i,
-        "of",
-        nrow(ssfs_interstops_h),
-        "service_id",
-        service_id_i
-      ))
+      cli::cli_progress_update()
 
       stop_a <- ssfs_interstops_h[i, ]$stop_id
 
