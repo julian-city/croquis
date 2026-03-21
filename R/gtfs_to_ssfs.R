@@ -1054,7 +1054,7 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
 
   #return ssfs-----------------------
 
-  ssfs <- list(
+  ssfs <- new_ssfs(
     agency = agency |> as.data.frame(),
     routes = route_info |> as.data.frame(),
     stops = stops,

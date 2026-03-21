@@ -2310,6 +2310,8 @@ croquis <- function() {
         {
           loaded_ssfs <- readRDS(input$load_ssfs$datapath)
 
+          validate_ssfs(loaded_ssfs)
+
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
 
