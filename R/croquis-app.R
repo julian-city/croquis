@@ -4,7 +4,37 @@
 #'
 #' @export
 #' @examples
-croquis <- function() {
+croquis <- function(ssfs = NULL) {
+  # Validate input ssfs (and change name to avoid name collision in the server)
+
+  input_ssfs <- NULL
+
+  if (!is.null(ssfs)) {
+    validate_ssfs(ssfs) # throws informative error if invalid
+    input_ssfs <- ssfs
+  }
+
+  #convert typical format ssfs into format ready to immediately assign to the ReactiveVal
+
+  if (!is.null(input_ssfs)) {
+    # Join stop_name into stop_seq (the app expects this column)
+    stop_id_to_stopname <-
+      input_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
+
+    input_ssfs$stop_seq <-
+      input_ssfs$stop_seq |>
+      left_join(stop_id_to_stopname, by = "stop_id")
+
+    # Ensure CRS 4326 for spatial tables
+    input_ssfs$itin <-
+      input_ssfs$itin |>
+      st_transform(4326)
+
+    input_ssfs$stops <-
+      input_ssfs$stops |>
+      st_transform(4326)
+  }
+
   #UI-----------------------------
 
   # UI functions
@@ -2080,68 +2110,72 @@ croquis <- function() {
     # Initialize ssfs : data structure for the whole app
 
     ssfs <- reactiveVal(
-      list(
-        agency = data.frame(
-          agency_id = character(),
-          agency_name = character(),
-          agency_url = character(),
-          agency_timezone = character()
-        ),
-        routes = data.frame(
-          route_id = character(),
-          agency_id = character(),
-          route_short_name = character(),
-          route_long_name = character(),
-          route_type = integer(),
-          route_color = character(),
-          route_text_color = character()
-        ),
-        stops = st_sf(
-          stop_id = character(),
-          stop_name = character(),
-          geometry = st_sfc(crs = 4326)
-        ),
-        itin = st_sf(
-          itin_id = character(),
-          route_id = character(),
-          direction_id = integer(),
-          trip_headsign = character(),
-          geometry = st_sfc(crs = 4326)
-        ),
-        stop_seq = data.frame(
-          itin_id = character(),
-          stop_id = character(),
-          stop_sequence = integer(),
-          speed_factor = double(),
-          stop_name = character()
-        ),
-        calendar = data.frame(
-          service_id = character(),
-          monday = integer(),
-          tuesday = integer(),
-          wednesday = integer(),
-          thursday = integer(),
-          friday = integer(),
-          saturday = integer(),
-          sunday = integer(),
-          start_date = character(),
-          end_date = character()
-        ),
-        span = data.frame(
-          itin_id = character(),
-          service_id = character(),
-          service_window = integer(),
-          first_dep = character(),
-          last_dep = character()
-        ),
-        hsh = data.frame(
-          itin_id = character(),
-          service_id = character(),
-          hour_dep = character(),
-          headway = integer(),
-          speed = double()
+      if (!is.null(input_ssfs)) {
+        input_ssfs
+      } else {
+        list(
+          agency = data.frame(
+            agency_id = character(),
+            agency_name = character(),
+            agency_url = character(),
+            agency_timezone = character()
+          ),
+          routes = data.frame(
+            route_id = character(),
+            agency_id = character(),
+            route_short_name = character(),
+            route_long_name = character(),
+            route_type = integer(),
+            route_color = character(),
+            route_text_color = character()
+          ),
+          stops = st_sf(
+            stop_id = character(),
+            stop_name = character(),
+            geometry = st_sfc(crs = 4326)
+          ),
+          itin = st_sf(
+            itin_id = character(),
+            route_id = character(),
+            direction_id = integer(),
+            trip_headsign = character(),
+            geometry = st_sfc(crs = 4326)
+          ),
+          stop_seq = data.frame(
+            itin_id = character(),
+            stop_id = character(),
+            stop_sequence = integer(),
+            speed_factor = double(),
+            stop_name = character()
+          ),
+          calendar = data.frame(
+            service_id = character(),
+            monday = integer(),
+            tuesday = integer(),
+            wednesday = integer(),
+            thursday = integer(),
+            friday = integer(),
+            saturday = integer(),
+            sunday = integer(),
+            start_date = character(),
+            end_date = character()
+          ),
+          span = data.frame(
+            itin_id = character(),
+            service_id = character(),
+            service_window = integer(),
+            first_dep = character(),
+            last_dep = character()
+          ),
+          hsh = data.frame(
+            itin_id = character(),
+            service_id = character(),
+            hour_dep = character(),
+            headway = integer(),
+            speed = double()
+          )
         )
-      )
+      }
     )
     #stringsAsFactors = FALSE used to be in each table, removed as it is not relevant
     #for versions of R > 4.0
@@ -2152,7 +2186,17 @@ croquis <- function() {
     cities_data <- reactiveVal(NULL)
 
     # Reactive values for map center and agency info
-    map_center <- reactiveVal(list(lng = -73.567, lat = 45.5017)) # Montreal default
+    map_center <- reactiveVal(
+      if (!is.null(input_ssfs) && nrow(input_ssfs$stops) > 0) {
+        bbox <- st_bbox(input_ssfs$stops)
+        list(
+          lng = (bbox[["xmin"]] + bbox[["xmax"]]) / 2,
+          lat = (bbox[["ymin"]] + bbox[["ymax"]]) / 2
+        )
+      } else {
+        list(lng = -73.567, lat = 45.5017) # Montreal default
+      }
+    )
 
     # Filtered cities for autocomplete
     filtered_cities <- reactiveVal(data.frame())
