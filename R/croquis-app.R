@@ -2191,8 +2191,8 @@ croquis <- function(ssfs = NULL) {
 
     #reactive values for cities db and agency info on home page / in gtfs
 
-    # Load cities data from GitHub
-    cities_data <- reactiveVal(NULL)
+    # Cities database (bundled as internal package data)
+    cities_data <- reactiveVal(cities_db)
 
     # Reactive values for map center and agency info
     map_center <- reactiveVal(
@@ -2209,46 +2209,6 @@ croquis <- function(ssfs = NULL) {
 
     # Filtered cities for autocomplete
     filtered_cities <- reactiveVal(data.frame())
-
-    # Load cities data from GitHub on app startup
-    observe({
-      tryCatch(
-        {
-          url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main/cities_db.rds"
-
-          # Create a temporary file
-          temp_file <- tempfile(fileext = ".rds")
-
-          # Download the file
-          download.file(url, temp_file, mode = "wb")
-
-          # Load the file
-          cities_df <- readRDS(temp_file)
-
-          # Clean up
-          unlink(temp_file)
-
-          cities_data(cities_df)
-          showNotification(
-            "Cities database loaded successfully",
-            type = "message"
-          )
-        },
-        error = function(e) {
-          showNotification(
-            paste("Error loading cities database:", e$message),
-            type = "warning"
-          )
-          # Create empty fallback
-          cities_data(data.frame(
-            name = character(),
-            lat = numeric(),
-            long = numeric(),
-            tz = character()
-          ))
-        }
-      )
-    })
 
     # Helper function for marker size calculation for stops on maps
     calculateMarkerSize <- function(zoom) {
@@ -2458,47 +2418,32 @@ croquis <- function(ssfs = NULL) {
     })
 
     #handle load_ligne_jaune_ssfs
+    #NOTE all sample network observe handlers
+    # are a bit superflous now that the networks are internal objects
+    #not necessary to use tryCatch
     observeEvent(input$load_yellowline_ssfs, {
       tryCatch(
         {
-          # URL to your raw GitHub file
-          url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main/sample_networks/ligne_jaune_v2.rds"
-
-          # Create a temporary file
-          temp_file <- tempfile(fileext = ".rds")
-
-          # Download the file
-          download.file(url, temp_file, mode = "wb")
-
-          # Load the file
-          ljaune_ssfs <- readRDS(temp_file)
-
-          # Clean up
-          unlink(temp_file)
-
-          #adjust ssfs to data structure (stop names in stop seq,
-          #FOR 3.0 NO SPEED FACTOR, 3.1 will incorporate this)
+          loaded_ssfs <- ligne_jaune
 
           stop_id_to_stopname <-
-            ljaune_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
+            loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
 
-          ljaune_ssfs$stop_seq <-
-            ljaune_ssfs$stop_seq |>
+          loaded_ssfs$stop_seq <-
+            loaded_ssfs$stop_seq |>
             left_join(stop_id_to_stopname, by = "stop_id")
 
-          ljaune_ssfs$itin <-
-            ljaune_ssfs$itin |>
+          loaded_ssfs$itin <-
+            loaded_ssfs$itin |>
             st_transform(4326)
 
-          ljaune_ssfs$stops <-
-            ljaune_ssfs$stops |>
+          loaded_ssfs$stops <-
+            loaded_ssfs$stops |>
             st_transform(4326)
 
-          ssfs(ljaune_ssfs)
+          ssfs(loaded_ssfs)
 
-          #update map center
-
-          map_center(list(lng = -73.567, lat = 45.5017)) # Montreal default
+          map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
             "STM Ligne Jaune loaded successfully",
@@ -2518,45 +2463,26 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_metro_ssfs, {
       tryCatch(
         {
-          url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main/sample_networks/metro_v2.rds"
-
-          # Create a temporary file
-          temp_file <- tempfile(fileext = ".rds")
-
-          # Download the file
-          download.file(url, temp_file, mode = "wb")
-
-          # Load the file
-          mtlmetro_ssfs <- readRDS(temp_file)
-
-          # Clean up
-          unlink(temp_file)
-
-          #adjust ssfs to data structure (stop names in stop seq,
-          #FOR 3.0 NO SPEED FACTOR, 3.1 will incorporate this)
+          loaded_ssfs <- stm_metro
 
           stop_id_to_stopname <-
-            mtlmetro_ssfs$stops |>
-            as.data.frame() |>
-            select(stop_id, stop_name)
+            loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
 
-          mtlmetro_ssfs$stop_seq <-
-            mtlmetro_ssfs$stop_seq |>
+          loaded_ssfs$stop_seq <-
+            loaded_ssfs$stop_seq |>
             left_join(stop_id_to_stopname, by = "stop_id")
 
-          mtlmetro_ssfs$itin <-
-            mtlmetro_ssfs$itin |>
+          loaded_ssfs$itin <-
+            loaded_ssfs$itin |>
             st_transform(4326)
 
-          mtlmetro_ssfs$stops <-
-            mtlmetro_ssfs$stops |>
+          loaded_ssfs$stops <-
+            loaded_ssfs$stops |>
             st_transform(4326)
 
-          ssfs(mtlmetro_ssfs)
+          ssfs(loaded_ssfs)
 
-          #update map center
-
-          map_center(list(lng = -73.567, lat = 45.5017)) # Montreal default
+          map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
             "STM metro network loaded successfully",
@@ -2576,45 +2502,26 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_mileend_ssfs, {
       tryCatch(
         {
-          url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main/sample_networks/mileend_v2.rds"
-
-          # Create a temporary file
-          temp_file <- tempfile(fileext = ".rds")
-
-          # Download the file
-          download.file(url, temp_file, mode = "wb")
-
-          # Load the file
-          mtlmileend_ssfs <- readRDS(temp_file)
-
-          # Clean up
-          unlink(temp_file)
-
-          #adjust ssfs to data structure (stop names in stop seq,
-          #FOR 3.0 NO SPEED FACTOR, 3.1 will incorporate this)
+          loaded_ssfs <- mileend
 
           stop_id_to_stopname <-
-            mtlmileend_ssfs$stops |>
-            as.data.frame() |>
-            select(stop_id, stop_name)
+            loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
 
-          mtlmileend_ssfs$stop_seq <-
-            mtlmileend_ssfs$stop_seq |>
+          loaded_ssfs$stop_seq <-
+            loaded_ssfs$stop_seq |>
             left_join(stop_id_to_stopname, by = "stop_id")
 
-          mtlmileend_ssfs$itin <-
-            mtlmileend_ssfs$itin |>
+          loaded_ssfs$itin <-
+            loaded_ssfs$itin |>
             st_transform(4326)
 
-          mtlmileend_ssfs$stops <-
-            mtlmileend_ssfs$stops |>
+          loaded_ssfs$stops <-
+            loaded_ssfs$stops |>
             st_transform(4326)
 
-          ssfs(mtlmileend_ssfs)
+          ssfs(loaded_ssfs)
 
-          #update map center
-
-          map_center(list(lng = -73.567, lat = 45.5017)) # Montreal default
+          map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
             "STM Mile-End bus network loaded successfully",
@@ -2634,52 +2541,30 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_ttcsubway_ssfs, {
       tryCatch(
         {
-          url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main/sample_networks/ttcsubway_v2.rds"
-
-          # Create a temporary file
-          temp_file <- tempfile(fileext = ".rds")
-
-          # Download the file
-          download.file(url, temp_file, mode = "wb")
-
-          # Load the file
-          ttcsubway_ssfs <- readRDS(temp_file)
-
-          # Clean up
-          unlink(temp_file)
-
-          #adjust ssfs to data structure (stop names in stop seq,
-          #FOR 3.0 NO SPEED FACTOR, 3.1 will incorporate this)
+          loaded_ssfs <- ttc_subway
 
           stop_id_to_stopname <-
-            ttcsubway_ssfs$stops |>
-            as.data.frame() |>
-            select(stop_id, stop_name)
+            loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
 
-          ttcsubway_ssfs$stop_seq <-
-            ttcsubway_ssfs$stop_seq |>
+          loaded_ssfs$stop_seq <-
+            loaded_ssfs$stop_seq |>
             left_join(stop_id_to_stopname, by = "stop_id")
 
-          ttcsubway_ssfs$itin <-
-            ttcsubway_ssfs$itin |>
+          loaded_ssfs$itin <-
+            loaded_ssfs$itin |>
             st_transform(4326)
 
-          ttcsubway_ssfs$stops <-
-            ttcsubway_ssfs$stops |>
+          loaded_ssfs$stops <-
+            loaded_ssfs$stops |>
             st_transform(4326)
 
-          ssfs(ttcsubway_ssfs)
+          ssfs(loaded_ssfs)
 
-          #update <- of map
-
-          bbox <- st_bbox(ttcsubway_ssfs$stops)
-
-          # Calculate center point
+          bbox <- st_bbox(loaded_ssfs$stops)
           center <- list(
             lng = (bbox[["xmin"]] + bbox[["xmax"]]) / 2,
             lat = (bbox[["ymin"]] + bbox[["ymax"]]) / 2
           )
-
           map_center(center)
 
           showNotification(
