@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# croquis <img src="man/figures/logo.png" align="right" height="138" alt="" />
+# croquis: Transit Sketch Planning <img src="man/figures/logo.png" align="right" height="300" alt="" />
 
 <!-- badges: start -->
 
