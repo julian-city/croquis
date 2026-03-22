@@ -1,5 +1,7 @@
 #' Croquis: transit sketch planning Shiny app
 #'
+#' Launches the Croquis shiny app
+#'
 #' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
 #'
 #' @returns Does not inherently return anything

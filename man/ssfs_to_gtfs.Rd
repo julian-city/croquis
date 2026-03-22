@@ -15,7 +15,8 @@ ssfs_to_gtfs(ssfs, dist_traveled = FALSE)
 an object of class 'gtfs'
 }
 \description{
-Convert a SSFS to a GTFS
+Reads a SSFS (Simplified Speeds and Frequencies Structure) and
+converts it into a GTFS.
 }
 \examples{
 # Convert the sample Ligne Jaune SSFS to GTFS

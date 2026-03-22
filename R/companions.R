@@ -1,5 +1,7 @@
 #' Retain routes from GTFS
 #'
+#' Reads a GTFS and returns a subset GTFS including only the data relevant to specified routes.
+#'
 #' @param gtfs An object of class 'gtfs'
 #' @param retain_routes A character vector indicating the route_ids you wish to retain in the GTFS
 #'
@@ -99,6 +101,8 @@ gtfs_retain_routes <- function(gtfs, retain_routes) {
 }
 
 #' Remove routes from GTFS
+#'
+#' Reads a GTFS and returns a subset GTFS excluding the data relevant to specified routes.
 #'
 #' @param gtfs An object of class 'gtfs'
 #' @param remove_routes A character vector of the route_ids that you wish to remove from the GTFS

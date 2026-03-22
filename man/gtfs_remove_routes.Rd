@@ -15,7 +15,7 @@ gtfs_remove_routes(gtfs, remove_routes)
 An object of class 'gtfs'
 }
 \description{
-Remove routes from GTFS
+Reads a GTFS and returns a subset GTFS excluding the data relevant to specified routes.
 }
 \examples{
 \dontrun{

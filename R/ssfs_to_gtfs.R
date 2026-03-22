@@ -1,5 +1,8 @@
 #' Convert a SSFS to a GTFS
 #'
+#' Reads a SSFS (Simplified Speeds and Frequencies Structure) and
+#' converts it into a GTFS.
+#'
 #' @param ssfs An ssfs list
 #' @param dist_traveled When TRUE, adds shape_dist_traveled field to shapes and stop_times tables in output GTFS
 #'

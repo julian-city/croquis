@@ -1,5 +1,10 @@
 #' Convert a GTFS to a SSFS
 #'
+#' Reads a GTFS object and transforms it into a Simplified Schedule
+#' and Frequency Structure (SSFS), extracting route geometries,
+#' stop sequences, and service patterns into a more editable format
+#' for sketch planning workflows.
+#'
 #' @param gtfs An object of class 'gtfs'. Must contain required tables and calendar table.
 #' @param routes A character vector of the route id(s) you wish to convert to ssfs. Leave as NULL to convert all routes to SSFS
 #' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS

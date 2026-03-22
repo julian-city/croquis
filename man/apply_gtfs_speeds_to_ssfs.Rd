@@ -33,7 +33,8 @@ apply_gtfs_speeds_to_ssfs(
 A ssfs list
 }
 \description{
-Speeds calibration engine
+Reads a reference GTFS and a target SSFS and returns that SSFS with speeds adjusted
+to those documented in the GTFS based on shapes and stop_times data.
 }
 \examples{
 \dontrun{

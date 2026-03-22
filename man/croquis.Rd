@@ -13,7 +13,7 @@ croquis(ssfs = NULL)
 Does not inherently return anything
 }
 \description{
-Croquis: transit sketch planning Shiny app
+Launches the Croquis shiny app
 }
 \examples{
 \dontrun{

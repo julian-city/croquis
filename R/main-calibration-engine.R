@@ -1,5 +1,8 @@
 #' Speeds calibration engine
 #'
+#' Reads a reference GTFS and a target SSFS and returns that SSFS with speeds adjusted
+#' to those documented in the GTFS based on shapes and stop_times data.
+#'
 #' @param gtfs An object of class 'gtfs'
 #' @param ssfs A ssfs list
 #' @param max_date A date representing the maximum date range of services retained from the reference GTFS

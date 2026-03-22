@@ -17,7 +17,10 @@ gtfs_to_ssfs(gtfs, routes = NULL, max_date = NULL)
 A SSFS list
 }
 \description{
-Convert a GTFS to a SSFS
+Reads a GTFS object and transforms it into a Simplified Schedule
+and Frequency Structure (SSFS), extracting route geometries,
+stop sequences, and service patterns into a more editable format
+for sketch planning workflows.
 }
 \examples{
 \donttest{

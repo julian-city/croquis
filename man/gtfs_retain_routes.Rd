@@ -15,7 +15,7 @@ gtfs_retain_routes(gtfs, retain_routes)
 An object of class 'gtfs'
 }
 \description{
-Retain routes from GTFS
+Reads a GTFS and returns a subset GTFS including only the data relevant to specified routes.
 }
 \examples{
 \dontrun{
