@@ -2591,7 +2591,10 @@ croquis <- function(ssfs = NULL) {
           #matches <- cities_data()[grepl(search_term, cities_data()$name, ignore.case = TRUE), ]
 
           matches <- cities_data() |>
-            filter(str_detect(tolower(name), tolower(str_escape(search_term))))
+            filter(stringr::str_detect(
+              tolower(name),
+              tolower(stringr::str_escape(search_term))
+            ))
 
           if (nrow(matches) > 0 && nrow(matches) <= 10) {
             # Show suggestions if we have 1-10 matches
