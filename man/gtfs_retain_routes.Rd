@@ -19,6 +19,10 @@ Retain routes from GTFS
 }
 \examples{
 \dontrun{
+# Import GTFS
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+
+# filter to retain specified routes
 gtfs_filtered <- gtfs_retain_routes(gtfs,retain_routes = c("route_1","route_2"))
 }
 }

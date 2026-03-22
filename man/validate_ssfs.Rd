@@ -19,8 +19,6 @@ table contains its required columns. Returns the object invisibly if
 valid; throws an informative error otherwise.
 }
 \examples{
-\dontrun{
 # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
 validate_ssfs(ssfs)
-}
 }

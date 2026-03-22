@@ -18,11 +18,11 @@ an object of class 'gtfs'
 Convert a SSFS to a GTFS
 }
 \examples{
-\dontrun{
-# Create a GTFS based on a SSFS
-gtfs <- ssfs_to_gtfs(ssfs)
-# Create shape_dist_traveled fields in GTFS stop_times and shapes tables
-# This increases processing time
-gtfs <- ssfs_to_gtfs(ssfs, dist_traveled = TRUE)
+# Convert the sample Ligne Jaune SSFS to GTFS
+gtfs <- ssfs_to_gtfs(ligne_jaune)
+
+\donttest{
+# Include shape_dist_traveled (increases processing time)
+gtfs_with_dist <- ssfs_to_gtfs(ligne_jaune, dist_traveled = TRUE)
 }
 }

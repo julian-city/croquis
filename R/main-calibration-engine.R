@@ -16,6 +16,9 @@
 #' # Create reference GTFS
 #' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
 #'
+#' # Import reference ssfs
+#' ssfs <- readRDS("path/to/ssfs.rds")
+#'
 #' # Apply the reference GTFS speeds to ssfs
 #' ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(gtfs, ssfs)
 #'

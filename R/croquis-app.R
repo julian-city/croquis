@@ -11,7 +11,7 @@
 #' croquis()
 #'
 #' #Launch the app with a SSFS project pre-loaded
-#' croquis(ssfs)
+#' croquis(stm_metro)
 #' }
 croquis <- function(ssfs = NULL) {
   # Validate input ssfs (and change name to avoid name collision in the server)

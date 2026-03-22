@@ -19,6 +19,10 @@ Remove routes from GTFS
 }
 \examples{
 \dontrun{
-gtfs_filtered <- gtfs_remove_routes(gtfs,remove_routes = c("route 3","route_4"))
+# Import GTFS
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+
+# filter to remove specified routes
+gtfs_filtered <- gtfs_remove_routes(gtfs,remove_routes = c("route_3","route_4"))
 }
 }

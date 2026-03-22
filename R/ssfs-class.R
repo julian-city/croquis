@@ -67,10 +67,8 @@ new_ssfs <- function(
 #'
 #' @export
 #' @examples
-#' \dontrun{
 #' # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
 #' validate_ssfs(ssfs)
-#' }
 validate_ssfs <- function(x) {
   # FUTURE IMPROVEMENT : include individual field validations, for example
   #validate that route_type is an integer within the valid range, that
@@ -214,7 +212,7 @@ print.ssfs <- function(x, ...) {
   n_itin <- nrow(x$itin)
   n_services <- nrow(x$calendar)
 
-  cat("<ssfs> Simplified Schedule and Frequency Structure\n")
+  cat("<ssfs> Simplified Speed and Frequency Structure\n")
   cat("  Agencies:     ", n_agencies, "\n")
   cat("  Routes:       ", n_routes, "\n")
   cat("  Itineraries:  ", n_itin, "\n")

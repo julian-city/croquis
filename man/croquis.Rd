@@ -21,6 +21,6 @@ Croquis: transit sketch planning Shiny app
 croquis()
 
 #Launch the app with a SSFS project pre-loaded
-croquis(ssfs)
+croquis(stm_metro)
 }
 }

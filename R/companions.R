@@ -8,6 +8,10 @@
 #' @export
 #' @examples
 #' \dontrun{
+#' # Import GTFS
+#' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+#'
+#' # filter to retain specified routes
 #' gtfs_filtered <- gtfs_retain_routes(gtfs,retain_routes = c("route_1","route_2"))
 #' }
 gtfs_retain_routes <- function(gtfs, retain_routes) {
@@ -104,7 +108,11 @@ gtfs_retain_routes <- function(gtfs, retain_routes) {
 #' @export
 #' @examples
 #' \dontrun{
-#' gtfs_filtered <- gtfs_remove_routes(gtfs,remove_routes = c("route 3","route_4"))
+#' # Import GTFS
+#' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+#'
+#' # filter to remove specified routes
+#' gtfs_filtered <- gtfs_remove_routes(gtfs,remove_routes = c("route_3","route_4"))
 #' }
 gtfs_remove_routes <- function(gtfs, remove_routes) {
   #filter out modified routes
