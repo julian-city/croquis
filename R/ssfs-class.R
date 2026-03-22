@@ -67,6 +67,10 @@ new_ssfs <- function(
 #'
 #' @export
 #' @examples
+#' \dontrun{
+#' # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
+#' validate_ssfs(ssfs)
+#' }
 validate_ssfs <- function(x) {
   # FUTURE IMPROVEMENT : include individual field validations, for example
   #validate that route_type is an integer within the valid range, that
@@ -172,9 +176,9 @@ validate_ssfs <- function(x) {
 #' @return A validated object of class `"ssfs"`.
 #'
 #' @export
-#' @examples
 ssfs <- function(agency, routes, stops, itin, stop_seq, span, hsh, calendar) {
   # this is a user-facing constructor
+  #needs an example at some point
 
   ssfs <- new_ssfs(
     agency = agency,

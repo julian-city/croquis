@@ -35,3 +35,22 @@ A ssfs list
 \description{
 Speeds calibration engine
 }
+\examples{
+\dontrun{
+# Create reference GTFS
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+
+# Apply the reference GTFS speeds to ssfs
+ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(gtfs, ssfs)
+
+# With custom parameters
+ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(
+  gtfs,
+  ssfs,
+  buffer_dist = 15,
+  dist_factor = 0.4,
+  stop_time = 12,
+  osrm_speed_adj_factor = 0.70
+)
+}
+}

@@ -17,3 +17,8 @@ An object of class 'gtfs'
 \description{
 Retain routes from GTFS
 }
+\examples{
+\dontrun{
+gtfs_filtered <- gtfs_retain_routes(gtfs,retain_routes = c("route_1","route_2"))
+}
+}

@@ -32,3 +32,27 @@ A ssfs list
 \description{
 Apply interstop matrixx to ssfs
 }
+\examples{
+\dontrun{
+# First, create an interstop speed matrix from a reference GTFS
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+interstop_matrix <- gtfs_to_interstop_matrix(
+  gtfs,
+  ssfs,
+  max_date = as.Date("2026-03-31")
+)
+
+# Apply the interstop matrix to calibrate ssfs speeds
+ssfs_calibrated <- apply_interstop_matrix_to_ssfs(ssfs, interstop_matrix)
+
+# With custom parameters
+ssfs_calibrated <- apply_interstop_matrix_to_ssfs(
+  ssfs,
+  interstop_matrix,
+  buffer_dist = 15,
+  dist_factor = 0.4,
+  stop_time = 12,
+  osrm_speed_adj_factor = 0.70
+)
+}
+}

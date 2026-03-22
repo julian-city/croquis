@@ -7,6 +7,13 @@
 #'
 #' @export
 #' @examples
+#' \dontrun{
+#' # Create a GTFS based on a SSFS
+#' gtfs <- ssfs_to_gtfs(ssfs)
+#' # Create shape_dist_traveled fields in GTFS stop_times and shapes tables
+#' # This increases processing time
+#' gtfs <- ssfs_to_gtfs(ssfs, dist_traveled = TRUE)
+#' }
 ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
   #agency and routes can simply be carried over to the final GTFS
 

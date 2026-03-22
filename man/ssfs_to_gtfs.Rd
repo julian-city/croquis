@@ -17,3 +17,12 @@ an object of class 'gtfs'
 \description{
 Convert a SSFS to a GTFS
 }
+\examples{
+\dontrun{
+# Create a GTFS based on a SSFS
+gtfs <- ssfs_to_gtfs(ssfs)
+# Create shape_dist_traveled fields in GTFS stop_times and shapes tables
+# This increases processing time
+gtfs <- ssfs_to_gtfs(ssfs, dist_traveled = TRUE)
+}
+}

@@ -19,3 +19,17 @@ An interstop speed matrix table
 \description{
 Turn GTFS into interstop speed matrix
 }
+\examples{
+\dontrun{
+# Create interstop speed matrix
+# For now, specifying a max date within the gtfs is mandatory
+# SSFS must be supplied to evaluate service structure
+# First, create an interstop speed matrix from a reference GTFS
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+interstop_matrix <- gtfs_to_interstop_matrix(
+  gtfs,
+  ssfs,
+  max_date = as.Date("2026-03-31")
+)
+}
+}

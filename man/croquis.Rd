@@ -2,10 +2,25 @@
 % Please edit documentation in R/croquis-app.R
 \name{croquis}
 \alias{croquis}
-\title{Croquis transit sketch planning Shiny app}
+\title{Croquis: transit sketch planning Shiny app}
 \usage{
-croquis()
+croquis(ssfs = NULL)
+}
+\arguments{
+\item{ssfs}{an optional SSFS to load into the app on launch. Defaults to NULL.}
+}
+\value{
+Does not inherently return anything
 }
 \description{
-Croquis transit sketch planning Shiny app
+Croquis: transit sketch planning Shiny app
+}
+\examples{
+\dontrun{
+#Launch the app to start a project from scratch or load a GTFS from within the app
+croquis()
+
+#Launch the app with a SSFS project pre-loaded
+croquis(ssfs)
+}
 }

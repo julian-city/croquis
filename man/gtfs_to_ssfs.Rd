@@ -19,3 +19,20 @@ A SSFS list
 \description{
 Convert a GTFS to a SSFS
 }
+\examples{
+\dontrun{
+# Load a GTFS file using gtfstools
+gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+
+# Convert all routes to SSFS.
+ssfs <- gtfs_to_ssfs(gtfs)
+
+# Convert specific routes only
+ssfs <- gtfs_to_ssfs(gtfs, routes = c("route_1", "route_2"))
+
+# Specify maximum date
+# By default, max_date is NULL and the gtfs_to_ssfs looks at the last 7 days of the GTFS service period
+# max_date indicates the last day of the 7 day period desired for use to build the SSFS
+ssfs <- gtfs_to_ssfs(gtfs, max_date = as.Date("2026-03-31"))
+}
+}

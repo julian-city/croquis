@@ -1,9 +1,18 @@
-#' Croquis transit sketch planning Shiny app
+#' Croquis: transit sketch planning Shiny app
 #'
-#' @returns
+#' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
+#'
+#' @returns Does not inherently return anything
 #'
 #' @export
 #' @examples
+#' \dontrun{
+#' #Launch the app to start a project from scratch or load a GTFS from within the app
+#' croquis()
+#'
+#' #Launch the app with a SSFS project pre-loaded
+#' croquis(ssfs)
+#' }
 croquis <- function(ssfs = NULL) {
   # Validate input ssfs (and change name to avoid name collision in the server)
 

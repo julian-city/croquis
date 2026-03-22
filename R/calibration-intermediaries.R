@@ -8,6 +8,18 @@
 #'
 #' @export
 #' @examples
+#' \dontrun{
+#' # Create interstop speed matrix
+#' # For now, specifying a max date within the gtfs is mandatory
+#' # SSFS must be supplied to evaluate service structure
+#' # First, create an interstop speed matrix from a reference GTFS
+#' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+#' interstop_matrix <- gtfs_to_interstop_matrix(
+#'   gtfs,
+#'   ssfs,
+#'   max_date = as.Date("2026-03-31")
+#' )
+#' }
 gtfs_to_interstop_matrix <- function(
   gtfs,
   ssfs,
@@ -345,6 +357,28 @@ gtfs_to_interstop_matrix <- function(
 #'
 #' @export
 #' @examples
+#' \dontrun{
+#' # First, create an interstop speed matrix from a reference GTFS
+#' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+#' interstop_matrix <- gtfs_to_interstop_matrix(
+#'   gtfs,
+#'   ssfs,
+#'   max_date = as.Date("2026-03-31")
+#' )
+#'
+#' # Apply the interstop matrix to calibrate ssfs speeds
+#' ssfs_calibrated <- apply_interstop_matrix_to_ssfs(ssfs, interstop_matrix)
+#'
+#' # With custom parameters
+#' ssfs_calibrated <- apply_interstop_matrix_to_ssfs(
+#'   ssfs,
+#'   interstop_matrix,
+#'   buffer_dist = 15,
+#'   dist_factor = 0.4,
+#'   stop_time = 12,
+#'   osrm_speed_adj_factor = 0.70
+#' )
+#' }
 apply_interstop_matrix_to_ssfs <- function(
   ssfs,
   interstop_matrices_by_service,

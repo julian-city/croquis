@@ -17,3 +17,8 @@ An object of class 'gtfs'
 \description{
 Remove routes from GTFS
 }
+\examples{
+\dontrun{
+gtfs_filtered <- gtfs_remove_routes(gtfs,remove_routes = c("route 3","route_4"))
+}
+}
