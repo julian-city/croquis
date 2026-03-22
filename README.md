@@ -59,30 +59,61 @@ if `sf` is not already installed. This may take several minutes.
 Once you have installed Croquis, you can launch the app to get started.
 
 ``` r
-croquis()
+croquis::croquis()
 ```
 
 Within the Croquis app, you can set the network region, create stops,
 define routes, create schedules and more in order to set up a viable
-GTFS. You can also upload an existing GTFS and edit the network and
-schedule. When you are done, you can export your project to GTFS format
-or export it to RDS so that you can import it again later and continue
-working.
+GTFS. You can also upload an existing GTFS and edit its network and
+schedule within the Croquis app. When you are done, you can export your
+project to GTFS format or export it (as a .rds file) in order to import
+it again later and continue working.
 
 The home panel of the app contains more detailed instructions on how to
 use it.
 
 ### Conversion functions
 
-Lorem ipsum dolor sit amet
+Two functions have been created to handle conversions between GTFS and
+SSFS formats: `gtfs_to_ssfs()` and `ssfs_to_gtfs()`. These are called by
+the Croquis app to handle imports and exports. You can also use them to
+view, edit and create SSFS data and GTFS data from SSFS within your
+programming environment.
+
+For now, `gtfs_to_ssfs()` requires the input GTFS to contain all
+required tables of the GTFS file format, plus `calendar`.
 
 ### Calibration engine
 
-Lorem ipsum dolor sit amet
+Using a reference GTFS, you can calibrate SSFS speeds by hour and across
+route segments to reflect real-world conditions using
+`apply_gtfs_speeds_to_ssfs()`. This will modify the speeds and speed
+factors detailed in the `ssfs$hsh` and `ssfs$stop_seq` tables of an
+SSFS.
+
+The function works by creating a temporal-spatial matrix of speeds based
+on the `stop_times` and `shapes` of the reference GTFS. The interstop
+speed matrix contains spatial data points of average speed for every
+service, every hour, and every interstop. This data is applied to adjust
+speeds of the SSFS where possible. OSRM routing is used as a fallback to
+calculate speeds for segments and times described in the SSFS that are
+not recorded in the GTFS. You can read more about the methodology of the
+calibration engine in the function documentation.
+
+`gtfs_to_interstop_matrix()` and `apply_interstop_matrix_to_ssfs()` are
+functions that, together, accomplish the same thing as
+`apply_gtfs_speeds_to_ssfs()`. They are included here for development
+and demonstration purposes. `gtfs_to_interstop_matrix()` outputs the
+interstop matrix that is used to calibrate the ssfs in
+`apply_interstop_matrix_to_ssfs()`.
 
 ### Companion functions
 
-Lorem ipsum dolor sit amet.
+Two helpful companion functions have been included for extracting GTFS
+data pertaining to a subset of routes. These are `gtfs_retain_routes()`
+and `gtfs_remove_routes()`. Both functions output a GTFS that includes
+or excludes data related to routes supplied to `retain_routes` or
+`remove_routes` arguments.
 
 ## SSFS data structure
 
@@ -97,6 +128,10 @@ When you load a GTFS into the app, `gtfs_to_ssfs()` is used to convert
 it into SSFS file format. What you are directly editing in the various
 panels of the Croquis app is the SSFS. When exporting to GTFS,
 `ssfs_to_gtfs()` is called.
+
+`croquis::ligne_jaune`, `croquis::stm_metro`, `croquis::mileend` and
+`croquis::ttcsubway` are all pre-loaded examples of SSFS data that you
+can view to better understand the data structure.
 
 ## License
 
