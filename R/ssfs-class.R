@@ -68,7 +68,11 @@ new_ssfs <- function(
 #' @export
 #' @examples
 #' # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
-#' validate_ssfs(ssfs)
+#' bad <- ligne_jaune
+#' bad$hsh <- NULL
+#' validate_ssfs(bad)
+#' # No message indicates no problem
+#' validate_ssfs(ligne_jaune)
 validate_ssfs <- function(x) {
   # FUTURE IMPROVEMENT : include individual field validations, for example
   #validate that route_type is an integer within the valid range, that
