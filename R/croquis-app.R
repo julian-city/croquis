@@ -1,6 +1,6 @@
 #' Croquis: transit sketch planning Shiny app
 #'
-#' Launches the Croquis shiny app
+#' Launches the Croquis Shiny app
 #'
 #' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
 #'
@@ -2379,7 +2379,7 @@ croquis <- function(ssfs = NULL) {
         {
           loaded_gtfs <- gtfstools::read_gtfs(input$load_gtfs$datapath)
 
-          loaded_ssfs <- gtfs_to_ssfs(loaded_gtfs)
+          loaded_ssfs <- croquis::gtfs_to_ssfs(loaded_gtfs)
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
@@ -2467,7 +2467,7 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_metro_ssfs, {
       tryCatch(
         {
-          loaded_ssfs <- stm_metro
+          loaded_ssfs <- croquis::stm_metro
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
@@ -2506,7 +2506,7 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_mileend_ssfs, {
       tryCatch(
         {
-          loaded_ssfs <- mileend
+          loaded_ssfs <- croquis::mileend
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
@@ -2545,7 +2545,7 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_ttcsubway_ssfs, {
       tryCatch(
         {
-          loaded_ssfs <- ttc_subway
+          loaded_ssfs <- croquis::ttc_subway
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
@@ -8679,7 +8679,7 @@ croquis <- function(ssfs = NULL) {
           current_ssfs$calendar |>
           mutate(start_date = as.Date(start_date), end_date = as.Date(end_date))
 
-        current_gtfs <- ssfs_to_gtfs(
+        current_gtfs <- croquis::ssfs_to_gtfs(
           current_ssfs,
           dist_traveled = input$include_dist_traveled
         )
