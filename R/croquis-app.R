@@ -1065,8 +1065,10 @@ croquis <- function(ssfs = NULL) {
     #Module architecture
     navbarPage(
       title = "Croquis",
-      tags$script(
-        "
+      # div for the theme toggle
+      header = tagList(
+        tags$script(
+          "
     $(document).on('keydown', function(e) {
       if (e.key === 'Backspace') {
         var tag = e.target.tagName.toLowerCase();
@@ -1077,15 +1079,15 @@ croquis <- function(ssfs = NULL) {
       }
     });
   "
-      ),
-      # div for the theme toggle
-      header = div(
-        style = "position: absolute; right: 10px; top: 10px; z-index: 1000;",
-        tags$button(
-          id = "theme-toggle",
-          onclick = "toggleTheme()",
-          class = "btn btn-default btn-sm",
-          htmltools::HTML("&#9680;")
+        ),
+        div(
+          style = "position: absolute; right: 10px; top: 10px; z-index: 1000;",
+          tags$button(
+            id = "theme-toggle",
+            onclick = "toggleTheme()",
+            class = "btn btn-default btn-sm",
+            htmltools::HTML("&#9680;")
+          )
         )
       ),
 
@@ -2426,7 +2428,7 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$load_yellowline_ssfs, {
       tryCatch(
         {
-          loaded_ssfs <- ligne_jaune
+          loaded_ssfs <- croquis::ligne_jaune
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
