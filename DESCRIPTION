@@ -18,6 +18,7 @@ Imports:
     gtfstools,
     htmltools,
     htmlwidgets,
+    ISOcodes,
     leaflet,
     lubridate,
     osrm,

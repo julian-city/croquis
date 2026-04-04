@@ -2107,6 +2107,58 @@ croquis <- function(ssfs = NULL) {
             )
           )
         )
+      ),
+
+      #settings tab
+      tabPanel(
+        tags$span(icon("gear")),
+        fluidPage(
+          titlePanel("settings"),
+          wellPanel(
+            h3("Feed info"),
+            textInput(
+              "fi_feed_publisher_name",
+              label = tagList(
+                "Publisher name",
+                info_popover(
+                  "Full name of the organization that publishes the feed.",
+                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                )
+              ),
+              value = "Comotive"
+            ),
+            textInput(
+              "fi_feed_publisher_url",
+              label = tagList(
+                "Publisher URL",
+                info_popover(
+                  "URL of the feed publishing organization's website.",
+                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                )
+              ),
+              value = "https://www.comotive.net"
+            ),
+            selectInput(
+              "fi_feed_lang",
+              label = tagList(
+                "Feed language",
+                info_popover(
+                  "Default language used for text in this dataset (IETF BCP 47 language code).",
+                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                )
+              ),
+              choices = local({
+                lc <- ISOcodes::ISO_639_2[!is.na(ISOcodes::ISO_639_2$Alpha_2), ]
+                ch <- stats::setNames(
+                  lc$Alpha_2,
+                  paste0(lc$Name, " (", lc$Alpha_2, ")")
+                )
+                ch[order(names(ch))]
+              }),
+              selected = "en"
+            )
+          )
+        )
       )
     )
   )
@@ -2194,9 +2246,6 @@ croquis <- function(ssfs = NULL) {
     #for versions of R > 4.0
 
     #reactive values for cities db and agency info on home page / in gtfs
-
-    # Cities database (bundled as internal package data)
-    cities_data <- reactiveVal(cities_db)
 
     # Reactive values for map center and agency info
     map_center <- reactiveVal(
@@ -2587,50 +2636,45 @@ croquis <- function(ssfs = NULL) {
 
     # City search autocomplete
     observeEvent(input$city_search, {
-      if (!is.null(cities_data()) && nrow(cities_data()) > 0) {
-        search_term <- input$city_search
+      search_term <- input$city_search
 
-        if (nchar(search_term) >= 2) {
-          # Filter cities that match the search term (case insensitive)
-          #matches <- cities_data()[grepl(search_term, cities_data()$name, ignore.case = TRUE), ]
+      if (nchar(search_term) >= 2) {
+        matches <- cities_db |>
+          filter(stringr::str_detect(
+            tolower(name),
+            tolower(stringr::str_escape(search_term))
+          ))
 
-          matches <- cities_data() |>
-            filter(stringr::str_detect(
-              tolower(name),
-              tolower(stringr::str_escape(search_term))
-            ))
+        if (nrow(matches) > 0 && nrow(matches) <= 10) {
+          # Show suggestions if we have 1-10 matches
+          filtered_cities(matches)
 
-          if (nrow(matches) > 0 && nrow(matches) <= 10) {
-            # Show suggestions if we have 1-10 matches
-            filtered_cities(matches)
+          # Create suggestion HTML
+          suggestions_html <- paste0(
+            "<div style='padding: 5px; cursor: pointer; border-bottom: 1px solid #eee;' ",
+            "onclick='selectCity(\"",
+            matches$name,
+            "\")'>",
+            matches$name,
+            "</div>",
+            collapse = ""
+          )
 
-            # Create suggestion HTML
-            suggestions_html <- paste0(
-              "<div style='padding: 5px; cursor: pointer; border-bottom: 1px solid #eee;' ",
-              "onclick='selectCity(\"",
-              matches$name,
-              "\")'>",
-              matches$name,
-              "</div>",
-              collapse = ""
-            )
-
-            # Show suggestions dropdown
-            session$sendCustomMessage("showSuggestions", suggestions_html)
-          } else if (nrow(matches) == 1) {
-            # Exactly one match - hide suggestions
-            session$sendCustomMessage("hideSuggestions", "")
-            filtered_cities(matches)
-          } else {
-            # No matches or too many matches
-            session$sendCustomMessage("hideSuggestions", "")
-            filtered_cities(data.frame())
-          }
+          # Show suggestions dropdown
+          session$sendCustomMessage("showSuggestions", suggestions_html)
+        } else if (nrow(matches) == 1) {
+          # Exactly one match - hide suggestions
+          session$sendCustomMessage("hideSuggestions", "")
+          filtered_cities(matches)
         } else {
-          # Search term too short
+          # No matches or too many matches
           session$sendCustomMessage("hideSuggestions", "")
           filtered_cities(data.frame())
         }
+      } else {
+        # Search term too short
+        session$sendCustomMessage("hideSuggestions", "")
+        filtered_cities(data.frame())
       }
     })
 
@@ -2651,14 +2695,9 @@ croquis <- function(ssfs = NULL) {
         return()
       }
 
-      if (is.null(cities_data()) || nrow(cities_data()) == 0) {
-        showNotification("Cities database not loaded", type = "error")
-        return()
-      }
-
       # Find exact matches (case insensitive)
-      exact_matches <- cities_data()[
-        tolower(cities_data()$name) == tolower(search_term),
+      exact_matches <- cities_db[
+        tolower(cities_db$name) == tolower(search_term),
       ]
 
       if (nrow(exact_matches) == 0) {
@@ -8682,6 +8721,13 @@ croquis <- function(ssfs = NULL) {
         current_gtfs <- croquis::ssfs_to_gtfs(
           current_ssfs,
           dist_traveled = input$include_dist_traveled
+        )
+
+        # Add feed info details that are specified in the Settings tab.
+        current_gtfs$feed_info <- data.table(
+          feed_publisher_name = input$fi_feed_publisher_name,
+          feed_publisher_url = input$fi_feed_publisher_url,
+          feed_lang = input$fi_feed_lang
         )
 
         gtfstools::write_gtfs(current_gtfs, file)
