@@ -28,7 +28,7 @@ for sketch planning workflows.
 gtfs <- ssfs_to_gtfs(stm_metro)
 
 # Convert the GTFS back to SSFS
-ssfs <- gtfs_to_ssfs(stm_metro)
+ssfs <- gtfs_to_ssfs(gtfs)
 
 # Convert specific routes only
 ssfs <- gtfs_to_ssfs(stm_metro, routes = c("1","2"))

@@ -68,12 +68,14 @@ new_ssfs <- function(
 #' @export
 #' @examples
 #' # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
+#' \dontrun{
 #' bad <- ligne_jaune
 #' bad$hsh <- NULL
 #' validate_ssfs(bad)
-#' # No message indicates no problem
-#' validate_ssfs(ligne_jaune)
-validate_ssfs <- function(x) {
+#' }
+#' # "ssfs is valid." message appears if ssfs is valid
+#' validate_ssfs(ligne_jaune,verbose=TRUE)
+validate_ssfs <- function(x, verbose = TRUE) {
   # FUTURE IMPROVEMENT : include individual field validations, for example
   #validate that route_type is an integer within the valid range, that
   #monday through sunday in calendar are integers of either 0 or 1
@@ -164,6 +166,10 @@ validate_ssfs <- function(x) {
     stop("ssfs$itin must be an sf object.", call. = FALSE)
   }
 
+  # Display message that ssfs is valid if verbose = TRUE
+  if (verbose) {
+    cli::cli_alert_success("ssfs is valid.")
+  }
   invisible(x)
 }
 
@@ -193,7 +199,7 @@ ssfs <- function(agency, routes, stops, itin, stop_seq, span, hsh, calendar) {
     calendar = calendar
   )
 
-  validate_ssfs(ssfs)
+  validate_ssfs(ssfs, verbose = FALSE)
 
   ssfs
 }

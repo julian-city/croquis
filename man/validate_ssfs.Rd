@@ -4,7 +4,7 @@
 \alias{validate_ssfs}
 \title{Validate an ssfs object}
 \usage{
-validate_ssfs(x)
+validate_ssfs(x, verbose = TRUE)
 }
 \arguments{
 \item{x}{An object to validate, typically created by \code{\link[=new_ssfs]{new_ssfs()}} or
@@ -20,9 +20,11 @@ valid; throws an informative error otherwise.
 }
 \examples{
 # Run validation. Console messages will indicate missing tables, missing vectors (columns), or incorrect class / data type
+\dontrun{
 bad <- ligne_jaune
 bad$hsh <- NULL
 validate_ssfs(bad)
-# No message indicates no problem
-validate_ssfs(ligne_jaune)
+}
+# "ssfs is valid." message appears if ssfs is valid
+validate_ssfs(ligne_jaune,verbose=TRUE)
 }

@@ -21,7 +21,7 @@ croquis <- function(ssfs = NULL) {
   input_ssfs <- NULL
 
   if (!is.null(ssfs)) {
-    validate_ssfs(ssfs) # throws informative error if invalid
+    validate_ssfs(ssfs, verbose = FALSE) # throws informative error if invalid
     input_ssfs <- ssfs
   }
 
@@ -2327,7 +2327,7 @@ croquis <- function(ssfs = NULL) {
         {
           loaded_ssfs <- readRDS(input$load_ssfs$datapath)
 
-          validate_ssfs(loaded_ssfs)
+          validate_ssfs(loaded_ssfs, verbose = FALSE)
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
