@@ -213,7 +213,10 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
     select(service_combo_id, start_date, end_date) |>
     group_by(service_combo_id) |>
     summarise(start_date = min(start_date), end_date = max(end_date)) |>
-    left_join(service_combos |> select(-service_combo)) |>
+    left_join(
+      service_combos |> select(-service_combo),
+      by = "service_combo_id"
+    ) |>
     rename(service_id = service_combo_id)
 
   calendar <-
