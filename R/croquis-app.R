@@ -1093,10 +1093,10 @@ croquis <- function(ssfs = NULL) {
 
       #home tab
       tabPanel(
-        tags$span(htmltools::HTML("&#127968;")),
+        tags$span(icon("house")),
         #unicode house emoji
         fluidPage(
-          titlePanel("Create or edit a GTFS"),
+          titlePanel("Home"),
 
           #Info
           wellPanel(
@@ -1116,6 +1116,30 @@ croquis <- function(ssfs = NULL) {
             p(htmltools::HTML(
               "<a href='https://julian.city' target='_blank'>Get in touch</a>"
             ))
+          ),
+
+          # Upload sample transit systems
+          wellPanel(
+            h3("Load a sample transit network"),
+            p(
+              "To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works."
+            ),
+            actionButton(
+              "load_yellowline_ssfs",
+              "STM Ligne Jaune",
+              class = "btn-success"
+            ),
+            actionButton("load_metro_ssfs", "STM Metro", class = "btn-success"),
+            actionButton(
+              "load_mileend_ssfs",
+              "STM Mile-End bus network",
+              class = "btn-success"
+            ),
+            actionButton(
+              "load_ttcsubway_ssfs",
+              "TTC Subway",
+              class = "btn-success"
+            )
           ),
 
           # ssfs upload section
@@ -1151,30 +1175,6 @@ croquis <- function(ssfs = NULL) {
             ),
             tags$small(
               "Uploading a gtfs here will convert it to an editable format in Croquis"
-            )
-          ),
-
-          # Upload sample transit systems
-          wellPanel(
-            h3("Load a sample transit network"),
-            p(
-              "To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works."
-            ),
-            actionButton(
-              "load_yellowline_ssfs",
-              "STM Ligne Jaune",
-              class = "btn-success"
-            ),
-            actionButton("load_metro_ssfs", "STM Metro", class = "btn-success"),
-            actionButton(
-              "load_mileend_ssfs",
-              "STM Mile-End bus network",
-              class = "btn-success"
-            ),
-            actionButton(
-              "load_ttcsubway_ssfs",
-              "TTC Subway",
-              class = "btn-success"
             )
           ),
 
@@ -3980,6 +3980,9 @@ croquis <- function(ssfs = NULL) {
     itin_editing_id <- reactiveVal(NULL) # itin_id being edited in panel
     itin_adding_for_route <- reactiveVal(NULL) # route_id for which we're adding a new itin
 
+    # itin ids highlighted on map
+    highlighted_itin_ids <- reactiveVal(character(0))
+
     # Render editing instruction for route itinerary drawing
     output$routes_editing_instruction <- renderUI({
       is_editing <- !is.null(active_itin_id()) &&
@@ -4626,10 +4629,19 @@ croquis <- function(ssfs = NULL) {
     # Toggle expand/collapse
     observeEvent(input$route_list_toggle_expand, {
       route_id <- input$route_list_toggle_expand$id
+      current_data <- ssfs()
+
       if (!is.null(routes_expanded_id()) && routes_expanded_id() == route_id) {
+        # Collapsing — clear highlight
         routes_expanded_id(NULL)
+        highlighted_itin_ids(character(0))
       } else {
+        # Expanding — highlight all itineraries of this route
         routes_expanded_id(route_id)
+        route_itin_ids <- current_data$itin$itin_id[
+          current_data$itin$route_id == route_id
+        ]
+        highlighted_itin_ids(route_itin_ids)
       }
     })
 
@@ -4801,6 +4813,9 @@ croquis <- function(ssfs = NULL) {
             lat2 = bbox[["ymax"]]
           )
       }
+
+      # Highlight just this itinerary
+      highlighted_itin_ids(itin_id)
     })
 
     # Edit itinerary (pencil icon) : loads it for map editing and displays inline edit
@@ -4821,6 +4836,9 @@ croquis <- function(ssfs = NULL) {
       editing_existing_itin(TRUE)
       itin_editing_id(itin_id) # THIS shows the inline edit form
       itin_adding_for_route(NULL)
+
+      # clear any highlighted itin ids if any
+      highlighted_itin_ids(character(0))
 
       # Set the active reactive values
       active_route_id(selected_itin$route_id)
@@ -4919,6 +4937,9 @@ croquis <- function(ssfs = NULL) {
 
       # Clear any current editing state
       clearInputs()
+
+      # clear any highlighted itin ids
+      highlighted_itin_ids(character(0))
 
       # Set the active route and default direction
       active_route_id(route_id)
@@ -5441,7 +5462,27 @@ croquis <- function(ssfs = NULL) {
         leaflet::clearGroup("stops") |>
         leaflet::clearGroup("routes") |>
         leaflet::clearGroup("current_route") |>
-        leaflet::clearGroup("route_nodes")
+        leaflet::clearGroup("route_nodes") |>
+        leaflet::clearGroup("highlight")
+
+      # Draw highlight underlay for selected itineraries
+      hl_ids <- highlighted_itin_ids()
+      if (length(hl_ids) > 0 && nrow(current_data$itin) > 0) {
+        hl_itins <- current_data$itin[current_data$itin$itin_id %in% hl_ids, ]
+        for (j in seq_len(nrow(hl_itins))) {
+          hl_coords <- st_coordinates(hl_itins$geometry[j])
+          proxy <- proxy |>
+            leaflet::addPolylines(
+              lng = hl_coords[, 1],
+              lat = hl_coords[, 2],
+              group = "highlight",
+              color = "#FFE999",
+              weight = 10,
+              opacity = 0.4,
+              stroke = TRUE
+            )
+        }
+      }
 
       # Add existing routes (except current one being edited)
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
@@ -6540,6 +6581,9 @@ croquis <- function(ssfs = NULL) {
         if (length(nearby_idx) == 0) {
           leaflet::leafletProxy("routes_map") |>
             leaflet::clearPopups()
+
+          #clear highlighted itin ids if any
+          highlighted_itin_ids(character(0))
           return()
         }
 
@@ -6632,6 +6676,9 @@ croquis <- function(ssfs = NULL) {
               maxWidth = 300
             )
           )
+
+        # Set highlight to the nearby itineraries that triggered the popup
+        highlighted_itin_ids(nearby_itins$itin_id)
       }
     })
 
