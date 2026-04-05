@@ -937,6 +937,12 @@ croquis <- function(ssfs = NULL) {
     Shiny.setInputValue('route_list_edit_click', {id: routeId, ts: Math.random()}, {priority: 'event'});
   }
 
+  // Duplicate route
+  function copyRouteFromList(routeId) {
+  Shiny.setInputValue('route_list_copy_click', 
+    {id: routeId, ts: Math.random()}, {priority: 'event'});
+  }
+
   // Delete route (trash icon on route row)
   function deleteRouteFromList(routeId) {
     if (confirm('Delete this route? Itineraries must be deleted first.')) {
@@ -4376,6 +4382,15 @@ croquis <- function(ssfs = NULL) {
                   htmltools::HTML("&#9998;")
                 ),
                 tags$button(
+                  class = "route-action-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); copyRouteFromList('%s')",
+                    route$route_id
+                  ),
+                  title = "Duplicate route",
+                  htmltools::HTML('<i class="fa-solid fa-clone"></i>')
+                ),
+                tags$button(
                   class = "route-action-btn delete-btn",
                   onclick = sprintf(
                     "event.stopPropagation(); deleteRouteFromList('%s')",
@@ -4655,6 +4670,105 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$route_list_edit_click, {
       routes_editing_id(input$route_list_edit_click$id)
       routes_adding_new(FALSE)
+    })
+
+    # Duplicate route (copy icon)
+    observeEvent(input$route_list_copy_click, {
+      route_to_copy <- input$route_list_copy_click$id
+      current_data <- ssfs()
+
+      # source route: row of route to copy from routes tables
+      source_route <- current_data$routes[
+        current_data$routes$route_id == route_to_copy,
+      ]
+
+      # Generate new route_id with "b" suffix, incrementing if needed
+      new_route_id <- paste0(route_to_copy, "b")
+      while (new_route_id %in% current_data$routes$route_id) {
+        new_route_id <- paste0(new_route_id, "b")
+      }
+      # this suffix assignment handles the case where two or more "b"s were added
+      # in order to add the right number of "b"s to route short name
+      suffix <- sub(
+        paste0("^", route_to_copy),
+        "",
+        new_route_id
+      )
+
+      # 1. Duplicate route row
+      new_route <- source_route
+      new_route$route_id <- new_route_id
+      new_route$route_short_name <- paste0(
+        source_route$route_short_name,
+        suffix
+      )
+      current_data$routes <- rbind(current_data$routes, new_route)
+
+      # 2. Duplicate itineraries and build itin_id mapping
+      source_itins <- current_data$itin[
+        current_data$itin$route_id == route_to_copy,
+      ]
+
+      # Duplicate itineraries and associated data, if any
+      if (nrow(source_itins) > 0) {
+        new_itins <- source_itins
+        new_itins$route_id <- new_route_id
+
+        # Build old -> new itin_id mapping
+        # e.g. "14_0_1" -> "14b_0_1"
+        itin_id_map <- setNames(
+          sub(
+            paste0("^", route_to_copy),
+            new_route_id,
+            source_itins$itin_id
+          ),
+          source_itins$itin_id
+        )
+        new_itins$itin_id <- unname(itin_id_map[new_itins$itin_id])
+
+        current_data$itin <- rbind(current_data$itin, new_itins)
+
+        # 3. Duplicate stop_seq
+        old_itin_ids <- names(itin_id_map)
+        source_stop_seq <- current_data$stop_seq[
+          current_data$stop_seq$itin_id %in% old_itin_ids,
+        ]
+        if (nrow(source_stop_seq) > 0) {
+          new_stop_seq <- source_stop_seq
+          new_stop_seq$itin_id <- itin_id_map[new_stop_seq$itin_id]
+          current_data$stop_seq <- rbind(current_data$stop_seq, new_stop_seq)
+        }
+
+        # 4. Duplicate span
+        source_span <- current_data$span[
+          current_data$span$itin_id %in% old_itin_ids,
+        ]
+        if (nrow(source_span) > 0) {
+          new_span <- source_span
+          new_span$itin_id <- itin_id_map[new_span$itin_id]
+          current_data$span <- rbind(current_data$span, new_span)
+        }
+
+        # 5. Duplicate hsh
+        source_hsh <- current_data$hsh[
+          current_data$hsh$itin_id %in% old_itin_ids,
+        ]
+        if (nrow(source_hsh) > 0) {
+          new_hsh <- source_hsh
+          new_hsh$itin_id <- itin_id_map[new_hsh$itin_id]
+          current_data$hsh <- rbind(current_data$hsh, new_hsh)
+        }
+      }
+
+      ssfs(current_data)
+
+      # Expand the new route to show the duplicated itineraries
+      routes_expanded_id(new_route_id)
+
+      showNotification(
+        paste("Duplicated route as:", new_route_id),
+        type = "message"
+      )
     })
 
     # Cancel route edit
