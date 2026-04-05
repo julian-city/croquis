@@ -4391,6 +4391,9 @@ croquis <- function(ssfs = NULL) {
               current_data$itin$route_id == route$route_id,
             ]
 
+            # ensures that itin ids always stay in the same order
+            route_itins <- route_itins[order(route_itins$itin_id), ]
+
             itin_rows <- list()
 
             # "Add itinerary" row at top of sub-list
@@ -4440,10 +4443,10 @@ croquis <- function(ssfs = NULL) {
                   '<select id="inline_direction_id" onchange="onDirectionChanged()">',
                   '<option value="0"',
                   dir_sel_0,
-                  '>0</option>',
+                  '>Outbound</option>',
                   '<option value="1"',
                   dir_sel_1,
-                  '>1</option>',
+                  '>Inbound</option>',
                   '</select>'
                 )),
                 tags$label("Trip Headsign"),
@@ -4524,10 +4527,10 @@ croquis <- function(ssfs = NULL) {
                       '<select id="inline_direction_id" onchange="onDirectionChanged()">',
                       '<option value="0"',
                       dir_sel_0,
-                      '>0</option>',
+                      '>Outbound</option>',
                       '<option value="1"',
                       dir_sel_1,
-                      '>1</option>',
+                      '>Inbound</option>',
                       '</select>'
                     )),
                     tags$label("Trip Headsign"),
@@ -4559,7 +4562,7 @@ croquis <- function(ssfs = NULL) {
                     onclick = sprintf("viewItinFromList('%s')", itin$itin_id),
                     span(
                       class = "itin-direction-badge",
-                      paste0("D", itin$direction_id)
+                      if (as.integer(itin$direction_id) == 0) "Out" else "In"
                     ),
                     div(
                       class = "itin-info",
@@ -6542,13 +6545,16 @@ croquis <- function(ssfs = NULL) {
 
         nearby_itins <- current_data$itin[nearby_idx, ]
 
-        # Build popup content
-        popup_lines <- vapply(
+        # Group itineraries by route_id
+        route_groups <- split(
           seq_len(nrow(nearby_itins)),
-          function(j) {
-            rid <- nearby_itins$route_id[j]
-            iid <- nearby_itins$itin_id[j]
+          nearby_itins$route_id
+        )
 
+        popup_sections <- vapply(
+          names(route_groups),
+          function(rid) {
+            idxs <- route_groups[[rid]]
             route_row <- current_data$routes[
               current_data$routes$route_id == rid,
             ]
@@ -6574,16 +6580,23 @@ croquis <- function(ssfs = NULL) {
               "#05AEEF"
             }
 
-            headsign <- nearby_itins$trip_headsign[j]
-            headsign_text <- if (
-              !is.null(headsign) &&
-                !is.na(headsign) &&
-                nchar(trimws(headsign)) > 0
-            ) {
-              paste0(" - ", htmltools::htmlEscape(trimws(headsign)))
-            } else {
-              ""
-            }
+            # Build itinerary lines
+            itin_lines <- vapply(
+              idxs,
+              function(j) {
+                iid <- htmltools::htmlEscape(nearby_itins$itin_id[j])
+                headsign <- nearby_itins$trip_headsign[j]
+                headsign_text <- if (
+                  !is.na(headsign) && nchar(trimws(headsign)) > 0
+                ) {
+                  paste0(" - ", htmltools::htmlEscape(trimws(headsign)))
+                } else {
+                  ""
+                }
+                paste0(iid, headsign_text)
+              },
+              character(1)
+            )
 
             paste0(
               "<span style='color:",
@@ -6595,8 +6608,7 @@ croquis <- function(ssfs = NULL) {
               long_name,
               "</b>",
               "<br><span style='font-size:10px; color:grey;'>",
-              htmltools::htmlEscape(iid),
-              headsign_text,
+              paste(itin_lines, collapse = "<br>"),
               "</span>"
             )
           },
@@ -6605,7 +6617,7 @@ croquis <- function(ssfs = NULL) {
 
         popup_html <- paste0(
           "<div style='font-size:11px; line-height:1.6;'>",
-          paste(popup_lines, collapse = "<hr style='margin:4px 0;'>"),
+          paste(popup_sections, collapse = "<hr style='margin:4px 0;'>"),
           "</div>"
         )
 
