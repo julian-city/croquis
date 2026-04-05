@@ -2156,6 +2156,28 @@ croquis <- function(ssfs = NULL) {
                 ch[order(names(ch))]
               }),
               selected = "en"
+            ),
+            textInput(
+              "fi_feed_contact_email",
+              label = tagList(
+                "Contact email",
+                info_popover(
+                  "Email address for communication regarding the GTFS dataset and data publishing practices.",
+                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                )
+              ),
+              value = "contact@julian.city"
+            ),
+            textInput(
+              "fi_feed_version",
+              label = tagList(
+                "Version",
+                info_popover(
+                  "String that indicates the current version of their GTFS dataset.",
+                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                )
+              ),
+              value = paste0("v", Sys.Date())
             )
           )
         )
