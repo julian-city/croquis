@@ -5456,6 +5456,7 @@ croquis <- function(ssfs = NULL) {
           # Get route info from routes table
           route_id_i <- current_data$itin$route_id[i]
           itin_id_i <- current_data$itin$itin_id[i]
+          trip_headsign_i <- current_data$itin$trip_headsign[i]
 
           route_row <- current_data$routes[
             current_data$routes$route_id == route_id_i,
@@ -5476,8 +5477,15 @@ croquis <- function(ssfs = NULL) {
           # Build route display name
           route_display <- paste0(
             htmltools::htmlEscape(route_short),
-            " \u2014 ",
+            " - ",
             htmltools::htmlEscape(route_long)
+          )
+
+          # Build itinerary display name
+          itinerary_display <- paste0(
+            htmltools::htmlEscape(itin_id_i),
+            " - ",
+            htmltools::htmlEscape(trip_headsign_i)
           )
 
           # Build hover label
@@ -5487,7 +5495,7 @@ croquis <- function(ssfs = NULL) {
             route_display,
             "</b>",
             "<br>Itinerary: ",
-            htmltools::htmlEscape(itin_id_i),
+            itinerary_display,
             "</span>"
           ))
 
@@ -6028,351 +6036,412 @@ croquis <- function(ssfs = NULL) {
 
     # Map click handler
     observeEvent(input$routes_map_click, {
-      req(active_itin_id())
-
-      # Check if this map click is too close in time to a marker click
-      current_time <- as.numeric(Sys.time())
-      time_since_marker_click <- current_time - last_marker_click_time()
-
-      # If a marker was clicked within the last 100ms, ignore this map click
-      if (time_since_marker_click < 0.1) {
-        return()
-      }
-
       click <- input$routes_map_click
-      curr_nodes <- route_nodes()
-      curr_points <- route_points()
 
-      #a waypoint is selected for movement : move it to the clicked location
-      #and update route points and route nodes
-      #based on the number of current nodes
-      if (!is.null(selected_point_index())) {
-        # Move the selected node to the new location
-        idx <- which(curr_nodes$node_id == selected_point_index())
+      # EDITING MODE : if there is an active itinerary
+      if (!is.null(active_itin_id())) {
+        # Check if this map click is too close in time to a marker click
+        current_time <- as.numeric(Sys.time())
+        time_since_marker_click <- current_time - last_marker_click_time()
 
-        #only one node and it is moved, replace its geo coords
-        if (nrow(curr_nodes) == 1) {
-          curr_nodes$lat <- click$lat
-          curr_nodes$lng <- click$lng
-
-          curr_points$lat <- click$lat
-          curr_points$lng <- click$lng
-
-          #More than one node but the first node is selected for movement
-        } else if (idx == 1) {
-          #remove and replace the first segment of points
-
-          #how many points in the first segment before the point move?
-          nb_points_before <- curr_nodes[2, ]$index - 1
-
-          #recreate new first segment based on new position of first point
-          from_point <- c(click$lng, click$lat)
-          to_point <- c(curr_nodes[2, ]$lng, curr_nodes[2, ]$lat)
-
-          new_segment <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode
-          )
-
-          #new points to be used to replace previous points
-          new_points <-
-            new_segment[1:(nrow(new_segment) - 1), ] |> #EXCLUDING the last point,
-            #which is included in the retained segment
-            mutate(index = row_number(), .before = "lng")
-
-          #nrow(new_points) is used for the new number of points
-
-          adj_index <- nrow(new_points) - nb_points_before
-
-          #define retained points
-          curr_points <-
-            rbind(
-              new_points,
-              curr_points[(nb_points_before + 1):nrow(curr_points), ] |>
-                mutate(index = index + adj_index)
-            )
-
-          #rename rows..
-          row.names(curr_points) <- 1:nrow(curr_points)
-
-          #this part will need to be reworked to handle various cases related to stop status...
-          curr_nodes[1, ]$lng <- click$lng
-          curr_nodes[1, ]$lat <- click$lat
-
-          curr_nodes <-
-            rbind(
-              curr_nodes[1, ],
-              curr_nodes[2:nrow(curr_nodes), ] |>
-                mutate(index = index + adj_index)
-            )
-
-          #the selected node is the last node
-        } else if (idx == nrow(curr_nodes)) {
-          #recreate new last segment based on new position of last point
-          from_point <- c(curr_nodes[idx - 1, ]$lng, curr_nodes[idx - 1, ]$lat)
-          to_point <- c(click$lng, click$lat)
-
-          new_segment <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode
-          )
-
-          #points in retained segment
-
-          nb_points_retained <-
-            curr_nodes[idx - 1, ]$index
-
-          #new points to be used to replace previous points
-          new_points <-
-            new_segment[2:(nrow(new_segment)), ] |> #EXCLUDING the first point,
-            #which is included in the retained segment
-            mutate(index = row_number() + nb_points_retained, .before = "lng")
-
-          #define new curr points
-          curr_points <-
-            rbind(
-              curr_points[1:nb_points_retained, ],
-              new_points
-            )
-
-          #rename rows..
-          row.names(curr_points) <- 1:nrow(curr_points)
-
-          #this part will need to be reworked to handle various cases related to stop status...
-          curr_nodes[idx, ]$lng <- click$lng
-          curr_nodes[idx, ]$lat <- click$lat
-          curr_nodes[idx, ]$index <- max(curr_points$index)
-
-          #move node selected for movement mid-route
-        } else {
-          before_idx <- idx - 1
-          after_idx <- idx + 1
-
-          #divide the nodes and route points into segments a, b, c and d
-          #segments b and c (before and after the selected point that is moved to a new point)
-          #will be calculated later
-          #index values in segment d need to be adjusted based on the difference of
-          #segment bc before and after
-
-          #segment A :
-          nodes_a <- curr_nodes[1:before_idx, ]
-          nodes_a_idx_max <- max(nodes_a$index)
-
-          points_a <- curr_points[1:nodes_a_idx_max, ]
-
-          #segment D :
-          nodes_d <- curr_nodes[after_idx:nrow(curr_nodes), ]
-          nodes_d_idx_min <- min(nodes_d$index)
-
-          points_d <- curr_points[nodes_d_idx_min:nrow(curr_points), ]
-
-          #number of points in BC before :
-          nb_points_bc_before <-
-            min(points_d$index) - max(points_a$index) - 1
-          #specifically the points BETWEEN segments a and d,
-          #excluding the last point of a and the first point of d
-
-          #generate segment B
-
-          #from the end of segment a to the new stop
-          from_point <- c(
-            curr_nodes[before_idx, ]$lng,
-            curr_nodes[before_idx, ]$lat
-          )
-          to_point <- c(click$lng, click$lat)
-
-          segment_b <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode
-          )
-
-          #EXCLUDING the first point which is included in points_a
-          points_b <-
-            segment_b[2:nrow(segment_b), ] |>
-            mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
-
-          #point b index max will be the new index value for the moved node AND added stop
-          #and will serve to adjust the index values of points_d and nodes_d
-
-          points_b_idx_max <-
-            max(points_b$index)
-
-          #generate segment C
-
-          #from new stop to beginning of segment d
-
-          from_point <- c(click$lng, click$lat)
-          to_point <- c(
-            curr_nodes[after_idx, ]$lng,
-            curr_nodes[after_idx, ]$lat
-          )
-
-          segment_c <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode
-          )
-
-          points_c <-
-            segment_c[2:(nrow(segment_c) - 1), ] |> #EXCLUDING the first and the last point,
-            #which are included in the other segments already
-            mutate(index = row_number() + points_b_idx_max, .before = "lng")
-
-          points_bc <- rbind(points_b, points_c)
-
-          #adjust index values for points and nodes d :
-
-          nb_points_bc_after <- nrow(points_bc)
-
-          adj_index_d <- nb_points_bc_after - nb_points_bc_before
-          #this will help add or subtract from the index values, depending on if the new segment bc
-          #has more or fewer points than the old segment bc
-
-          points_d <-
-            points_d |>
-            mutate(index = index + adj_index_d)
-
-          nodes_d <-
-            nodes_d |>
-            mutate(index = index + adj_index_d)
-          #called nodes_d but it's really just the third set of nodes
-          #nodes_a, new node, and nodes_d
-
-          node_bc <-
-            data.frame(
-              node_id = idx,
-              lng = click$lng,
-              lat = click$lat,
-              is_stop = FALSE, #this is a waypoint if it's selected and being moved
-              #not possible to select a stop node for movement
-              stop_id = "",
-              stop_name = "",
-              speed_factor = NA_real_, #setting speed factor to na_real_
-              index = points_b_idx_max
-            )
-
-          #reconstitute curr_points and curr_nodes
-
-          curr_points <-
-            rbind(points_a, points_b, points_c, points_d)
-
-          curr_nodes <-
-            rbind(nodes_a, node_bc, nodes_d)
-
-          #rename rows for good form
-          row.names(curr_points) <- 1:nrow(curr_points)
-          row.names(curr_nodes) <- 1:nrow(curr_nodes)
+        # If a marker was clicked within the last 100ms, ignore this map click
+        if (time_since_marker_click < 0.1) {
+          return()
         }
 
-        #reactive value update, notification, reset selected point index to null
-        route_points(curr_points)
-        route_nodes(curr_nodes)
-        selected_point_index(NULL) # Reset selection
-        showNotification("Waypoint moved", type = "message")
-      } else if (nrow(curr_nodes) >= 1) {
-        if (nrow(curr_nodes) >= 2) {
-          #check if click is near a segment, and if so, add point along segment
+        curr_nodes <- route_nodes()
+        curr_points <- route_points()
 
-          point_added <- FALSE
+        #a waypoint is selected for movement : move it to the clicked location
+        #and update route points and route nodes
+        #based on the number of current nodes
+        if (!is.null(selected_point_index())) {
+          # Move the selected node to the new location
+          idx <- which(curr_nodes$node_id == selected_point_index())
 
-          for (i in 1:(nrow(curr_points) - 1)) {
-            # Get segment endpoints
-            p1 <- curr_points[i, ]
-            p2 <- curr_points[i + 1, ]
+          #only one node and it is moved, replace its geo coords
+          if (nrow(curr_nodes) == 1) {
+            curr_nodes$lat <- click$lat
+            curr_nodes$lng <- click$lng
 
-            # Calculate distance from click to line segment
-            d <- abs(
-              (p2$lat - p1$lat) *
-                click$lng -
-                (p2$lng - p1$lng) * click$lat +
-                p2$lng * p1$lat -
-                p2$lat * p1$lng
-            ) /
-              sqrt((p2$lat - p1$lat)^2 + (p2$lng - p1$lng)^2)
+            curr_points$lat <- click$lat
+            curr_points$lng <- click$lng
 
-            # Also check if click is within the bounding box of the segment
-            within_bounds <- (min(p1$lng, p2$lng) <= click$lng &&
-              click$lng <= max(p1$lng, p2$lng) &&
-              min(p1$lat, p2$lat) <= click$lat &&
-              click$lat <= max(p1$lat, p2$lat))
+            #More than one node but the first node is selected for movement
+          } else if (idx == 1) {
+            #remove and replace the first segment of points
 
-            # If click is close to segment and within bounds
-            if (
-              d < calculateThreshold(current_zoom()) &&
-                within_bounds
-            ) {
-              new_pt_idx <- p1$index + 1
+            #how many points in the first segment before the point move?
+            nb_points_before <- curr_nodes[2, ]$index - 1
 
-              # Create new point
-              new_point <- data.frame(
-                index = new_pt_idx, #index of point before, plus 1
+            #recreate new first segment based on new position of first point
+            from_point <- c(click$lng, click$lat)
+            to_point <- c(curr_nodes[2, ]$lng, curr_nodes[2, ]$lat)
+
+            new_segment <- generateRouteSegment(
+              from_point,
+              to_point,
+              drawing_mode = input$drawing_mode
+            )
+
+            #new points to be used to replace previous points
+            new_points <-
+              new_segment[1:(nrow(new_segment) - 1), ] |> #EXCLUDING the last point,
+              #which is included in the retained segment
+              mutate(index = row_number(), .before = "lng")
+
+            #nrow(new_points) is used for the new number of points
+
+            adj_index <- nrow(new_points) - nb_points_before
+
+            #define retained points
+            curr_points <-
+              rbind(
+                new_points,
+                curr_points[(nb_points_before + 1):nrow(curr_points), ] |>
+                  mutate(index = index + adj_index)
+              )
+
+            #rename rows..
+            row.names(curr_points) <- 1:nrow(curr_points)
+
+            #this part will need to be reworked to handle various cases related to stop status...
+            curr_nodes[1, ]$lng <- click$lng
+            curr_nodes[1, ]$lat <- click$lat
+
+            curr_nodes <-
+              rbind(
+                curr_nodes[1, ],
+                curr_nodes[2:nrow(curr_nodes), ] |>
+                  mutate(index = index + adj_index)
+              )
+
+            #the selected node is the last node
+          } else if (idx == nrow(curr_nodes)) {
+            #recreate new last segment based on new position of last point
+            from_point <- c(
+              curr_nodes[idx - 1, ]$lng,
+              curr_nodes[idx - 1, ]$lat
+            )
+            to_point <- c(click$lng, click$lat)
+
+            new_segment <- generateRouteSegment(
+              from_point,
+              to_point,
+              drawing_mode = input$drawing_mode
+            )
+
+            #points in retained segment
+
+            nb_points_retained <-
+              curr_nodes[idx - 1, ]$index
+
+            #new points to be used to replace previous points
+            new_points <-
+              new_segment[2:(nrow(new_segment)), ] |> #EXCLUDING the first point,
+              #which is included in the retained segment
+              mutate(index = row_number() + nb_points_retained, .before = "lng")
+
+            #define new curr points
+            curr_points <-
+              rbind(
+                curr_points[1:nb_points_retained, ],
+                new_points
+              )
+
+            #rename rows..
+            row.names(curr_points) <- 1:nrow(curr_points)
+
+            #this part will need to be reworked to handle various cases related to stop status...
+            curr_nodes[idx, ]$lng <- click$lng
+            curr_nodes[idx, ]$lat <- click$lat
+            curr_nodes[idx, ]$index <- max(curr_points$index)
+
+            #move node selected for movement mid-route
+          } else {
+            before_idx <- idx - 1
+            after_idx <- idx + 1
+
+            #divide the nodes and route points into segments a, b, c and d
+            #segments b and c (before and after the selected point that is moved to a new point)
+            #will be calculated later
+            #index values in segment d need to be adjusted based on the difference of
+            #segment bc before and after
+
+            #segment A :
+            nodes_a <- curr_nodes[1:before_idx, ]
+            nodes_a_idx_max <- max(nodes_a$index)
+
+            points_a <- curr_points[1:nodes_a_idx_max, ]
+
+            #segment D :
+            nodes_d <- curr_nodes[after_idx:nrow(curr_nodes), ]
+            nodes_d_idx_min <- min(nodes_d$index)
+
+            points_d <- curr_points[nodes_d_idx_min:nrow(curr_points), ]
+
+            #number of points in BC before :
+            nb_points_bc_before <-
+              min(points_d$index) - max(points_a$index) - 1
+            #specifically the points BETWEEN segments a and d,
+            #excluding the last point of a and the first point of d
+
+            #generate segment B
+
+            #from the end of segment a to the new stop
+            from_point <- c(
+              curr_nodes[before_idx, ]$lng,
+              curr_nodes[before_idx, ]$lat
+            )
+            to_point <- c(click$lng, click$lat)
+
+            segment_b <- generateRouteSegment(
+              from_point,
+              to_point,
+              drawing_mode = input$drawing_mode
+            )
+
+            #EXCLUDING the first point which is included in points_a
+            points_b <-
+              segment_b[2:nrow(segment_b), ] |>
+              mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+
+            #point b index max will be the new index value for the moved node AND added stop
+            #and will serve to adjust the index values of points_d and nodes_d
+
+            points_b_idx_max <-
+              max(points_b$index)
+
+            #generate segment C
+
+            #from new stop to beginning of segment d
+
+            from_point <- c(click$lng, click$lat)
+            to_point <- c(
+              curr_nodes[after_idx, ]$lng,
+              curr_nodes[after_idx, ]$lat
+            )
+
+            segment_c <- generateRouteSegment(
+              from_point,
+              to_point,
+              drawing_mode = input$drawing_mode
+            )
+
+            points_c <-
+              segment_c[2:(nrow(segment_c) - 1), ] |> #EXCLUDING the first and the last point,
+              #which are included in the other segments already
+              mutate(index = row_number() + points_b_idx_max, .before = "lng")
+
+            points_bc <- rbind(points_b, points_c)
+
+            #adjust index values for points and nodes d :
+
+            nb_points_bc_after <- nrow(points_bc)
+
+            adj_index_d <- nb_points_bc_after - nb_points_bc_before
+            #this will help add or subtract from the index values, depending on if the new segment bc
+            #has more or fewer points than the old segment bc
+
+            points_d <-
+              points_d |>
+              mutate(index = index + adj_index_d)
+
+            nodes_d <-
+              nodes_d |>
+              mutate(index = index + adj_index_d)
+            #called nodes_d but it's really just the third set of nodes
+            #nodes_a, new node, and nodes_d
+
+            node_bc <-
+              data.frame(
+                node_id = idx,
                 lng = click$lng,
-                lat = click$lat
+                lat = click$lat,
+                is_stop = FALSE, #this is a waypoint if it's selected and being moved
+                #not possible to select a stop node for movement
+                stop_id = "",
+                stop_name = "",
+                speed_factor = NA_real_, #setting speed factor to na_real_
+                index = points_b_idx_max
               )
 
-              # Insert new point between segment endpoints
-              new_points <- rbind(
-                curr_points[1:i, ],
-                new_point,
-                curr_points[(i + 1):nrow(curr_points), ]
-              )
+            #reconstitute curr_points and curr_nodes
 
-              # Reindex all points to maintain sequence
-              new_points$index <- 1:nrow(new_points)
+            curr_points <-
+              rbind(points_a, points_b, points_c, points_d)
 
-              curr_points <- new_points
+            curr_nodes <-
+              rbind(nodes_a, node_bc, nodes_d)
 
-              #create waypoint node for this point
-
-              #first, identify the nodes before this new point
-
-              nodes_a <-
-                curr_nodes |>
-                filter(index <= i)
-
-              nodes_b <-
-                curr_nodes |>
-                filter(index > i) |>
-                mutate(
-                  node_id = node_id + 1, #add one more node
-                  index = index + 1
-                ) #add one more point
-
-              new_node <-
-                data.frame(
-                  node_id = max(nodes_a$node_id) + 1,
-                  lng = click$lng,
-                  lat = click$lat,
-                  is_stop = FALSE,
-                  stop_id = "",
-                  stop_name = "",
-                  speed_factor = NA_real_, #assigning na_real_ to speed factor
-                  index = new_pt_idx
-                )
-
-              curr_nodes <- rbind(nodes_a, new_node, nodes_b)
-
-              #rename rows for good form
-              row.names(curr_points) <- 1:nrow(curr_points)
-              row.names(curr_nodes) <- 1:nrow(curr_nodes)
-
-              point_added <- TRUE
-
-              #update the reactive values
-              route_points(curr_points)
-              route_nodes(curr_nodes)
-
-              showNotification("Waypoint added along route", type = "message")
-
-              break
-            }
+            #rename rows for good form
+            row.names(curr_points) <- 1:nrow(curr_points)
+            row.names(curr_nodes) <- 1:nrow(curr_nodes)
           }
 
-          if (!point_added) {
-            #SUPER REDUNDANT ! repeats because I don't know how to better organise the conditions
+          #reactive value update, notification, reset selected point index to null
+          route_points(curr_points)
+          route_nodes(curr_nodes)
+          selected_point_index(NULL) # Reset selection
+          showNotification("Waypoint moved", type = "message")
+        } else if (nrow(curr_nodes) >= 1) {
+          if (nrow(curr_nodes) >= 2) {
+            #check if click is near a segment, and if so, add point along segment
+
+            point_added <- FALSE
+
+            for (i in 1:(nrow(curr_points) - 1)) {
+              # Get segment endpoints
+              p1 <- curr_points[i, ]
+              p2 <- curr_points[i + 1, ]
+
+              # Calculate distance from click to line segment
+              d <- abs(
+                (p2$lat - p1$lat) *
+                  click$lng -
+                  (p2$lng - p1$lng) * click$lat +
+                  p2$lng * p1$lat -
+                  p2$lat * p1$lng
+              ) /
+                sqrt((p2$lat - p1$lat)^2 + (p2$lng - p1$lng)^2)
+
+              # Also check if click is within the bounding box of the segment
+              within_bounds <- (min(p1$lng, p2$lng) <= click$lng &&
+                click$lng <= max(p1$lng, p2$lng) &&
+                min(p1$lat, p2$lat) <= click$lat &&
+                click$lat <= max(p1$lat, p2$lat))
+
+              # If click is close to segment and within bounds
+              if (
+                d < calculateThreshold(current_zoom()) &&
+                  within_bounds
+              ) {
+                new_pt_idx <- p1$index + 1
+
+                # Create new point
+                new_point <- data.frame(
+                  index = new_pt_idx, #index of point before, plus 1
+                  lng = click$lng,
+                  lat = click$lat
+                )
+
+                # Insert new point between segment endpoints
+                new_points <- rbind(
+                  curr_points[1:i, ],
+                  new_point,
+                  curr_points[(i + 1):nrow(curr_points), ]
+                )
+
+                # Reindex all points to maintain sequence
+                new_points$index <- 1:nrow(new_points)
+
+                curr_points <- new_points
+
+                #create waypoint node for this point
+
+                #first, identify the nodes before this new point
+
+                nodes_a <-
+                  curr_nodes |>
+                  filter(index <= i)
+
+                nodes_b <-
+                  curr_nodes |>
+                  filter(index > i) |>
+                  mutate(
+                    node_id = node_id + 1, #add one more node
+                    index = index + 1
+                  ) #add one more point
+
+                new_node <-
+                  data.frame(
+                    node_id = max(nodes_a$node_id) + 1,
+                    lng = click$lng,
+                    lat = click$lat,
+                    is_stop = FALSE,
+                    stop_id = "",
+                    stop_name = "",
+                    speed_factor = NA_real_, #assigning na_real_ to speed factor
+                    index = new_pt_idx
+                  )
+
+                curr_nodes <- rbind(nodes_a, new_node, nodes_b)
+
+                #rename rows for good form
+                row.names(curr_points) <- 1:nrow(curr_points)
+                row.names(curr_nodes) <- 1:nrow(curr_nodes)
+
+                point_added <- TRUE
+
+                #update the reactive values
+                route_points(curr_points)
+                route_nodes(curr_nodes)
+
+                showNotification("Waypoint added along route", type = "message")
+
+                break
+              }
+            }
+
+            if (!point_added) {
+              #SUPER REDUNDANT ! repeats because I don't know how to better organise the conditions
+              #add second waypoint
+
+              #get the existing max index from the nodes
+              nodes_a_idx_max <- max(curr_nodes$index)
+
+              #Route a new segment from the last existing node to the new node
+              #using the last existing node coords as from_point and
+              #stop_coords from clicked stop as to_point
+              from_lng <- curr_nodes[nrow(curr_nodes), ]$lng
+              from_lat <- curr_nodes[nrow(curr_nodes), ]$lat
+
+              from_point <- c(from_lng, from_lat)
+              to_point <- c(click$lng, click$lat)
+
+              new_segment <- generateRouteSegment(
+                from_point,
+                to_point,
+                drawing_mode = input$drawing_mode
+              )
+
+              new_points <-
+                new_segment[2:nrow(new_segment), ] |> #EXCLUDING the first point
+                #which is included in the previous segment already
+                mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+
+              curr_points <- rbind(curr_points, new_points)
+
+              #just in case, rename curr_point row names
+              row.names(curr_points) <- 1:nrow(curr_points)
+
+              #max index of new curr_points becomes the index of new node
+              #(associated with stop_coords)
+
+              new_node_index <- max(curr_points$index)
+
+              # Create new node
+              new_node <- data.frame(
+                node_id = max(curr_nodes$node_id) + 1,
+                lng = click$lng,
+                lat = click$lat,
+                is_stop = FALSE,
+                stop_id = "",
+                stop_name = "",
+                speed_factor = NA_real_,
+                index = new_node_index,
+                stringsAsFactors = FALSE
+              )
+
+              # Add to nodes
+              curr_nodes <- rbind(curr_nodes, new_node)
+
+              #curr_nodes |> st_as_sf(coords=c("lng","lat"),crs=4326) |> mapview()
+
+              route_points(curr_points)
+              route_nodes(curr_nodes)
+            }
+          } else if (nrow(curr_nodes) == 1) {
             #add second waypoint
 
             #get the existing max index from the nodes
@@ -6428,72 +6497,129 @@ croquis <- function(ssfs = NULL) {
 
             route_points(curr_points)
             route_nodes(curr_nodes)
+          } else {
+            #there are no nodes or waypoints yet. Do nothing other than prompt the user
+            #to start the route with a stop (routes should start at stops)
+
+            showNotification(
+              "Click on a stop to start your route",
+              type = "warning"
+            )
           }
-        } else if (nrow(curr_nodes) == 1) {
-          #add second waypoint
+        }
+      } else {
+        #ELSE BROWSE MODE : no active itinerary, display popup of all routes around click
+        current_data <- ssfs()
+        if (is.null(current_data$itin) || nrow(current_data$itin) == 0) {
+          return()
+        }
 
-          #get the existing max index from the nodes
-          nodes_a_idx_max <- max(curr_nodes$index)
+        # Find all itineraries near the click point
+        click_point <- sf::st_sfc(
+          sf::st_point(c(click$lng, click$lat)),
+          crs = 4326
+        )
 
-          #Route a new segment from the last existing node to the new node
-          #using the last existing node coords as from_point and
-          #stop_coords from clicked stop as to_point
-          from_lng <- curr_nodes[nrow(curr_nodes), ]$lng
-          from_lat <- curr_nodes[nrow(curr_nodes), ]$lat
+        zoom <- current_zoom()
+        threshold_m <- if (!is.null(zoom) && zoom >= 10) {
+          200 / (2^(zoom - 12))
+        } else {
+          200
+        }
 
-          from_point <- c(from_lng, from_lat)
-          to_point <- c(click$lng, click$lat)
+        distances <- as.numeric(sf::st_distance(
+          current_data$itin$geometry,
+          click_point
+        ))
 
-          new_segment <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode
-          )
+        nearby_idx <- which(distances <= threshold_m)
 
-          new_points <-
-            new_segment[2:nrow(new_segment), ] |> #EXCLUDING the first point
-            #which is included in the previous segment already
-            mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+        if (length(nearby_idx) == 0) {
+          leaflet::leafletProxy("routes_map") |>
+            leaflet::clearPopups()
+          return()
+        }
 
-          curr_points <- rbind(curr_points, new_points)
+        nearby_itins <- current_data$itin[nearby_idx, ]
 
-          #just in case, rename curr_point row names
-          row.names(curr_points) <- 1:nrow(curr_points)
+        # Build popup content
+        popup_lines <- vapply(
+          seq_len(nrow(nearby_itins)),
+          function(j) {
+            rid <- nearby_itins$route_id[j]
+            iid <- nearby_itins$itin_id[j]
 
-          #max index of new curr_points becomes the index of new node
-          #(associated with stop_coords)
+            route_row <- current_data$routes[
+              current_data$routes$route_id == rid,
+            ]
 
-          new_node_index <- max(curr_points$index)
+            short_name <- if (nrow(route_row) > 0) {
+              htmltools::htmlEscape(route_row$route_short_name[1])
+            } else {
+              ""
+            }
+            long_name <- if (nrow(route_row) > 0) {
+              htmltools::htmlEscape(route_row$route_long_name[1])
+            } else {
+              ""
+            }
 
-          # Create new node
-          new_node <- data.frame(
-            node_id = max(curr_nodes$node_id) + 1,
+            rcol <- if (
+              nrow(route_row) > 0 &&
+                !is.na(route_row$route_color[1]) &&
+                nchar(route_row$route_color[1]) > 0
+            ) {
+              paste0("#", route_row$route_color[1])
+            } else {
+              "#05AEEF"
+            }
+
+            headsign <- nearby_itins$trip_headsign[j]
+            headsign_text <- if (
+              !is.null(headsign) &&
+                !is.na(headsign) &&
+                nchar(trimws(headsign)) > 0
+            ) {
+              paste0(" - ", htmltools::htmlEscape(trimws(headsign)))
+            } else {
+              ""
+            }
+
+            paste0(
+              "<span style='color:",
+              rcol,
+              "; font-size:14px;'>\u25CF</span> ",
+              "<b>",
+              short_name,
+              " \u2014 ",
+              long_name,
+              "</b>",
+              "<br><span style='font-size:10px; color:grey;'>",
+              htmltools::htmlEscape(iid),
+              headsign_text,
+              "</span>"
+            )
+          },
+          character(1)
+        )
+
+        popup_html <- paste0(
+          "<div style='font-size:11px; line-height:1.6;'>",
+          paste(popup_lines, collapse = "<hr style='margin:4px 0;'>"),
+          "</div>"
+        )
+
+        leaflet::leafletProxy("routes_map") |>
+          leaflet::clearPopups() |>
+          leaflet::addPopups(
             lng = click$lng,
             lat = click$lat,
-            is_stop = FALSE,
-            stop_id = "",
-            stop_name = "",
-            speed_factor = NA_real_,
-            index = new_node_index,
-            stringsAsFactors = FALSE
+            popup = popup_html,
+            options = leaflet::popupOptions(
+              closeButton = TRUE,
+              maxWidth = 300
+            )
           )
-
-          # Add to nodes
-          curr_nodes <- rbind(curr_nodes, new_node)
-
-          #curr_nodes |> st_as_sf(coords=c("lng","lat"),crs=4326) |> mapview()
-
-          route_points(curr_points)
-          route_nodes(curr_nodes)
-        } else {
-          #there are no nodes or waypoints yet. Do nothing other than prompt the user
-          #to start the route with a stop (routes should start at stops)
-
-          showNotification(
-            "Click on a stop to start your route",
-            type = "warning"
-          )
-        }
       }
     })
 
