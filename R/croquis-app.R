@@ -5453,11 +5453,43 @@ croquis <- function(ssfs = NULL) {
 
           line_coords <- st_coordinates(current_data$itin$geometry[i])
 
-          # Get route_color from routes table based on route_id
+          # Get route info from routes table
           route_id_i <- current_data$itin$route_id[i]
-          route_color_i <- current_data$routes$route_color[
-            current_data$routes$route_id == route_id_i
+          itin_id_i <- current_data$itin$itin_id[i]
+
+          route_row <- current_data$routes[
+            current_data$routes$route_id == route_id_i,
           ]
+
+          route_color_i <- route_row$route_color
+          route_short <- if (nrow(route_row) > 0) {
+            route_row$route_short_name[1]
+          } else {
+            ""
+          }
+          route_long <- if (nrow(route_row) > 0) {
+            route_row$route_long_name[1]
+          } else {
+            ""
+          }
+
+          # Build route display name
+          route_display <- paste0(
+            htmltools::htmlEscape(route_short),
+            " \u2014 ",
+            htmltools::htmlEscape(route_long)
+          )
+
+          # Build hover label
+          hover_label <- htmltools::HTML(paste0(
+            "<span style='font-size:11px;'>",
+            "<b>",
+            route_display,
+            "</b>",
+            "<br>Itinerary: ",
+            htmltools::htmlEscape(itin_id_i),
+            "</span>"
+          ))
 
           # Use route color if found, otherwise fallback to default
           line_color <- if (
@@ -5477,7 +5509,18 @@ croquis <- function(ssfs = NULL) {
               group = "routes",
               color = line_color,
               weight = 2,
-              opacity = 0.6
+              opacity = 0.6,
+              label = hover_label,
+              labelOptions = leaflet::labelOptions(
+                style = list("font-size" = "11px", "padding" = "3px 6px"),
+                direction = "top",
+                offset = c(0, -8)
+              ),
+              highlightOptions = leaflet::highlightOptions(
+                weight = 6,
+                opacity = 0.9,
+                bringToFront = TRUE
+              )
             )
         }
       }
