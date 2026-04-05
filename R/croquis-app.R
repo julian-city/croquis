@@ -8749,7 +8749,11 @@ croquis <- function(ssfs = NULL) {
         current_gtfs$feed_info <- data.table(
           feed_publisher_name = input$fi_feed_publisher_name,
           feed_publisher_url = input$fi_feed_publisher_url,
-          feed_lang = input$fi_feed_lang
+          feed_lang = input$fi_feed_lang,
+          feed_start_date = min(current_ssfs$calendar$start_date),
+          feed_end_date = max(current_ssfs$calendar$end_date),
+          feed_version = input$fi_feed_version,
+          feed_contact_email = input$fi_feed_contact_email
         )
 
         gtfstools::write_gtfs(current_gtfs, file)
