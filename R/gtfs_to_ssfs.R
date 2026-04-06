@@ -187,6 +187,37 @@ gtfs_to_ssfs <- function(
 
   # Service id consolidation
 
+  # function for creating names for service_id based on combination of ordered days of the week
+
+  service_namer <- function(
+    x,
+    day = c(
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday"
+    )
+  ) {
+    idx <- match(x, day)
+    short <- substr(day, 1, 3)
+    groups <- split(idx, cumsum(c(1, diff(idx) != 1)))
+    parts <- vapply(
+      groups,
+      function(g) {
+        if (length(g) == 1) {
+          short[g]
+        } else {
+          paste0(short[g[1]], "-", short[g[length(g)]])
+        }
+      },
+      character(1)
+    )
+    paste(parts, collapse = "_")
+  }
+
   #consolidating services that occur on the same day of the week
   service_combos <-
     service_ids_byday |>
@@ -194,7 +225,7 @@ gtfs_to_ssfs <- function(
     enframe(name = "day", value = "service_combo") |> # Convert to a tibble with day and combination
     group_by(service_combo) |>
     summarise(days = list(day)) |> #identify days of week associated with each service combo
-    mutate(service_combo_id = paste0("S", row_number())) #defining the service combo id
+    mutate(service_combo_id = vapply(days, service_namer, character(1))) #Give service a name based on active days of the week
 
   service_combo_to_service_id <-
     service_combos |>
