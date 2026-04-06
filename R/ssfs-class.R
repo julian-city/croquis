@@ -62,6 +62,7 @@ new_ssfs <- function(
 #'
 #' @param x An object to validate, typically created by [new_ssfs()] or
 #'   [gtfs_to_ssfs()].
+#' @param verbose When TRUE, prints a message if the SSFS is valid.
 #'
 #' @return `x`, invisibly, if validation passes.
 #'

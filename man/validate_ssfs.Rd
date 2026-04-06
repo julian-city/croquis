@@ -9,6 +9,8 @@ validate_ssfs(x, verbose = TRUE)
 \arguments{
 \item{x}{An object to validate, typically created by \code{\link[=new_ssfs]{new_ssfs()}} or
 \code{\link[=gtfs_to_ssfs]{gtfs_to_ssfs()}}.}
+
+\item{verbose}{When TRUE, prints a message if the SSFS is valid.}
 }
 \value{
 \code{x}, invisibly, if validation passes.

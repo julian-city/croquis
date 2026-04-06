@@ -22,7 +22,7 @@
 #' ssfs <- gtfs_to_ssfs(gtfs)
 #'
 #' # Convert specific routes only
-#' ssfs <- gtfs_to_ssfs(stm_metro, routes = c("1","2"))
+#' ssfs <- gtfs_to_ssfs(gtfs, routes = c("1","2"))
 #' }
 gtfs_to_ssfs <- function(
   gtfs,
