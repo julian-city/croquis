@@ -4,7 +4,12 @@
 \alias{gtfs_to_ssfs}
 \title{Convert a GTFS to a SSFS}
 \usage{
-gtfs_to_ssfs(gtfs, routes = NULL, max_date = NULL)
+gtfs_to_ssfs(
+  gtfs,
+  routes = NULL,
+  max_date = NULL,
+  routing_server = c("Valhalla", "OSRM")
+)
 }
 \arguments{
 \item{gtfs}{An object of class 'gtfs'. Must contain required tables and calendar table.}
@@ -12,6 +17,8 @@ gtfs_to_ssfs(gtfs, routes = NULL, max_date = NULL)
 \item{routes}{A character vector of the route id(s) you wish to convert to ssfs. Leave as NULL to convert all routes to SSFS}
 
 \item{max_date}{A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS}
+
+\item{routing_server}{Routing server used to draw shapes in the case where none are provided in the input GTFS}
 }
 \value{
 A SSFS list

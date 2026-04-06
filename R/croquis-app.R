@@ -51,19 +51,24 @@ croquis <- function(ssfs = NULL) {
   # UI functions
 
   # Info icon with popover - uses Bootstrap 3 popovers (already bundled with Shiny)
-  info_popover <- function(text, link) {
+  # Also handles option to not provide link (this is default)
+  info_popover <- function(text, link = NULL) {
     tags$span(
       class = "info-icon",
       `data-toggle` = "popover",
       `data-trigger` = "click",
       `data-html` = "true",
       `data-placement` = "right",
-      `data-content` = paste0(
-        text,
-        "<br><a href='",
-        link,
-        "' target='_blank'>Read more</a>"
-      ),
+      `data-content` = if (is.null(link)) {
+        text
+      } else {
+        paste0(
+          text,
+          "<br><a href='",
+          link,
+          "' target='_blank'>Read more</a>"
+        )
+      },
       tabindex = "0",
       icon("info-circle", class = "text-muted")
     )
@@ -2120,6 +2125,7 @@ croquis <- function(ssfs = NULL) {
         tags$span(icon("gear")),
         fluidPage(
           titlePanel("settings"),
+
           wellPanel(
             h3("Feed info"),
             textInput(
@@ -2185,6 +2191,22 @@ croquis <- function(ssfs = NULL) {
               ),
               value = paste0("v", Sys.Date())
             )
+          ),
+
+          # Advanced settings panel
+          wellPanel(
+            h3("Advanced settings"),
+            selectInput(
+              "settings_routing_server",
+              label = tagList(
+                "Default_routing_server",
+                info_popover(
+                  "Routing server used to draw segments along the road network between stops and waypoints in the routes module."
+                )
+              ),
+              choices = c("OSRM", "Valhalla"),
+              selected = "Valhalla"
+            ),
           )
         )
       )
@@ -2456,7 +2478,10 @@ croquis <- function(ssfs = NULL) {
         {
           loaded_gtfs <- gtfstools::read_gtfs(input$load_gtfs$datapath)
 
-          loaded_ssfs <- croquis::gtfs_to_ssfs(loaded_gtfs)
+          loaded_ssfs <- croquis::gtfs_to_ssfs(
+            loaded_gtfs,
+            routing_server = input$settings_routing_server
+          )
 
           stop_id_to_stopname <-
             loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
@@ -5402,7 +5427,7 @@ croquis <- function(ssfs = NULL) {
       result_points <- data.frame(lng = numeric(), lat = numeric())
 
       if (drawing_mode == "network") {
-        # Try OSRM routing
+        # Try OSRM or Valhalla routing (based on the input in advanced settings)
         tryCatch(
           {
             from_sf <- st_sf(
@@ -5410,11 +5435,17 @@ croquis <- function(ssfs = NULL) {
             )
             to_sf <- st_sf(geometry = st_sfc(st_point(to_point), crs = 4326))
 
-            route <- osrm::osrmRoute(
-              src = from_sf,
-              dst = to_sf,
-              overview = "full"
-            )
+            if (input$settings_routing_server == "OSRM") {
+              route <- osrm::osrmRoute(
+                src = from_sf,
+                dst = to_sf,
+                overview = "full"
+              )
+            } else {
+              # Valhalla routing instead of OSRM routing
+              route <-
+                valh::vl_route(src = from_sf, dst = to_sf)
+            }
             route_coords <- st_coordinates(route$geometry)
 
             # Add all points from route

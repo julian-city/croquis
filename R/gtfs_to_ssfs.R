@@ -8,6 +8,7 @@
 #' @param gtfs An object of class 'gtfs'. Must contain required tables and calendar table.
 #' @param routes A character vector of the route id(s) you wish to convert to ssfs. Leave as NULL to convert all routes to SSFS
 #' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS
+#' @param routing_server Routing server used to draw shapes in the case where none are provided in the input GTFS
 #'
 #' @returns A SSFS list
 #'
@@ -23,7 +24,12 @@
 #' # Convert specific routes only
 #' ssfs <- gtfs_to_ssfs(stm_metro, routes = c("1","2"))
 #' }
-gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
+gtfs_to_ssfs <- function(
+  gtfs,
+  routes = NULL,
+  max_date = NULL,
+  routing_server = c("Valhalla", "OSRM")
+) {
   #THREE parameters
   #gtfs must be a gtfs imported by gtfstools : an object with class "dt_gtfs","gtfs","list"
   #it must contain the required tables of gtfs and the required fields
@@ -515,8 +521,14 @@ gtfs_to_ssfs <- function(gtfs, routes = NULL, max_date = NULL) {
         unique()
 
       if (route_type_i %in% c(3, 5, 11)) {
-        shape_i <-
-          osrm::osrmRoute(loc = stops_itin_i, overview = "full")
+        if (routing_server == "OSRM") {
+          shape_i <-
+            osrm::osrmRoute(loc = stops_itin_i, overview = "full")
+        } else {
+          # Valhalla routing instead of OSRM
+          shape_i <-
+            valh::vl_route(loc = stops_itin_i)
+        }
 
         shapes_i <-
           shape_i |>
