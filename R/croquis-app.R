@@ -505,7 +505,7 @@ croquis <- function(ssfs = NULL) {
 
       /* Route List Panel Styles */
       .route-list-container {
-        max-height: calc(100vh - 300px);
+        max-height: calc(100vh - 400px);
         overflow-y: auto;
         margin-bottom: 10px;
       }
@@ -2199,7 +2199,7 @@ croquis <- function(ssfs = NULL) {
             selectInput(
               "settings_routing_server",
               label = tagList(
-                "Default_routing_server",
+                "Default routing server",
                 info_popover(
                   "Routing server used to draw segments along the road network between stops and waypoints in the routes module."
                 )
@@ -4475,13 +4475,25 @@ croquis <- function(ssfs = NULL) {
 
               itin_rows[[length(itin_rows) + 1]] <- div(
                 class = "itin-edit-form",
-                tags$label("Itinerary ID"),
+                tags$label(
+                  "Itinerary ID",
+                  info_popover(
+                    "Unique ID for this itinerary or variant of the route. Will be used as the trip_id prefix in exported GTFS for trips of this itinerary."
+                  )
+                ),
                 tags$input(
                   type = "text",
                   id = "inline_itin_id",
                   value = default_itin_id
                 ),
-                tags$label("Direction"),
+                tags$label(
+                  "Direction",
+                  info_popover(
+                    "Indicates the direction of travel for a trip. Routes generally have at least one outbound (e.g. Northbound or Eastbound) variant and at least inbound or return variant (e.g. Southbound or Westbound). 
+                Outbond corresponds to 0 and Inbound corresponds to 1 in exported GTFS.",
+                    "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+                  )
+                ),
                 htmltools::HTML(paste0(
                   '<select id="inline_direction_id" onchange="onDirectionChanged()">',
                   '<option value="0"',
@@ -4492,7 +4504,13 @@ croquis <- function(ssfs = NULL) {
                   '>Inbound</option>',
                   '</select>'
                 )),
-                tags$label("Trip Headsign"),
+                tags$label(
+                  "Trip Headsign",
+                  info_popover(
+                    "Text that appears on signage identifying the trip's destination to riders.",
+                    "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+                  )
+                ),
                 tags$input(
                   type = "text",
                   id = "inline_trip_headsign",
@@ -4558,13 +4576,25 @@ croquis <- function(ssfs = NULL) {
 
                   itin_rows[[length(itin_rows) + 1]] <- div(
                     class = "itin-edit-form",
-                    tags$label("Itinerary ID"),
+                    tags$label(
+                      "Itinerary ID",
+                      info_popover(
+                        "Unique ID for this itinerary or variant of the route. Will be used as the trip_id prefix in exported GTFS for trips of this itinerary."
+                      )
+                    ),
                     tags$input(
                       type = "text",
                       id = "inline_itin_id",
                       value = itin$itin_id
                     ),
-                    tags$label("Direction"),
+                    tags$label(
+                      "Direction",
+                      info_popover(
+                        "Indicates the direction of travel for a trip. Routes generally have at least one outbound (e.g. Northbound or Eastbound) variant and at least inbound or return variant (e.g. Southbound or Westbound). 
+                Outbond corresponds to 0 and Inbound corresponds to 1 in exported GTFS.",
+                        "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+                      )
+                    ),
                     #onchange handler added to direction select element
                     htmltools::HTML(paste0(
                       '<select id="inline_direction_id" onchange="onDirectionChanged()">',
@@ -4576,7 +4606,13 @@ croquis <- function(ssfs = NULL) {
                       '>Inbound</option>',
                       '</select>'
                     )),
-                    tags$label("Trip Headsign"),
+                    tags$label(
+                      "Trip Headsign",
+                      info_popover(
+                        "Text that appears on signage identifying the trip's destination to riders.",
+                        "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+                      )
+                    ),
                     tags$input(
                       type = "text",
                       id = "inline_trip_headsign",
