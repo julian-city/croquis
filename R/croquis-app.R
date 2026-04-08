@@ -9554,7 +9554,7 @@ croquis <- function(ssfs = NULL) {
         route_display <- if (nrow(route_row) > 0) {
           paste0(
             htmltools::htmlEscape(route_row$route_short_name[1]),
-            " \u2014 ",
+            " - ",
             htmltools::htmlEscape(route_row$route_long_name[1])
           )
         } else {
@@ -9568,7 +9568,7 @@ croquis <- function(ssfs = NULL) {
               nchar(trimws(itin_row$trip_headsign[1])) > 0
           ) {
             paste0(
-              " \u2014 ",
+              " - ",
               htmltools::htmlEscape(
                 trimws(itin_row$trip_headsign[1])
               )
@@ -9578,9 +9578,9 @@ croquis <- function(ssfs = NULL) {
           }
         )
 
-        hdwy_display <- if (is.na(hdwy)) "\u2014" else as.character(hdwy)
+        hdwy_display <- if (is.na(hdwy)) "-" else as.character(hdwy)
         trips_h <- if (is.na(hdwy) || hdwy == 0) {
-          "\u2014"
+          "-"
         } else {
           as.character(floor(60 / hdwy))
         }
@@ -9589,6 +9589,7 @@ croquis <- function(ssfs = NULL) {
           route = route_display,
           itin = itin_display,
           headway = hdwy_display,
+          headway_numeric = if (is.na(hdwy)) NA_real_ else as.numeric(hdwy),
           trips_h = trips_h,
           trips_numeric = if (is.na(hdwy) || hdwy == 0) 0L else floor(60 / hdwy)
         )
@@ -9629,10 +9630,19 @@ croquis <- function(ssfs = NULL) {
 
       # Totals row
       total_trips <- sum(sapply(rows, function(r) r$trips_numeric))
-      total_hdwy <- if (total_trips > 0) {
-        as.character(ceiling(60 / total_trips))
+      #total_hdwy <- if (total_trips > 0) {
+      #  as.character(ceiling(60 / total_trips))
+      #} else {
+      #  "\u2014"
+      #}
+
+      raw_headways <- sapply(rows, function(r) r$headway_numeric)
+      valid_hdwys <- raw_headways[!is.na(raw_headways) & raw_headways > 0]
+      exact_trips_sum <- sum(60 / valid_hdwys)
+      total_hdwy <- if (exact_trips_sum > 0) {
+        as.character(ceiling(60 / exact_trips_sum))
       } else {
-        "\u2014"
+        "-"
       }
 
       totals_html <- paste0(
