@@ -8529,8 +8529,9 @@ croquis <- function(ssfs = NULL) {
 
       # Extract hours for comparison
       edit_hour <- as.numeric(substr(input$edit_hour_dep, 1, 2))
-      first_hour <- as.numeric(substr(span_data$first_dep, 1, 2))
-      last_hour <- as.numeric(substr(span_data$last_dep, 1, 2))
+      # in case there are multiple service windows, search for min and max
+      first_hour <- min(as.numeric(substr(span_data$first_dep, 1, 2)))
+      last_hour <- max(as.numeric(substr(span_data$last_dep, 1, 2)))
 
       # Validate hour is within span range
       if (edit_hour < first_hour || edit_hour > last_hour) {
