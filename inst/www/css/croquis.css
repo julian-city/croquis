@@ -1,0 +1,812 @@
+/* Light mode (default) */
+:root {
+  --bg-color: #F9F5ED;
+  --text-color: #333333;
+  --panel-bg: #F1EBE3;
+  --input-bg: #F9F5ED;
+  --border-color: #5E5E5E;
+  --hover-color: #F1EBE3;
+  --btn-default-bg: #F1EBE3;
+  --btn-default-color: #333333;
+}
+
+/* Dark mode */
+:root[data-bs-theme='dark'] {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --panel-bg: #2d2d2d;
+  --input-bg: #3d3d3d;
+  --border-color: #404040;
+  --hover-color: #404040;
+  --btn-default-bg: #404040;
+  --btn-default-color: #ffffff;
+}
+
+/* Apply variables */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.well, .panel {
+  background-color: var(--panel-bg);
+  border-color: var(--border-color);
+}
+
+.form-control {
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.form-control:focus {
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.btn-default {
+  background-color: var(--btn-default-bg);
+  color: var(--btn-default-color);
+  border-color: var(--border-color);
+}
+
+.dataTables_wrapper {
+  color: var(--text-color);
+}
+
+.dataTable {
+  color: var(--text-color);
+  background-color: var(--panel-bg);
+}
+
+.dataTable tbody tr {
+  background-color: var(--panel-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.dataTable tbody tr:hover {
+  background-color: var(--hover-color) !important;
+}
+
+.navbar {
+  background-color: var(--panel-bg);
+  border-color: var(--border-color);
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: var(--text-color);
+}
+
+.navbar-default .navbar-nav > .active > a {
+  background-color: var(--hover-color);
+  color: var(--text-color);
+}
+
+/* Loading indicator styles */
+#loading-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Floating panel styles for map-centric modules */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 120px);
+  min-height: 600px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.map-container .leaflet-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.floating-panel {
+  position: absolute;
+  z-index: 1000;
+  background-color: var(--panel-bg);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  padding: 15px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.floating-panel-left {
+  top: 10px;
+  left: 10px;
+  width: 320px;
+}
+
+.floating-panel-right {
+  top: 10px;
+  right: 10px;
+  width: 320px;
+}
+
+.floating-panel-bottom-left {
+  bottom: 10px;
+  left: 10px;
+  width: 320px;
+}
+
+.floating-panel-bottom-right {
+  bottom: 10px;
+  right: 10px;
+  width: 320px;
+}
+
+/* Import/Export panel specific styles */
+.import-export-panel .form-group {
+  margin-bottom: 10px;
+}
+
+.import-export-panel .btn {
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.import-export-panel hr {
+  margin: 12px 0;
+  border-color: var(--border-color);
+}
+
+.import-export-panel .selectize-input {
+  min-height: 32px;
+  padding: 4px 8px;
+}
+
+/* Fix fileInput alignment */
+.import-export-panel .shiny-input-container {
+  width: 100% !important;
+}
+
+.import-export-panel .input-group {
+  display: flex;
+  width: 100%;
+}
+
+.import-export-panel .input-group .form-control {
+  flex: 1;
+  height: 34px;
+}
+
+.import-export-panel .input-group .input-group-btn {
+  width: auto;
+}
+
+.import-export-panel .input-group .input-group-btn .btn {
+  margin-top: 0;
+  height: 34px;
+}
+
+/* Collapsible panel header */
+.floating-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.floating-panel-header h4 {
+  margin: 0;
+}
+
+.floating-panel-toggle {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-color);
+  padding: 0 5px;
+}
+
+.floating-panel.collapsed .floating-panel-content {
+  display: none;
+}
+
+.floating-panel.collapsed {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Stop List Panel Styles */
+.stop-list-container {
+  max-height: calc(100vh - 350px);
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.stop-list-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.stop-list-row:hover {
+  background-color: var(--hover-color);
+}
+
+.stop-list-row.editing {
+  background-color: rgba(178, 24, 43, 0.1);
+  border-left: 3px solid #B2182B;
+}
+
+.stop-list-row.add-row {
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.stop-list-row.add-row:hover {
+  color: #333;
+}
+
+.stop-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.stop-info-display {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stop-name {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.stop-id-display {
+  font-size: 11px;
+  color: #888;
+  margin-left: 4px;
+}
+
+.stop-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.stop-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  background-color: transparent;
+  color: var(--text-color);
+}
+
+.stop-action-btn:hover {
+  background-color: var(--hover-color);
+}
+
+.stop-action-btn.save-btn {
+  color: #2B5D2C;
+}
+
+.stop-action-btn.save-btn:hover {
+  background-color: rgba(40, 167, 69, 0.15);
+}
+
+.stop-action-btn.cancel-btn {
+  color: #B2182B;
+}
+
+.stop-action-btn.cancel-btn:hover {
+  background-color: rgba(220, 53, 69, 0.15);
+}
+
+.stop-action-btn.edit-btn {
+  color: #6c757d;
+}
+
+.stop-action-btn.edit-btn:hover {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #495057;
+}
+
+.stop-action-btn.delete-btn {
+  color: #444;
+}
+
+.stop-action-btn.delete-btn:hover {
+  background-color: #888;
+}
+
+.stop-action-btn.add-btn {
+  color: #2B5D2C;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.stop-edit-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.stop-edit-inputs input {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.stop-edit-inputs input:focus {
+  outline: none;
+  border-color: #B2182B;
+}
+
+.stop-search-container {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.stop-search-container input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+}
+
+.stop-search-container input:focus {
+  outline: none;
+  border-color: #B2182B;
+}
+
+.editing-instruction {
+  font-size: 12px;
+  color: #B2182B;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: rgba(178, 24, 43, 0.08);
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* Route List Panel Styles */
+.route-list-container {
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.route-list-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.route-list-row:hover {
+  background-color: var(--hover-color);
+}
+
+.route-list-row.expanded {
+  background-color: rgba(5, 174, 239, 0.06);
+  border-left: 3px solid #05AEEF;
+}
+
+.route-list-row.editing-route {
+  background-color: rgba(178, 24, 43, 0.1);
+  border-left: 3px solid #B2182B;
+}
+
+.route-color-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.route-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.route-info-display {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-short-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.route-long-name {
+  font-size: 11px;
+  color: #888;
+  margin-left: 4px;
+}
+
+.route-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.route-action-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.15s ease;
+  background-color: transparent;
+  color: var(--text-color);
+}
+
+.route-action-btn:hover {
+  background-color: var(--hover-color);
+}
+
+.route-action-btn.delete-btn {
+  color: #444;
+}
+
+.route-action-btn.delete-btn:hover {
+  background-color: #888;
+}
+
+.route-action-btn.expand-btn {
+  font-size: 10px;
+}
+
+/* Itinerary sub-rows */
+.itin-list-container {
+  padding-left: 20px;
+  border-left: 2px solid var(--border-color);
+  margin-left: 12px;
+  margin-bottom: 4px;
+}
+
+.itin-list-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-size: 12px;
+}
+
+.itin-list-row:hover {
+  background-color: var(--hover-color);
+}
+
+.itin-list-row.active-itin {
+  background-color: rgba(178, 24, 43, 0.1);
+  border-left: 3px solid #B2182B;
+}
+
+.itin-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.itin-info-display {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itin-headsign {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.itin-id-display {
+  font-size: 10px;
+  color: #888;
+  margin-left: 4px;
+}
+
+.itin-direction-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: var(--hover-color);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+/* Inline route edit form */
+.route-edit-form {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 4px 0;
+  background-color: var(--panel-bg);
+}
+
+.route-edit-form label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.route-edit-form input,
+.route-edit-form select {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.route-edit-form input:focus,
+.route-edit-form select:focus {
+  outline: none;
+  border-color: #B2182B;
+}
+
+.route-edit-form .btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.route-edit-form .btn-row button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.route-edit-form .btn-save {
+  background-color: #2B5D2C;
+  color: white;
+}
+
+.route-edit-form .btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Inline itin edit form */
+.itin-edit-form {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 4px 0;
+  background-color: var(--panel-bg);
+}
+
+.itin-edit-form label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.itin-edit-form input,
+.itin-edit-form select {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+
+.itin-edit-form .btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.itin-edit-form .btn-row button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.itin-edit-form .btn-save {
+  background-color: #2B5D2C;
+  color: white;
+}
+
+.itin-edit-form .btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Stop sequence floating panel */
+.floating-panel-top-right {
+  top: 10px;
+  right: 10px;
+  width: 280px;
+  max-height: 50vh;
+}
+
+.info-icon {
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 13px;
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+.info-icon:hover {
+  opacity: 1;
+}
+
+.popover {
+  background-color: var(--panel-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.popover .arrow::after {
+  border-right-color: var(--panel-bg);
+}
+
+.popover a {
+  color: #337ab7;
+}
+
+/* -- Schedule module -- */
+.sched-map-container {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  min-height: 450px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.sched-map-container .leaflet-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#sched-routes-panel {
+  top: 10px;
+  left: 10px;
+  width: 280px;
+}
+
+#sched-filter-panel {
+  top: 10px;
+  right: 10px;
+  width: 220px;
+}
+
+#sched-filter-panel select {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  margin-bottom: 8px;
+}
+
+#sched-filter-panel label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.sched-route-list-container {
+  max-height: calc(60vh - 120px);
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.sched-popup-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+}
+
+.sched-popup-table th {
+  background-color: rgba(0,0,0,0.05);
+  text-align: left;
+  padding: 3px 6px;
+  border-bottom: 1px solid #ccc;
+  font-weight: 600;
+}
+
+.sched-popup-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.sched-popup-table tr.totals-row td {
+  font-weight: 700;
+  border-top: 2px solid #999;
+}
+
+#sched-filter-panel {
+  overflow: visible;
+}
+
+#sched-filter-panel .floating-panel-content {
+  overflow: visible;
+}
