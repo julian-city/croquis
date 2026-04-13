@@ -79,8 +79,11 @@ croquis <- function(ssfs = NULL) {
     shinyjs::useShinyjs(),
     # CSS and JavaScript in the head
     tags$head(
-      
-      tags$link(rel = "stylesheet", type = "text/css", href = "www/css/croquis.css"),
+      tags$link(
+        rel = "stylesheet",
+        type = "text/css",
+        href = "www/css/croquis.css"
+      ),
 
       tags$script(src = "www/js/theme.js"),
       tags$script(src = "www/js/loading.js"),
@@ -89,7 +92,6 @@ croquis <- function(ssfs = NULL) {
       tags$script(src = "www/js/itineraries.js"),
       tags$script(src = "www/js/popovers.js"),
       tags$script(src = "www/js/schedule.js")
-
     ),
 
     #loading indicator div
@@ -1410,7 +1412,7 @@ croquis <- function(ssfs = NULL) {
     calculateMarkerSize <- function(zoom) {
       base_size <- 2
       adjusted_size <- base_size * (1.2^(zoom - 10))
-      return(min(max(adjusted_size, 4), 15))
+      return(min(max(adjusted_size, 1), 15))
     }
 
     #current zoom reactive value
