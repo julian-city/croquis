@@ -1,5 +1,5 @@
 # UI
-calendarUI <- function(id, info_popover) {
+calendarUI <- function(id) {
   ns <- NS(id)
 
   tabPanel(

@@ -48,32 +48,6 @@ croquis <- function(ssfs = NULL) {
 
   #UI-----------------------------
 
-  # UI functions
-
-  # Info icon with popover - uses Bootstrap 3 popovers (already bundled with Shiny)
-  # Also handles option to not provide link (this is default)
-  info_popover <- function(text, link = NULL) {
-    tags$span(
-      class = "info-icon",
-      `data-toggle` = "popover",
-      `data-trigger` = "click",
-      `data-html` = "true",
-      `data-placement` = "right",
-      `data-content` = if (is.null(link)) {
-        text
-      } else {
-        paste0(
-          text,
-          "<br><a href='",
-          link,
-          "' target='_blank'>Read more</a>"
-        )
-      },
-      tabindex = "0",
-      icon("info-circle", class = "text-muted")
-    )
-  }
-
   # UI Definition
   ui <- fluidPage(
     shinyjs::useShinyjs(),
@@ -650,7 +624,7 @@ croquis <- function(ssfs = NULL) {
       ),
 
       #calendar tab
-      calendarUI("calendar", info_popover),
+      calendarUI("calendar"),
 
 
       #spans tab
@@ -1343,29 +1317,11 @@ croquis <- function(ssfs = NULL) {
     # Filtered cities for autocomplete
     filtered_cities <- reactiveVal(data.frame())
 
-    # Helper function for marker size calculation for stops on maps
-    calculateMarkerSize <- function(zoom) {
-      base_size <- 2
-      adjusted_size <- base_size * (1.2^(zoom - 10))
-      return(min(max(adjusted_size, 1), 15))
-    }
-
     #current zoom reactive value
     current_zoom <- reactiveVal(10)
 
-    #function for adding base maps
-    addBaseMaps <- function(map) {
-      map |>
-        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
-        leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
-        leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
-        leaflet::addLayersControl(
-          baseGroups = c("Positron", "Satellite", "OSM"),
-          options = leaflet::layersControlOptions(collapsed = FALSE)
-        )
-    }
-
     # Function to update any map with current ssfs data
+    # TODO: Remove this?
     updateMapWithSsfsData <- function(
       map_id,
       current_data,
@@ -4471,17 +4427,6 @@ croquis <- function(ssfs = NULL) {
     })
 
     # --- Route itinerary geometry and map handlers ---
-
-    # Function to calculate threshold distance from existing points
-    calculateThreshold <- function(zoom) {
-      # Base threshold at zoom level 10 is 0.02
-      base_threshold <- 0.02
-      # Adjust threshold exponentially based on zoom difference from base level
-      # Smaller number when zoomed in, larger when zoomed out
-      adjusted_threshold <- base_threshold * (2^(10 - zoom))
-      # Clamp the threshold to reasonable limits
-      return(min(max(adjusted_threshold, 0.0001), 0.1))
-    }
 
     # Modified function to generate partial route segments between nodes
     generateRouteSegment <- function(
