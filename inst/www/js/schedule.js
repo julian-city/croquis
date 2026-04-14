@@ -1,6 +1,12 @@
+var schedNs = '';
+
+Shiny.addCustomMessageHandler('setShedNs', function(ns) {
+  schedNs = ns;
+});
+
 // Click on a route row in the schedule routes panel to highlight
 function schedToggleRoute(routeId) {
-  Shiny.setInputValue('sched_route_click',
+  Shiny.setInputValue(schedNs + 'sched_route_click',
     {id: routeId, ts: Math.random()}, {priority: 'event'});
 }
 
