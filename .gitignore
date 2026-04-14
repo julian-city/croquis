@@ -1,1 +1,13 @@
 .Rproj.user
+utils
+.dockerignore
+.DS_Store
+.Rhistory
+Dockerfile
+default.ico
+infoafter.txt
+infobefore.txt
+setup.ico
+air.toml
+.vscode
+.lintr

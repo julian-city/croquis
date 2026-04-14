@@ -38,6 +38,6 @@ gtfs <- ssfs_to_gtfs(stm_metro)
 ssfs <- gtfs_to_ssfs(gtfs)
 
 # Convert specific routes only
-ssfs <- gtfs_to_ssfs(stm_metro, routes = c("1","2"))
+ssfs <- gtfs_to_ssfs(gtfs, routes = c("1","2"))
 }
 }

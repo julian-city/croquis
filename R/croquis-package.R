@@ -15,7 +15,7 @@ NULL
 # sf ----
 #' @importFrom sf st_as_sf st_cast st_length st_nearest_feature st_coordinates
 #'   st_buffer st_join st_distance st_sfc st_sf st_point st_linestring
-#'   st_centroid st_transform st_bbox
+#'   st_centroid st_transform st_bbox st_write st_read st_geometry_type st_is_empty
 NULL
 
 # stringr ----
