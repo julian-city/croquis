@@ -3,3 +3,5 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^data-raw$
+^\.vscode$
+^[.]?air[.]toml$

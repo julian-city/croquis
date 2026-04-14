@@ -23,7 +23,7 @@ function editRouteFromList(routeId) {
 
 // Duplicate route
 function copyRouteFromList(routeId) {
-  Shiny.setInputValue('route_list_copy_click',
+  Shiny.setInputValue(routesNs + 'route_list_copy_click',
     {id: routeId, ts: Math.random()}, {priority: 'event'});
 }
 
