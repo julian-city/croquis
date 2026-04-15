@@ -157,7 +157,7 @@ gtfs_to_ssfs <- function(
           filter(service_id == service_id_i)
 
         start_date_i <- min(calendar_dates_i$date)
-        end_date_i <- max(calendar_dates$date)
+        end_date_i <- max(calendar_dates_i$date)
         route_calendar$start_date[i] <- start_date_i
         route_calendar$end_date[i] <- end_date_i
       }
@@ -251,7 +251,7 @@ gtfs_to_ssfs <- function(
           filter(service_id == service_id_i)
 
         start_date_i <- min(calendar_dates_i$date)
-        end_date_i <- max(calendar_dates$date)
+        end_date_i <- max(calendar_dates_i$date)
         route_calendar$start_date[i] <- start_date_i
         route_calendar$end_date[i] <- end_date_i
       }
@@ -455,10 +455,16 @@ gtfs_to_ssfs <- function(
 
   #if there is no agency_id in routes_colnames, then add one to the original table and assign
   #the value to 1
+
+  # initialize variable that tracks if agency id needs to be changed to 1 in agency table
+  agency_id_1 <- FALSE
+
   if (!"agency_id" %in% routes_colnames) {
     gtfs$routes <-
       gtfs$routes |>
       mutate(agency_id = "1")
+
+    agency_id_1 <- TRUE
   }
 
   #if there is no route short name in colnames, then give route_short_name route_id
@@ -565,15 +571,16 @@ gtfs_to_ssfs <- function(
   agency_colnames <- colnames(gtfs$agency)
 
   #if agency_id is missing from the agency table, then add it and assign "1"
-  if (!"agency_id" %in% agency_colnames) {
+  # OR if agency_id was replaced to 1 in routes id, and agency_id is already in routes table
+  # replace agency_id in agency table
+  if (!"agency_id" %in% agency_colnames | agency_id_1) {
     agency <-
       gtfs$agency |>
       mutate(agency_id = "1") |>
       select(agency_id, agency_name, agency_url, agency_timezone)
-
+  } else {
     #else, identify the agency_ids retained in route_info
     #and filter agency based on this
-  } else {
     agency_ids <-
       route_info |> pull(agency_id) |> unique()
 
