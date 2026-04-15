@@ -31,7 +31,7 @@ generateRouteSegment <- function(
         }
         route_coords <- st_coordinates(route$geometry)
 
-        for (j in 1:nrow(route_coords)) {
+        for (j in seq_len(nrow(route_coords))) {
           result_points <- rbind(
             result_points,
             data.frame(
@@ -72,7 +72,7 @@ generateStopSequenceFromNodes <- function(nodes, itin_id) {
   stop_seq <- data.frame(
     itin_id = rep(itin_id, nrow(stop_nodes)),
     stop_id = stop_nodes$stop_id,
-    stop_sequence = 1:nrow(stop_nodes),
+    stop_sequence = seq_len(nrow(stop_nodes)),
     speed_factor = stop_nodes$speed_factor,
     stop_name = stop_nodes$stop_name,
     stringsAsFactors = FALSE

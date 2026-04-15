@@ -1081,7 +1081,7 @@ croquis <- function(ssfs = NULL) {
           !is.null(current_data$itin) &&
           nrow(current_data$itin) > 0
       ) {
-        for (i in 1:nrow(current_data$itin)) {
+        for (i in seq_len(nrow(current_data$itin))) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
           proxy <- proxy |>
             leaflet::addPolylines(
@@ -1130,7 +1130,7 @@ croquis <- function(ssfs = NULL) {
           )
       }
 
-      return(proxy)
+      proxy
     }
 
     #an update agency form helper function used to be here
@@ -1536,24 +1536,24 @@ croquis <- function(ssfs = NULL) {
             agency_url = character(),
             agency_timezone = character()
           ),
-          selection = 'single',
+          selection = "single",
           rownames = FALSE,
           options = list(
             pageLength = 10,
             ordering = FALSE,
-            dom = 't'
+            dom = "t"
           )
         ))
       }
 
       DT::datatable(
         current_data$agency,
-        selection = 'single',
+        selection = "single",
         rownames = FALSE,
         options = list(
           pageLength = 10,
           ordering = FALSE,
-          dom = 't'
+          dom = "t"
         ),
         colnames = c(
           "Agency ID",
@@ -1922,9 +1922,9 @@ croquis <- function(ssfs = NULL) {
 
       # Return speed based on route_type
       if (!is.na(route_type) && route_type %in% c(1, 2, 12)) {
-        return(40) # Rail/metro speed
+        40 # Rail/metro speed
       } else {
-        return(20) # Bus speed
+        20 # Bus speed
       }
     }
 
@@ -1966,12 +1966,12 @@ croquis <- function(ssfs = NULL) {
       current_data <- ssfs()
       DT::datatable(
         current_data$span,
-        selection = 'single',
+        selection = "single",
         rownames = FALSE,
         options = list(
           pageLength = -1,
           ordering = FALSE,
-          dom = 't'
+          dom = "t"
         )
       )
     })
@@ -2062,7 +2062,7 @@ croquis <- function(ssfs = NULL) {
         # Parse times for comparison (convert HH:MM:SS to seconds)
         parse_time_to_seconds <- function(time_str) {
           parts <- as.numeric(strsplit(time_str, ":")[[1]])
-          return(parts[1] * 3600 + parts[2] * 60 + parts[3])
+          parts[1] * 3600 + parts[2] * 60 + parts[3]
         }
 
         prev_last_seconds <- parse_time_to_seconds(prev_last_dep)
@@ -2823,14 +2823,14 @@ croquis <- function(ssfs = NULL) {
 
       DT::datatable(
         display_data,
-        selection = 'single',
+        selection = "single",
         rownames = FALSE,
         options = list(
           pageLength = 24,
           ordering = TRUE,
-          order = list(list(0, 'asc')),
+          order = list(list(0, "asc")),
           # Order by hour_dep (now index 0)
-          dom = 't'
+          dom = "t"
         ),
         colnames = c("Hour", "Headway (min)", "Speed (km/h)")
       )
@@ -3418,10 +3418,10 @@ croquis <- function(ssfs = NULL) {
           speed_factor
         ),
         hoverinfo = "text",
-        type = 'scatter',
-        mode = 'lines+markers',
-        marker = list(size = 12, color = '#124559'),
-        line = list(color = '#124559', width = 2)
+        type = "scatter",
+        mode = "lines+markers",
+        marker = list(size = 12, color = "#124559"),
+        line = list(color = "#124559", width = 2)
       ) |>
         plotly::layout(
           title = paste0(
@@ -3557,7 +3557,7 @@ croquis <- function(ssfs = NULL) {
         normalized <- values / avg
         return(round(normalized, 1))
       }
-      return(round(values, 1))
+      round(values, 1)
     }
 
     # Track how many button observers have been created to avoid duplicates
