@@ -45,7 +45,7 @@ NULL
 
 # shiny ----
 # Core shiny functions used heavily throughout the croquis() Shiny app.
-#' @importFrom shiny shinyApp fluidPage fluidRow column navbarPage tabPanel
+#' @importFrom shiny shinyApp NS moduleServer fluidPage fluidRow column navbarPage tabPanel
 #'   titlePanel sidebarLayout sidebarPanel mainPanel wellPanel conditionalPanel
 #'   actionButton downloadButton fileInput textInput numericInput selectInput
 #'   checkboxInput radioButtons dateInput
