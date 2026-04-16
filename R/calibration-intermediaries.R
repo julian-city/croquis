@@ -67,7 +67,7 @@ gtfs_to_interstop_matrix <- function(
       interstop_speeds = as.list(NULL)
     )
 
-  for (i in c(1:nrow(ssfs$calendar))) {
+  for (i in seq_len(nrow(ssfs$calendar))) {
     service_id_i <- ssfs$calendar[i, ]$service_id
 
     #FILTER TRIPS BASED ON RELEVANT DAYS OF THE WEEK
@@ -162,7 +162,7 @@ gtfs_to_interstop_matrix <- function(
       clear = FALSE
     )
 
-    for (i in c(1:nrow(interstops))) {
+    for (i in seq_len(nrow(interstops))) {
       cli::cli_progress_update()
 
       shape_id_i <- interstops$shape_id[i]
@@ -341,7 +341,7 @@ gtfs_to_interstop_matrix <- function(
       )
   }
 
-  return(interstop_matrices_by_service)
+  interstop_matrices_by_service
 }
 
 #' Apply interstop matrixx to ssfs
@@ -393,7 +393,7 @@ apply_interstop_matrix_to_ssfs <- function(
       geometry = st_sfc(NA, crs = 4269)
     )
 
-  for (i in 1:nrow(interstop_matrices_by_service)) {
+  for (i in seq_len(nrow(interstop_matrices_by_service))) {
     interstop_points_i <-
       interstop_matrices_by_service$interstops[[i]] |>
       st_as_sf(coords = c("cntr_pt_lon", "cntr_pt_lat"), crs = 4269) |>
@@ -458,7 +458,7 @@ apply_interstop_matrix_to_ssfs <- function(
     total = nrow(ssfs$span)
   )
 
-  for (i in 1:nrow(ssfs_interstops)) {
+  for (i in seq_len(nrow(ssfs_interstops))) {
     cli::cli_progress_update()
 
     stop_id_a <-
@@ -624,7 +624,7 @@ apply_interstop_matrix_to_ssfs <- function(
       clear = FALSE
     )
 
-    for (i in c(1:nrow(ssfs_interstops_h))) {
+    for (i in seq_len(nrow(ssfs_interstops_h))) {
       cli::cli_progress_update()
 
       stop_a <- ssfs_interstops_h[i, ]$stop_id
@@ -953,5 +953,5 @@ apply_interstop_matrix_to_ssfs <- function(
     select(-speed_factor) |>
     rename(speed_factor = speed_factor_overwrite)
 
-  return(ssfs)
+  ssfs
 }

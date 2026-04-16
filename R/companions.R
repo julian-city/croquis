@@ -97,7 +97,7 @@ gtfs_retain_routes <- function(gtfs, retain_routes) {
       filter(service_id %in% filter_service_id)
   }
 
-  return(gtfs)
+  gtfs
 }
 
 #' Remove routes from GTFS
@@ -194,5 +194,5 @@ gtfs_remove_routes <- function(gtfs, remove_routes) {
       filter(service_id %in% filter_service_id)
   }
 
-  return(gtfs)
+  gtfs
 }

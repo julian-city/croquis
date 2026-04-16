@@ -149,7 +149,7 @@ gtfs_to_ssfs <- function(
 
       #lookup start and end date for each service
 
-      for (i in 1:nrow(route_calendar)) {
+      for (i in seq_len(nrow(route_calendar))) {
         service_id_i <- route_calendar$service_id[i]
 
         calendar_dates_i <-
@@ -243,7 +243,7 @@ gtfs_to_ssfs <- function(
 
       #lookup start and end date for each service
 
-      for (i in 1:nrow(route_calendar)) {
+      for (i in seq_len(nrow(route_calendar))) {
         service_id_i <- route_calendar$service_id[i]
 
         calendar_dates_i <-
@@ -486,7 +486,9 @@ gtfs_to_ssfs <- function(
   #if route color and route text color exist in the gtfs$routes,
   #then pass those on to route info
   if (
-    "route_color" %in% routes_colnames & "route_text_color" %in% routes_colnames
+    "route_color" %in%
+      routes_colnames &&
+      "route_text_color" %in% routes_colnames
   ) {
     route_info <-
       gtfs$routes |>
@@ -573,7 +575,7 @@ gtfs_to_ssfs <- function(
   #if agency_id is missing from the agency table, then add it and assign "1"
   # OR if agency_id was replaced to 1 in routes id, and agency_id is already in routes table
   # replace agency_id in agency table
-  if (!"agency_id" %in% agency_colnames | agency_id_1) {
+  if (!"agency_id" %in% agency_colnames || agency_id_1) {
     agency <-
       gtfs$agency |>
       mutate(agency_id = "1") |>
@@ -888,7 +890,12 @@ gtfs_to_ssfs <- function(
     trips |>
     select(itin_id, shape_id) |>
     distinct() |>
-    left_join(shapes |> as_tibble() |> select(-geometry), by = "shape_id") |>
+    left_join(
+      shapes |>
+        as_tibble() |>
+        select(-geometry),
+      by = "shape_id"
+    ) |>
     group_by(itin_id) |>
     mutate(min_length = min(length)) |>
     ungroup() |>
@@ -942,7 +949,11 @@ gtfs_to_ssfs <- function(
   itin <-
     trips |>
     select(itin_id, route_id, direction_id, trip_headsign, shape_id) |>
-    left_join(shapes |> as_tibble(), by = "shape_id") |>
+    left_join(
+      shapes |>
+        as_tibble(),
+      by = "shape_id"
+    ) |>
     distinct() |>
     select(itin_id, route_id, direction_id, trip_headsign, geometry) |>
     st_as_sf()
@@ -983,7 +994,7 @@ gtfs_to_ssfs <- function(
 
     if (
       (stop_seq_proto$stop_sequence[i] + 1 ==
-        stop_seq_proto$stop_sequence[i + 1]) &
+        stop_seq_proto$stop_sequence[i + 1]) &&
         (stop_seq_proto$itin_id[i] == stop_seq_proto$itin_id[i + 1])
     ) {
       itin_id_i <- stop_seq_proto$itin_id[i]
@@ -1233,7 +1244,11 @@ gtfs_to_ssfs <- function(
   hsh <-
     stop_times_revised |>
     filter(stop_sequence == 1) |>
-    left_join(trips |> select(trip_id, speed), by = "trip_id") |>
+    left_join(
+      trips |>
+        select(trip_id, speed),
+      by = "trip_id"
+    ) |>
     mutate(
       hour_dep = sprintf("%02d:00:00", as.numeric(floor(departure_time / 3600)))
     ) |>
@@ -1290,5 +1305,5 @@ gtfs_to_ssfs <- function(
     calendar = calendar |> as.data.frame()
   )
 
-  return(ssfs)
+  ssfs
 }

@@ -41,7 +41,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
     clear = FALSE
   )
 
-  for (i in 1:nrow(ssfs$span)) {
+  for (i in seq_len(nrow(ssfs$span))) {
     itin_id_i <- ssfs$span[i, ]$itin_id
 
     service_id_i <- ssfs$span[i, ]$service_id
@@ -107,7 +107,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
         #ELSE calculate the next departure based on the headway and the previous hour
 
         if (
-          is.na(headway) &
+          is.na(headway) &&
             all(
               as.duration(hms(hour_prev_dep)) >=
                 as.duration(hms(headways$hour_dep))
@@ -142,7 +142,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
           #THEN overwrite next_dep_duration to that hour
 
           if (
-            !hour_next_dep %in% headways$hour_dep &
+            !hour_next_dep %in% headways$hour_dep &&
               all(
                 as.duration(hms(hour_next_dep)) >
                   as.duration(hms(headways$hour_dep))
@@ -262,7 +262,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
 
       if (
         (shapes_points$shape_pt_sequence[i] - 1 ==
-          shapes_points$shape_pt_sequence[i - 1]) &
+          shapes_points$shape_pt_sequence[i - 1]) &&
           (shapes_points$itin_id[i] == shapes_points$itin_id[i - 1])
       ) {
         point_before <-
@@ -298,7 +298,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       #ELSE the NA assignment remains
 
       if (
-        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &
+        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &&
           (stop_seq$itin_id[i] == stop_seq$itin_id[i + 1])
       ) {
         itin_id_i <- stop_seq$itin_id[i]
@@ -356,7 +356,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       #ELSE the NA assignment remains
 
       if (
-        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &
+        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &&
           (stop_seq$itin_id[i] == stop_seq$itin_id[i + 1])
       ) {
         itin_id_i <- stop_seq$itin_id[i]
@@ -454,7 +454,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
     clear = FALSE
   )
 
-  for (i in 1:length(ssfs$span$itin_id)) {
+  for (i in seq_along(ssfs$span$itin_id)) {
     itin_id_i <- ssfs$span[i, ]$itin_id
 
     service_id_i <- ssfs$span[i, ]$service_id
@@ -501,7 +501,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
         select(stop_id, stop_sequence, speed_factor, interstop_dist)
     }
 
-    for (i in 1:nrow(trips_i)) {
+    for (i in seq_len(nrow(trips_i))) {
       trip_id_i <- trips_i[i, ]$trip_id
 
       trip_dep_i <- trips_i[i, ]$trip_dep
@@ -676,5 +676,5 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
 
   class(gtfs) <- c("gtfs", "dt_gtfs", class(gtfs))
 
-  return(gtfs)
+  gtfs
 }
