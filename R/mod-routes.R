@@ -152,6 +152,9 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     # Track when a marker was last clicked
     last_marker_click_time <- reactiveVal(0)
 
+    # Track map state
+    map_ready <- reactiveVal(FALSE)
+
     # Clear all inputs function
     clearInputs <- function() {
       active_route_id(NULL)
@@ -1069,21 +1072,40 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::showGroup("current_route") |>
         htmlwidgets::onRender(sprintf(
           "
-      function(el, x) {
-        var ns = '%s';
-        this.on('zoomend', function(e) {
-          Shiny.setInputValue(ns + 'routes_map_zoom', this.getZoom());
-        });
+          function(el, x) {
+            var ns = '%s';
+            var map = this;
 
-        // Capture right-click events
-        this.on('contextmenu', function(e) {
-          Shiny.setInputValue(ns + 'routes_map_right_click', {
-            lat: e.latlng.lat,
-            lng: e.latlng.lng
-          }, {priority: 'event'});
-        });
-      }
-    ",
+            function calcMarkerSize(zoom) {
+              var base = 2;
+              var adjusted = base * Math.pow(1.2, zoom - 10);
+              return Math.min(Math.max(adjusted, 1), 15);
+            }
+
+            function resizeStopMarkers() {
+              var zoom = map.getZoom();
+              var r = calcMarkerSize(zoom);
+              map.eachLayer(function(layer) {
+                if (layer.options && layer.options.group === 'stops' &&
+                    typeof layer.setRadius === 'function') {
+                  layer.setRadius(r);
+                }
+              });
+            }
+
+            map.on('zoomend', function(e) {
+              Shiny.setInputValue(ns + 'routes_map_zoom', map.getZoom());
+              resizeStopMarkers();
+            });
+
+            map.on('contextmenu', function(e) {
+              Shiny.setInputValue(ns + 'routes_map_right_click', {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng
+              }, {priority: 'event'});
+            });
+          }
+          ",
           ns("")
         ))
     })
@@ -1093,16 +1115,33 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       current_zoom(input$routes_map_zoom)
     })
 
+    observeEvent(
+      map_center(),
+      {
+        map_ready(FALSE)
+      },
+      priority = 10
+    )
+
+    observeEvent(
+      input$routes_map_bounds,
+      {
+        map_ready(TRUE)
+      },
+      once = FALSE
+    )
+
     # --- Map Observers ----
     # ---- Itinerary Polylines ----
     observe({
+      req(map_ready())
       current_data <- ssfs()
       current_active <- active_itin_id()
 
       proxy <- leaflet::leafletProxy("routes_map") |>
         leaflet::clearGroup("routes")
 
-      if (!is.null(current_active) && nrow(current_data$itin) > 0) {
+      if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
         for (i in 1:nrow(current_data$itin)) {
           if (
             !is.null(current_active) &&
@@ -1192,6 +1231,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # ---- Highlight underlay ----
     observe({
+      req(map_ready())
       hl_ids <- highlighted_itin_ids()
       current_data <- ssfs()
 
@@ -1218,6 +1258,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # ---- Stop markers ----
     observe({
+      req(map_ready())
       current_data <- ssfs()
       curr_nodes <- route_nodes()
 
@@ -1225,7 +1266,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::clearGroup("stops")
 
       if (!is.null(current_data$stops) && nrow(current_data$stops) > 0) {
-        marker_size <- calculateMarkerSize(current_zoom())
+        marker_size <- calculateMarkerSize(isolate(current_zoom()))
 
         stop_ids_in_nodes <- curr_nodes$stop_id[curr_nodes$is_stop]
 
@@ -1253,6 +1294,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # ---- Current route being edited + node markers ----
     observe({
+      req(map_ready())
+
       curr_nodes <- route_nodes()
       curr_points <- route_points()
 

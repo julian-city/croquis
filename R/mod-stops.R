@@ -120,6 +120,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     stops_edit_stop_id <- reactiveVal("")
     stops_edit_stop_name <- reactiveVal("")
 
+    # Check if map is ready
+    stops_map_ready <- reactiveVal(FALSE)
+
     # Handle stop search input
     observeEvent(
       input$stop_search_term,
@@ -137,13 +140,33 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         htmlwidgets::onRender(sprintf(
           "
-      function(el, x) {
-        var ns = '%s';
-        this.on('zoomend', function(e) {
-          Shiny.setInputValue(ns + 'stops_map_zoom', this.getZoom());
-        });
-      }
-    ",
+          function(el, x) {
+            var ns = '%s';
+            var map = this;
+
+            function calcMarkerSize(zoom) {
+              var base = 2;
+              var adjusted = base * Math.pow(1.2, zoom - 10);
+              return Math.min(Math.max(adjusted, 1), 15);
+            }
+
+            function resizeMarkers() {
+              var zoom = map.getZoom();
+              var r = calcMarkerSize(zoom);
+              map.eachLayer(function(layer) {
+                if (layer.options && layer.options.className !== 'temp-marker' &&
+                    typeof layer.setRadius === 'function') {
+                  layer.setRadius(r);
+                }
+              });
+            }
+
+            map.on('zoomend', function(e) {
+              Shiny.setInputValue(ns + 'stops_map_zoom', map.getZoom());
+              resizeMarkers();
+            });
+          }
+          ",
           ns("")
         ))
     })
@@ -153,8 +176,25 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       current_zoom(input$stops_map_zoom)
     })
 
+    observeEvent(
+      map_center(),
+      {
+        stops_map_ready(FALSE)
+      },
+      priority = 10
+    )
+
+    observeEvent(
+      input$stops_map_bounds,
+      {
+        stops_map_ready(TRUE)
+      },
+      once = FALSE
+    )
+
     # Update stops map content
     observe({
+      req(stops_map_ready())
       current_data <- ssfs()
       temp <- stops_temp_point()
       editing_id <- stops_editing_id()
@@ -250,7 +290,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               stroke = TRUE,
               fillColor = "#7f7f7f",
               fillOpacity = 0.7,
-              radius = calculateMarkerSize(current_zoom()),
+              radius = calculateMarkerSize(isolate(current_zoom())),
               label = hover_labels,
               labelOptions = leaflet::labelOptions(
                 style = list("font-size" = "11px", "padding" = "3px 6px"),
@@ -264,7 +304,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       # Add temporary point (red draggable marker) if in editing mode
       if (!is.null(temp)) {
         # Calculate icon size based on zoom
-        icon_size <- as.integer((calculateMarkerSize(current_zoom()) + 2) * 2)
+        icon_size <- as.integer(
+          (calculateMarkerSize(isolate(current_zoom())) + 2) * 2
+        )
 
         # Create SVG circle as data URI
         svg_string <- sprintf(
