@@ -123,6 +123,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     # Check if map is ready
     stops_map_ready <- reactiveVal(FALSE)
 
+    # Check previous itin
+    prev_itin_hash <- reactiveVal(NULL)
+
     # Handle stop search input
     observeEvent(
       input$stop_search_term,
@@ -132,7 +135,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       ignoreNULL = FALSE
     )
 
-    # Initialize stops map
+    # --- Initialize stops map ---
     output$stops_map <- leaflet::renderLeaflet({
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
@@ -192,29 +195,28 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       once = FALSE
     )
 
-    # Update stops map content
+    # ---- Itinerary shapes ----
     observe({
       req(stops_map_ready())
       current_data <- ssfs()
-      temp <- stops_temp_point()
-      editing_id <- stops_editing_id()
+
+      # Skip redraw if itin data hasn't changed
+      new_hash <- digest::digest(current_data$itin)
+      if (identical(new_hash, isolate(prev_itin_hash()))) {
+        return()
+      }
+      prev_itin_hash(new_hash)
 
       proxy <- leaflet::leafletProxy("stops_map") |>
-        leaflet::clearMarkers() |>
-        leaflet::clearShapes()
+        leaflet::clearGroup("shapes")
 
-      # Add shapes if they exist
       if (nrow(current_data$itin) > 0) {
         for (i in seq_len(nrow(current_data$itin))) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
-
-          # Get route_color from routes table based on route_id
           route_id_i <- current_data$itin$route_id[i]
           route_color_i <- current_data$routes$route_color[
             current_data$routes$route_id == route_id_i
           ]
-
-          # Use route color if found, otherwise fallback to default
           line_color <- if (
             length(route_color_i) > 0 &&
               !is.na(route_color_i[1]) &&
@@ -232,12 +234,21 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               group = "shapes",
               color = line_color,
               weight = 3,
-              opacity = 0.5
+              opacity = 0.5,
             )
         }
       }
+    })
 
-      # Add stops (excluding the one being edited)
+    # ---- Stop markers ----
+    observe({
+      req(stops_map_ready())
+      current_data <- ssfs()
+      editing_id <- stops_editing_id()
+
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("stops")
+
       if (nrow(current_data$stops) > 0) {
         stops_to_show <- current_data$stops
         if (!is.null(editing_id)) {
@@ -296,14 +307,22 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
                 style = list("font-size" = "11px", "padding" = "3px 6px"),
                 direction = "top",
                 offset = c(0, -8)
-              )
+              ),
+              group = "stops"
             )
         }
       }
+    })
 
-      # Add temporary point (red draggable marker) if in editing mode
+    # ---- Temporary stop marker (when editing) ----
+    observe({
+      req(stops_map_ready())
+      temp <- stops_temp_point()
+
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("temp_marker")
+
       if (!is.null(temp)) {
-        # Calculate icon size based on zoom
         icon_size <- as.integer(
           (calculateMarkerSize(isolate(current_zoom())) + 2) * 2
         )
@@ -337,7 +356,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
             lat = temp[2],
             layerId = "temp_drag",
             icon = red_circle_icon,
-            options = leaflet::markerOptions(draggable = TRUE)
+            options = leaflet::markerOptions(draggable = TRUE),
+            group = "temp_marker"
           )
       }
     })
