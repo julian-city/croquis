@@ -234,7 +234,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               group = "shapes",
               color = line_color,
               weight = 3,
-              opacity = 0.5,
+              opacity = 0.5
             )
         }
       }
@@ -244,7 +244,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     observe({
       req(stops_map_ready())
       current_data <- ssfs()
-      editing_id <- stops_editing_id()
+      editing_id <- isolate(stops_editing_id())
 
       proxy <- leaflet::leafletProxy("stops_map") |>
         leaflet::clearGroup("stops")
@@ -264,33 +264,38 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               .groups = "drop"
             )
 
-          label_data <- merge(
-            as.data.frame(stops_to_show)[, "stop_id", drop = FALSE],
+          stops_df <- merge(
+            as.data.frame(stops_to_show)[,
+              c("stop_id", "stop_name"),
+              drop = FALSE
+            ],
             stop_itin_lookup,
             by = "stop_id",
-            all.x = TRUE
+            all.x = TRUE,
+            sort = FALSE
           )
 
-          hover_labels <- lapply(seq_len(nrow(stops_to_show)), function(i) {
-            sid <- stops_to_show$stop_id[i]
-            sname <- stops_to_show$stop_name[i]
-            itins <- label_data$itin_ids[label_data$stop_id == sid]
-            itin_text <- if (is.na(itins) || length(itins) == 0) {
-              "None"
-            } else {
-              itins
-            }
-            htmltools::HTML(paste0(
-              "<span style='font-size:11px;'>",
-              "<b>",
-              htmltools::htmlEscape(sid),
+          # Preserves row order
+          stops_df <- stops_df[match(stops_to_show$stop_id, stops_df$stop_id), ]
+
+          itin_text <- ifelse(
+            is.na(stops_df$itin_ids),
+            "None",
+            stops_df$itin_ids
+          )
+
+          hover_labels <- lapply(
+            paste0(
+              "<span style='font-size:11px;'><b>",
+              htmltools::htmlEscape(stops_df$stop_id),
               "</b> \u2014 ",
-              htmltools::htmlEscape(sname),
+              htmltools::htmlEscape(stops_df$stop_name),
               "<br>Itineraries: ",
               htmltools::htmlEscape(itin_text),
               "</span>"
-            ))
-          })
+            ),
+            htmltools::HTML
+          )
 
           proxy <- proxy |>
             leaflet::addCircleMarkers(
@@ -313,6 +318,20 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         }
       }
     })
+
+    # ---- Hide/show single marker on edit state change ----
+    observeEvent(
+      stops_editing_id(),
+      {
+        req(stops_map_ready())
+        editing_id <- stops_editing_id()
+        if (!is.null(editing_id)) {
+          leaflet::leafletProxy("stops_map") |>
+            leaflet::removeMarker(editing_id)
+        }
+      },
+      ignoreNULL = FALSE
+    )
 
     # ---- Temporary stop marker (when editing) ----
     observe({
@@ -433,9 +452,30 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         }
 
         if (nrow(stops_df) > 0) {
-          for (i in seq_len(nrow(stops_df))) {
-            rows[[length(rows) + 1]] <- build_stop_row(stops_df[i, ])
-          }
+          rows_html <- paste0(
+            "<div class='stop-list-row' onclick=\"viewStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\">",
+            "<div class='stop-info'><div class='stop-info-display'>",
+            "<span class='stop-name'>",
+            htmltools::htmlEscape(stops_df$stop_name),
+            "</span>",
+            "<span class='stop-id-display'>(",
+            htmltools::htmlEscape(stops_df$stop_id),
+            ")</span>",
+            "</div></div>",
+            "<div class='stop-actions'>",
+            "<button class='stop-action-btn edit-btn' onclick=\"event.stopPropagation(); editStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\" title='Edit'>&#9998;</button>",
+            "<button class='stop-action-btn delete-btn' onclick=\"event.stopPropagation(); deleteStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\" title='Delete stop'><i class='fa-solid fa-trash'></i></button>",
+            "</div>",
+            "</div>",
+            collapse = ""
+          )
+          rows[[length(rows) + 1]] <- htmltools::HTML(rows_html)
         } else if (
           !is.null(search_term) && search_term != "" && is.null(editing_id)
         ) {
