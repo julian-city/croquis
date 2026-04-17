@@ -63,6 +63,8 @@ gtfs_to_ssfs <- function(
     )
   }
 
+  routing_server <- match.arg(routing_server)
+
   #1. VALIDATIONS and initial transformations---------------------
 
   #goal is to filter routes, trips, and service ids based on max_date argument
@@ -1078,14 +1080,14 @@ gtfs_to_ssfs <- function(
     #filter(trip_id=="1261767") |>
     #filter(trip_id%in%c("1261875","1261876","1261877")) |>
 
-    group_by(trip_id) |>
+    group_by(trip_id, service_id) |>
     mutate(trip_max_stop_seq = max(stop_sequence)) |>
-    group_by(itin_id, trip_id, departure_time) |>
+    group_by(itin_id, trip_id, service_id, departure_time) |>
     mutate(
       ord = row_number(),
       group_n = n(),
-      group_dist = sum(interstop_dist),
-      group_dist_back = sum(lag_interstop_dist),
+      group_dist = sum(interstop_dist, na.rm = TRUE),
+      group_dist_back = sum(lag_interstop_dist, na.rm = TRUE),
       group_dist_cov = lag(cumsum(interstop_dist), default = 0),
       group_dist_cov_back = cumsum(lag_interstop_dist),
       group_max_stop_seq = max(stop_sequence)
@@ -1147,7 +1149,7 @@ gtfs_to_ssfs <- function(
 
   interstop_times <-
     stop_times_revised |>
-    arrange(itin_id, trip_id, stop_sequence) |>
+    arrange(itin_id, trip_id, service_id, stop_sequence) |>
     mutate(
       interstop_time = if_else(
         lead(stop_sequence) == stop_sequence + 1,
