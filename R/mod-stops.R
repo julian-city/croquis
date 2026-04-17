@@ -120,6 +120,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     stops_edit_stop_id <- reactiveVal("")
     stops_edit_stop_name <- reactiveVal("")
 
+    # Track previously editing stop for marker restore
+    prev_stops_editing_id <- reactiveVal(NULL)
+
     # Check if map is ready
     stops_map_ready <- reactiveVal(FALSE)
 
@@ -325,10 +328,37 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       {
         req(stops_map_ready())
         editing_id <- stops_editing_id()
+        prev_id <- prev_stops_editing_id()
+
+        # Re-add previously hidden marker
+        if (!is.null(prev_id)) {
+          current_data <- isolate(ssfs())
+          stop_row <- current_data$stops[
+            current_data$stops$stop_id == prev_id,
+          ]
+          if (nrow(stop_row) > 0) {
+            leaflet::leafletProxy("stops_map") |>
+              leaflet::addCircleMarkers(
+                data = stop_row,
+                layerId = ~stop_id,
+                color = "white",
+                weight = 1,
+                stroke = TRUE,
+                fillColor = "#7f7f7f",
+                fillOpacity = 0.7,
+                radius = calculateMarkerSize(isolate(current_zoom())),
+                group = "stops"
+              )
+          }
+        }
+
+        # Remove the marker being edited
         if (!is.null(editing_id)) {
           leaflet::leafletProxy("stops_map") |>
             leaflet::removeMarker(editing_id)
         }
+
+        prev_stops_editing_id(editing_id)
       },
       ignoreNULL = FALSE
     )
