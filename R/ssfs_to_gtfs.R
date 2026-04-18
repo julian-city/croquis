@@ -387,13 +387,22 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
             ):st_nearest_feature(next_stop, shapes_points_i),
           ]
 
-        interstop_dist_i <-
-          as.numeric(
-            interstop_segment_points |>
-              summarise(do_union = FALSE) |> #do_union retains the order of the points
-              st_cast("LINESTRING") |>
-              st_length()
+        if (nrow(interstop_segment_points) == 1) {
+          cli::cli_warn(
+            "Calculated interstop distance {current_stop_id} -> {next_stop_id} (itin {itin_id_i}) directly between both stops."
           )
+          interstop_dist_i <-
+            as.numeric(st_distance(current_stop, next_stop))
+        } else {
+          # calculate distance normally
+          interstop_dist_i <-
+            as.numeric(
+              interstop_segment_points |>
+                summarise(do_union = FALSE) |> #do_union retains the order of the points
+                st_cast("LINESTRING") |>
+                st_length()
+            )
+        }
 
         stop_seq$interstop_dist[i] <- interstop_dist_i
       } else {

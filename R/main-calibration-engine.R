@@ -211,13 +211,20 @@ apply_gtfs_speeds_to_ssfs <- function(
 
       #calculate distance (to the closest meter)
 
-      distance <-
-        interstop_segment_points |>
-        summarise(do_union = FALSE) |>
-        st_cast("LINESTRING") |>
-        st_length() |>
-        as.numeric() |>
-        round()
+      if (nrow(interstop_segment_points) == 1) {
+        #calculate distance from stop a to stop b if both have the same nearest shape point
+        distance <-
+          as.numeric(sf::st_distance(stop_a, stop_b)) |> round()
+      } else {
+        # Calculate interstop distance normally along itin shape
+        distance <-
+          interstop_segment_points |>
+          summarise(do_union = FALSE) |>
+          st_cast("LINESTRING") |>
+          st_length() |>
+          as.numeric() |>
+          round()
+      }
 
       interstops$dist[i] <- distance
 
