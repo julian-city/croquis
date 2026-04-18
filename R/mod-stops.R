@@ -120,6 +120,15 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     stops_edit_stop_id <- reactiveVal("")
     stops_edit_stop_name <- reactiveVal("")
 
+    # Track previously editing stop for marker restore
+    prev_stops_editing_id <- reactiveVal(NULL)
+
+    # Check if map is ready
+    stops_map_ready <- reactiveVal(FALSE)
+
+    # Check previous itin
+    prev_itin_hash <- reactiveVal(NULL)
+
     # Handle stop search input
     observeEvent(
       input$stop_search_term,
@@ -129,7 +138,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       ignoreNULL = FALSE
     )
 
-    # Initialize stops map
+    # --- Initialize stops map ---
     output$stops_map <- leaflet::renderLeaflet({
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
@@ -137,13 +146,33 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         htmlwidgets::onRender(sprintf(
           "
-      function(el, x) {
-        var ns = '%s';
-        this.on('zoomend', function(e) {
-          Shiny.setInputValue(ns + 'stops_map_zoom', this.getZoom());
-        });
-      }
-    ",
+          function(el, x) {
+            var ns = '%s';
+            var map = this;
+
+            function calcMarkerSize(zoom) {
+              var base = 2;
+              var adjusted = base * Math.pow(1.2, zoom - 10);
+              return Math.min(Math.max(adjusted, 1), 15);
+            }
+
+            function resizeMarkers() {
+              var zoom = map.getZoom();
+              var r = calcMarkerSize(zoom);
+              map.eachLayer(function(layer) {
+                if (layer.options && layer.options.className !== 'temp-marker' &&
+                    typeof layer.setRadius === 'function') {
+                  layer.setRadius(r);
+                }
+              });
+            }
+
+            map.on('zoomend', function(e) {
+              Shiny.setInputValue(ns + 'stops_map_zoom', map.getZoom());
+              resizeMarkers();
+            });
+          }
+          ",
           ns("")
         ))
     })
@@ -153,28 +182,44 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       current_zoom(input$stops_map_zoom)
     })
 
-    # Update stops map content
+    observeEvent(
+      map_center(),
+      {
+        stops_map_ready(FALSE)
+      },
+      priority = 10
+    )
+
+    observeEvent(
+      input$stops_map_bounds,
+      {
+        stops_map_ready(TRUE)
+      },
+      once = FALSE
+    )
+
+    # ---- Itinerary shapes ----
     observe({
+      req(stops_map_ready())
       current_data <- ssfs()
-      temp <- stops_temp_point()
-      editing_id <- stops_editing_id()
+
+      # Skip redraw if itin data hasn't changed
+      new_hash <- digest::digest(current_data$itin)
+      if (identical(new_hash, isolate(prev_itin_hash()))) {
+        return()
+      }
+      prev_itin_hash(new_hash)
 
       proxy <- leaflet::leafletProxy("stops_map") |>
-        leaflet::clearMarkers() |>
-        leaflet::clearShapes()
+        leaflet::clearGroup("shapes")
 
-      # Add shapes if they exist
       if (nrow(current_data$itin) > 0) {
         for (i in seq_len(nrow(current_data$itin))) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
-
-          # Get route_color from routes table based on route_id
           route_id_i <- current_data$itin$route_id[i]
           route_color_i <- current_data$routes$route_color[
             current_data$routes$route_id == route_id_i
           ]
-
-          # Use route color if found, otherwise fallback to default
           line_color <- if (
             length(route_color_i) > 0 &&
               !is.na(route_color_i[1]) &&
@@ -196,8 +241,17 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
             )
         }
       }
+    })
 
-      # Add stops (excluding the one being edited)
+    # ---- Stop markers ----
+    observe({
+      req(stops_map_ready())
+      current_data <- ssfs()
+      editing_id <- isolate(stops_editing_id())
+
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("stops")
+
       if (nrow(current_data$stops) > 0) {
         stops_to_show <- current_data$stops
         if (!is.null(editing_id)) {
@@ -213,33 +267,38 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               .groups = "drop"
             )
 
-          label_data <- merge(
-            as.data.frame(stops_to_show)[, "stop_id", drop = FALSE],
+          stops_df <- merge(
+            as.data.frame(stops_to_show)[,
+              c("stop_id", "stop_name"),
+              drop = FALSE
+            ],
             stop_itin_lookup,
             by = "stop_id",
-            all.x = TRUE
+            all.x = TRUE,
+            sort = FALSE
           )
 
-          hover_labels <- lapply(seq_len(nrow(stops_to_show)), function(i) {
-            sid <- stops_to_show$stop_id[i]
-            sname <- stops_to_show$stop_name[i]
-            itins <- label_data$itin_ids[label_data$stop_id == sid]
-            itin_text <- if (is.na(itins) || length(itins) == 0) {
-              "None"
-            } else {
-              itins
-            }
-            htmltools::HTML(paste0(
-              "<span style='font-size:11px;'>",
-              "<b>",
-              htmltools::htmlEscape(sid),
+          # Preserves row order
+          stops_df <- stops_df[match(stops_to_show$stop_id, stops_df$stop_id), ]
+
+          itin_text <- ifelse(
+            is.na(stops_df$itin_ids),
+            "None",
+            stops_df$itin_ids
+          )
+
+          hover_labels <- lapply(
+            paste0(
+              "<span style='font-size:11px;'><b>",
+              htmltools::htmlEscape(stops_df$stop_id),
               "</b> \u2014 ",
-              htmltools::htmlEscape(sname),
+              htmltools::htmlEscape(stops_df$stop_name),
               "<br>Itineraries: ",
               htmltools::htmlEscape(itin_text),
               "</span>"
-            ))
-          })
+            ),
+            htmltools::HTML
+          )
 
           proxy <- proxy |>
             leaflet::addCircleMarkers(
@@ -250,21 +309,72 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               stroke = TRUE,
               fillColor = "#7f7f7f",
               fillOpacity = 0.7,
-              radius = calculateMarkerSize(current_zoom()),
+              radius = calculateMarkerSize(isolate(current_zoom())),
               label = hover_labels,
               labelOptions = leaflet::labelOptions(
                 style = list("font-size" = "11px", "padding" = "3px 6px"),
                 direction = "top",
                 offset = c(0, -8)
-              )
+              ),
+              group = "stops"
             )
         }
       }
+    })
 
-      # Add temporary point (red draggable marker) if in editing mode
+    # ---- Hide/show single marker on edit state change ----
+    observeEvent(
+      stops_editing_id(),
+      {
+        req(stops_map_ready())
+        editing_id <- stops_editing_id()
+        prev_id <- prev_stops_editing_id()
+
+        # Re-add previously hidden marker
+        if (!is.null(prev_id)) {
+          current_data <- isolate(ssfs())
+          stop_row <- current_data$stops[
+            current_data$stops$stop_id == prev_id,
+          ]
+          if (nrow(stop_row) > 0) {
+            leaflet::leafletProxy("stops_map") |>
+              leaflet::addCircleMarkers(
+                data = stop_row,
+                layerId = ~stop_id,
+                color = "white",
+                weight = 1,
+                stroke = TRUE,
+                fillColor = "#7f7f7f",
+                fillOpacity = 0.7,
+                radius = calculateMarkerSize(isolate(current_zoom())),
+                group = "stops"
+              )
+          }
+        }
+
+        # Remove the marker being edited
+        if (!is.null(editing_id)) {
+          leaflet::leafletProxy("stops_map") |>
+            leaflet::removeMarker(editing_id)
+        }
+
+        prev_stops_editing_id(editing_id)
+      },
+      ignoreNULL = FALSE
+    )
+
+    # ---- Temporary stop marker (when editing) ----
+    observe({
+      req(stops_map_ready())
+      temp <- stops_temp_point()
+
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("temp_marker")
+
       if (!is.null(temp)) {
-        # Calculate icon size based on zoom
-        icon_size <- as.integer((calculateMarkerSize(current_zoom()) + 2) * 2)
+        icon_size <- as.integer(
+          (calculateMarkerSize(isolate(current_zoom())) + 2) * 2
+        )
 
         # Create SVG circle as data URI
         svg_string <- sprintf(
@@ -295,7 +405,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
             lat = temp[2],
             layerId = "temp_drag",
             icon = red_circle_icon,
-            options = leaflet::markerOptions(draggable = TRUE)
+            options = leaflet::markerOptions(draggable = TRUE),
+            group = "temp_marker"
           )
       }
     })
@@ -371,9 +482,30 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         }
 
         if (nrow(stops_df) > 0) {
-          for (i in seq_len(nrow(stops_df))) {
-            rows[[length(rows) + 1]] <- build_stop_row(stops_df[i, ])
-          }
+          rows_html <- paste0(
+            "<div class='stop-list-row' onclick=\"viewStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\">",
+            "<div class='stop-info'><div class='stop-info-display'>",
+            "<span class='stop-name'>",
+            htmltools::htmlEscape(stops_df$stop_name),
+            "</span>",
+            "<span class='stop-id-display'>(",
+            htmltools::htmlEscape(stops_df$stop_id),
+            ")</span>",
+            "</div></div>",
+            "<div class='stop-actions'>",
+            "<button class='stop-action-btn edit-btn' onclick=\"event.stopPropagation(); editStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\" title='Edit'>&#9998;</button>",
+            "<button class='stop-action-btn delete-btn' onclick=\"event.stopPropagation(); deleteStopFromList('",
+            htmltools::htmlEscape(stops_df$stop_id),
+            "')\" title='Delete stop'><i class='fa-solid fa-trash'></i></button>",
+            "</div>",
+            "</div>",
+            collapse = ""
+          )
+          rows[[length(rows) + 1]] <- htmltools::HTML(rows_html)
         } else if (
           !is.null(search_term) && search_term != "" && is.null(editing_id)
         ) {

@@ -152,6 +152,9 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     # Track when a marker was last clicked
     last_marker_click_time <- reactiveVal(0)
 
+    # Track map state
+    map_ready <- reactiveVal(FALSE)
+
     # Clear all inputs function
     clearInputs <- function() {
       active_route_id(NULL)
@@ -1069,21 +1072,40 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::showGroup("current_route") |>
         htmlwidgets::onRender(sprintf(
           "
-      function(el, x) {
-        var ns = '%s';
-        this.on('zoomend', function(e) {
-          Shiny.setInputValue(ns + 'routes_map_zoom', this.getZoom());
-        });
+          function(el, x) {
+            var ns = '%s';
+            var map = this;
 
-        // Capture right-click events
-        this.on('contextmenu', function(e) {
-          Shiny.setInputValue(ns + 'routes_map_right_click', {
-            lat: e.latlng.lat,
-            lng: e.latlng.lng
-          }, {priority: 'event'});
-        });
-      }
-    ",
+            function calcMarkerSize(zoom) {
+              var base = 2;
+              var adjusted = base * Math.pow(1.2, zoom - 10);
+              return Math.min(Math.max(adjusted, 1), 15);
+            }
+
+            function resizeStopMarkers() {
+              var zoom = map.getZoom();
+              var r = calcMarkerSize(zoom);
+              map.eachLayer(function(layer) {
+                if (layer.options && layer.options.group === 'stops' &&
+                    typeof layer.setRadius === 'function') {
+                  layer.setRadius(r);
+                }
+              });
+            }
+
+            map.on('zoomend', function(e) {
+              Shiny.setInputValue(ns + 'routes_map_zoom', map.getZoom());
+              resizeStopMarkers();
+            });
+
+            map.on('contextmenu', function(e) {
+              Shiny.setInputValue(ns + 'routes_map_right_click', {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng
+              }, {priority: 'event'});
+            });
+          }
+          ",
           ns("")
         ))
     })
@@ -1093,44 +1115,37 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       current_zoom(input$routes_map_zoom)
     })
 
-    # Observe block that updates map
+    observeEvent(
+      map_center(),
+      {
+        map_ready(FALSE)
+      },
+      priority = 10
+    )
+
+    observeEvent(
+      input$routes_map_bounds,
+      {
+        map_ready(TRUE)
+      },
+      once = FALSE
+    )
+
+    # --- Map Observers ----
+    # ---- Itinerary Polylines ----
     observe({
-      curr_nodes <- route_nodes()
-      curr_points <- route_points()
+      req(map_ready())
       current_data <- ssfs()
+      current_active <- active_itin_id()
 
       proxy <- leaflet::leafletProxy("routes_map") |>
-        leaflet::clearGroup("stops") |>
-        leaflet::clearGroup("routes") |>
-        leaflet::clearGroup("current_route") |>
-        leaflet::clearGroup("route_nodes") |>
-        leaflet::clearGroup("highlight")
+        leaflet::clearGroup("routes")
 
-      # Draw highlight underlay for selected itineraries
-      hl_ids <- highlighted_itin_ids()
-      if (length(hl_ids) > 0 && nrow(current_data$itin) > 0) {
-        hl_itins <- current_data$itin[current_data$itin$itin_id %in% hl_ids, ]
-        for (j in seq_len(nrow(hl_itins))) {
-          hl_coords <- st_coordinates(hl_itins$geometry[j])
-          proxy <- proxy |>
-            leaflet::addPolylines(
-              lng = hl_coords[, 1],
-              lat = hl_coords[, 2],
-              group = "highlight",
-              color = "#FFE999",
-              weight = 10,
-              opacity = 0.4,
-              stroke = TRUE
-            )
-        }
-      }
-
-      # Add existing routes (except current one being edited)
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
         for (i in 1:nrow(current_data$itin)) {
           if (
-            !is.null(active_itin_id()) &&
-              current_data$itin$itin_id[i] == active_itin_id()
+            !is.null(current_active) &&
+              current_data$itin$itin_id[i] == current_active
           ) {
             next
           }
@@ -1151,6 +1166,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           } else {
             ""
           }
+
           route_long <- if (nrow(route_row) > 0) {
             route_row$route_long_name[1]
           } else {
@@ -1211,10 +1227,46 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             )
         }
       }
+    })
 
-      # Add all stops
+    # ---- Highlight underlay ----
+    observe({
+      req(map_ready())
+      hl_ids <- highlighted_itin_ids()
+      current_data <- ssfs()
+
+      proxy <- leaflet::leafletProxy("routes_map") |>
+        leaflet::clearGroup("highlight")
+
+      if (length(hl_ids) > 0 && nrow(current_data$itin) > 0) {
+        hl_itins <- current_data$itin[current_data$itin$itin_id %in% hl_ids, ]
+        for (j in seq_len(nrow(hl_itins))) {
+          hl_coords <- st_coordinates(hl_itins$geometry[j])
+          proxy <- proxy |>
+            leaflet::addPolylines(
+              lng = hl_coords[, 1],
+              lat = hl_coords[, 2],
+              group = "highlight",
+              color = "#FFE999",
+              weight = 10,
+              opacity = 0.4,
+              stroke = TRUE
+            )
+        }
+      }
+    })
+
+    # ---- Stop markers ----
+    observe({
+      req(map_ready())
+      current_data <- ssfs()
+      curr_nodes <- route_nodes()
+
+      proxy <- leaflet::leafletProxy("routes_map") |>
+        leaflet::clearGroup("stops")
+
       if (!is.null(current_data$stops) && nrow(current_data$stops) > 0) {
-        marker_size <- calculateMarkerSize(current_zoom())
+        marker_size <- calculateMarkerSize(isolate(current_zoom()))
 
         stop_ids_in_nodes <- curr_nodes$stop_id[curr_nodes$is_stop]
 
@@ -1238,6 +1290,18 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             group = "stops"
           )
       }
+    })
+
+    # ---- Current route being edited + node markers ----
+    observe({
+      req(map_ready())
+
+      curr_nodes <- route_nodes()
+      curr_points <- route_points()
+
+      proxy <- leaflet::leafletProxy("routes_map") |>
+        leaflet::clearGroup("current_route") |>
+        leaflet::clearGroup("route_nodes")
 
       # Add current route being edited
       if (nrow(curr_points) > 1) {
@@ -1255,6 +1319,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       # Add node markers
       if (nrow(curr_nodes) > 0) {
         stop_nodes <- curr_nodes[curr_nodes$is_stop, ]
+
         if (nrow(stop_nodes) > 0) {
           proxy <- proxy |>
             leaflet::addCircleMarkers(
@@ -1271,48 +1336,47 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               label = paste0("Stop: ", stop_nodes$stop_name)
             )
         }
-
-        waypoint_nodes <- curr_nodes[!curr_nodes$is_stop, ]
-        if (nrow(waypoint_nodes) > 0) {
-          proxy <- proxy |>
-            leaflet::addCircleMarkers(
-              lng = waypoint_nodes$lng,
-              lat = waypoint_nodes$lat,
-              group = "route_nodes",
-              radius = 6,
-              color = "orange",
-              fillColor = "orange",
-              fillOpacity = 0.9,
-              stroke = TRUE,
-              weight = 2,
-              layerId = paste0("waypoint_", waypoint_nodes$node_id),
-              label = "Waypoint"
-            )
-        }
-
-        if (!is.null(selected_point_index())) {
-          selected_node <- curr_nodes[
-            curr_nodes$node_id == selected_point_index(),
-          ]
-          if (nrow(selected_node) > 0) {
-            proxy <- proxy |>
-              leaflet::addCircleMarkers(
-                lng = selected_node$lng,
-                lat = selected_node$lat,
-                group = "route_nodes",
-                radius = 8,
-                color = "#FFE999",
-                fillColor = "#FFE999",
-                fillOpacity = 0.9,
-                stroke = TRUE,
-                weight = 3,
-                layerId = "selected_node"
-              )
-          }
-        }
       }
 
-      return(proxy)
+      # Waypoint nodes
+      waypoint_nodes <- curr_nodes[!curr_nodes$is_stop, ]
+      if (nrow(waypoint_nodes) > 0) {
+        proxy <- proxy |>
+          leaflet::addCircleMarkers(
+            lng = waypoint_nodes$lng,
+            lat = waypoint_nodes$lat,
+            group = "route_nodes",
+            radius = 6,
+            color = "orange",
+            fillColor = "orange",
+            fillOpacity = 0.9,
+            stroke = TRUE,
+            weight = 2,
+            layerId = paste0("wp_", waypoint_nodes$node_id),
+            label = "Waypoint"
+          )
+      }
+
+      if (!is.null(selected_point_index())) {
+        selected_node <- curr_nodes[
+          curr_nodes$node_id == selected_point_index(),
+        ]
+        if (nrow(selected_node) > 0) {
+          proxy <- proxy |>
+            leaflet::addCircleMarkers(
+              lng = selected_node$lng,
+              lat = selected_node$lat,
+              group = "route_nodes",
+              radius = 8,
+              color = "#FFE999",
+              fillColor = "#FFE999",
+              fillOpacity = 0.9,
+              stroke = TRUE,
+              weight = 3,
+              layerId = "selected_node"
+            )
+        }
+      }
     })
 
     # Auto-update active_itin_id
