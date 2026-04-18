@@ -1,8 +1,8 @@
-#' Build the stop edit/add form
-#'
-#' @param stop_id_val Current stop ID value (or "" for new)
-#' @param stop_name_val Current stop name value (or "" for new)
-#' @param is_new If TRUE, shows placeholder text in inputs
+# Build the stop edit/add form
+#
+# @param stop_id_val Current stop ID value (or "" for new)
+# @param stop_name_val Current stop name value (or "" for new)
+# @param is_new If TRUE, shows placeholder text in inputs
 build_stop_form <- function(
   stop_id_val = "",
   stop_name_val = "",
@@ -63,48 +63,6 @@ build_stop_form <- function(
         class = "btn-cancel",
         onclick = "cancelEditingStop()",
         "Cancel"
-      )
-    )
-  )
-}
-
-#' Build a single stop row in the list
-#'
-#' @param stop A one-row data.frame with stop_id and stop_name
-build_stop_row <- function(stop) {
-  div(
-    class = "stop-list-row",
-    onclick = sprintf("viewStopFromList('%s')", stop$stop_id),
-    div(
-      class = "stop-info",
-      div(
-        class = "stop-info-display",
-        span(class = "stop-name", stop$stop_name),
-        span(
-          class = "stop-id-display",
-          paste0("(", stop$stop_id, ")")
-        )
-      )
-    ),
-    div(
-      class = "stop-actions",
-      tags$button(
-        class = "stop-action-btn edit-btn",
-        onclick = sprintf(
-          "event.stopPropagation(); editStopFromList('%s')",
-          stop$stop_id
-        ),
-        title = "Edit",
-        htmltools::HTML("&#9998;")
-      ),
-      tags$button(
-        class = "stop-action-btn delete-btn",
-        onclick = sprintf(
-          "event.stopPropagation(); deleteStopFromList('%s')",
-          stop$stop_id
-        ),
-        title = "Delete stop",
-        htmltools::HTML('<i class="fa-solid fa-trash"></i>')
       )
     )
   )
