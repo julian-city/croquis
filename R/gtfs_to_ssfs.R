@@ -71,14 +71,35 @@ gtfs_to_ssfs <- function(
   #OR based on the last week of service, so as to reduce the complexity of the ssfs
 
   if (is.null(routes)) {
-    route_service_ids <-
-      gtfs$trips |>
-      pull(service_id) |>
-      unique()
-
     #routes is frequently used in the script, so assigning this with all the routes
     #is the simplest thing to do
-    routes <- gtfs$routes |> pull(route_id)
+
+    #Identify routes that need to be removed due to invalid route type. Warn the user.
+    routes_invalid_type <-
+      gtfs$routes |> filter(!route_type %in% c(0:7, 11:12))
+
+    route_ids_invalid_type <- paste0(
+      routes_invalid_type$route_id,
+      collapse = ","
+    )
+
+    if (length(route_ids_invalid_type) != 0) {
+      cli::cli_warn(
+        "Invalid routes types : routes with the following route_ids were removed from the input GTFS : {route_ids_invalid_type}.
+          route_type must be one of the following integer values : 0,1,2,3,4,5,6,7,11,12. 
+          Read GTFS Reference for more info : https://gtfs.org/documentation/schedule/reference/#routestxt"
+      )
+    }
+
+    routes <- gtfs$routes |>
+      filter(route_type %in% c(0:7, 11:12)) |>
+      pull(route_id)
+
+    route_service_ids <-
+      gtfs$trips |>
+      filter(route_id %in% routes) |>
+      pull(service_id) |>
+      unique()
   } else {
     route_service_ids <-
       gtfs$trips |>
@@ -314,9 +335,16 @@ gtfs_to_ssfs <- function(
 
   #the trips that interest us, based on service_id and route_id
 
+  #also get the trip ids in stop times to remove trips with no stop times
+  stop_times_trip_ids <- gtfs$stop_times$trip_id |> unique()
+
   trips <-
     gtfs$trips |>
-    filter(route_id %in% routes, service_id %in% route_service_ids)
+    filter(
+      route_id %in% routes,
+      service_id %in% route_service_ids,
+      trip_id %in% stop_times_trip_ids
+    )
 
   #force add direction_id if it is absent from trips
 
