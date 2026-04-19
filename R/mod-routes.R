@@ -207,18 +207,6 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       if (is_editing) {
         itin_id_display <- active_itin_id()
         is_prepending <- isTRUE(prepend_mode())
-        btn_class <- if (is_prepending) {
-          "btn btn-warning btn-sm"
-        } else {
-          "btn btn-default btn-sm"
-        }
-        btn_label <- if (is_prepending) {
-          HTML(
-            '<i class="fa-solid fa-arrow-left"></i> Prepending - click to stop'
-          )
-        } else {
-          HTML('<i class="fa-solid fa-arrow-left"></i> Prepend stops at start')
-        }
 
         div(
           class = "editing-instruction",
@@ -231,12 +219,24 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               "Click stops to build sequence. Right-click to remove."
             }
           ),
-          tags$br(),
-          actionButton(
-            session$ns("prepend_mode_toggle"),
-            btn_label,
-            class = btn_class,
-            style = "margin-top: 6px; width: 100%;"
+          div(
+            class = "prepend-toggle-container",
+            tags$label(
+              class = "toggle-switch",
+              tags$input(
+                type = "checkbox",
+                checked = if (is_prepending) "checked" else NULL,
+                onchange = sprintf(
+                  "Shiny.setInputValue('%s', this.checked, {priority: 'event'})",
+                  session$ns("prepend_mode_toggle_state")
+                )
+              ),
+              tags$span(class = "toggle-slider")
+            ),
+            tags$span(
+              style = "font-size: 12px;",
+              "Prepend to start"
+            )
           )
         )
       } else {
@@ -282,27 +282,68 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           is_editing <- !is.null(editing_route_id) &&
             editing_route_id == route$route_id
 
-          if (is_editing) {
-            rows[[length(rows) + 1]] <- build_route_form(
-              current_data$agency,
-              route
-            )
-          } else {
-            rows[[length(rows) + 1]] <- build_route_row(route, is_expanded)
-          }
+          rows[[length(rows) + 1]] <- build_route_row(
+            route,
+            is_expanded
+          )
 
-          # If expanded, show itineraries for this route
-          if (is_expanded && !is_editing) {
+          if (is_expanded) {
+            expanded_children <- list()
+
+            # Actions bar
+            expanded_children[[length(expanded_children) + 1]] <- div(
+              class = "route-actions-bar",
+              tags$button(
+                class = "route-action-btn edit-btn",
+                onclick = sprintf(
+                  "event.stopPropagation(); editRouteFromList('%s')",
+                  route$route_id
+                ),
+                title = "Edit route",
+                htmltools::HTML("&#9998; Edit")
+              ),
+              tags$button(
+                class = "route-action-btn",
+                onclick = sprintf(
+                  "event.stopPropagation(); copyRouteFromList('%s')",
+                  route$route_id
+                ),
+                title = "Duplicate route",
+                htmltools::HTML('<i class="fa-solid fa-clone"></i> Copy')
+              ),
+              tags$button(
+                class = "route-action-btn delete-btn",
+                onclick = sprintf(
+                  "event.stopPropagation(); deleteRouteFromList('%s')",
+                  route$route_id
+                ),
+                title = "Delete route",
+                htmltools::HTML('<i class="fa-solid fa-trash"></i> Delete')
+              )
+            )
+
+            # Route edit form (if editing this route and no itin is being edited)
+            is_itin_editing_here <- (!is.null(editing_itin) ||
+              !is.null(adding_itin_route))
+
+            if (is_editing && !is_itin_editing_here) {
+              expanded_children[[length(expanded_children) + 1]] <-
+                build_route_form(
+                  current_data$agency,
+                  route
+                )
+            }
+
+            # Itineraries for this route
             route_itins <- current_data$itin[
               current_data$itin$route_id == route$route_id,
             ]
-
             route_itins <- route_itins[order(route_itins$itin_id), ]
 
-            itin_rows <- list()
-
+            # "Add itinerary" button or form
             if (
-              !is.null(adding_itin_route) && adding_itin_route == route$route_id
+              !is.null(adding_itin_route) &&
+                adding_itin_route == route$route_id
             ) {
               current_dir <- as.integer(active_direction_id())
               existing_itins_for_dir <- current_data$itin[
@@ -328,13 +369,13 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                 "_",
                 variant_num
               )
-
-              itin_rows[[length(itin_rows) + 1]] <- build_itin_form(
-                default_itin_id,
-                current_dir
-              )
+              expanded_children[[length(expanded_children) + 1]] <-
+                build_itin_form(
+                  default_itin_id,
+                  current_dir
+                )
             } else {
-              itin_rows[[length(itin_rows) + 1]] <- div(
+              expanded_children[[length(expanded_children) + 1]] <- div(
                 class = "stop-list-row add-row",
                 style = "padding: 4px 8px; font-size: 12px;",
                 onclick = sprintf("startAddingItin('%s')", route$route_id),
@@ -365,24 +406,25 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                   editing_itin == itin$itin_id
 
                 if (is_editing_itin) {
-                  itin_rows[[length(itin_rows) + 1]] <- build_itin_form(
-                    itin$itin_id,
-                    itin$direction_id,
-                    itin$trip_headsign,
-                    is_new = FALSE
-                  )
+                  expanded_children[[length(expanded_children) + 1]] <-
+                    build_itin_row(itin, is_active)
+                  expanded_children[[length(expanded_children) + 1]] <-
+                    build_itin_form(
+                      itin$itin_id,
+                      itin$direction_id,
+                      itin$trip_headsign,
+                      is_new = FALSE
+                    )
                 } else {
-                  itin_rows[[length(itin_rows) + 1]] <- build_itin_row(
-                    itin,
-                    is_active
-                  )
+                  expanded_children[[length(expanded_children) + 1]] <-
+                    build_itin_row(itin, is_active)
                 }
               }
             }
 
             rows[[length(rows) + 1]] <- div(
-              class = "itin-list-container",
-              do.call(tagList, itin_rows)
+              class = "route-expanded-content",
+              do.call(tagList, expanded_children)
             )
           }
         }
@@ -418,8 +460,19 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # Edit route (pencil icon)
     observeEvent(input$route_list_edit_click, {
-      routes_editing_id(input$route_list_edit_click$id)
-      routes_adding_new(FALSE)
+      clicked_id <- input$route_list_edit_click$id
+      if (!is.null(routes_editing_id()) && routes_editing_id() == clicked_id) {
+        # Toggle off: cancel route edit, keep expanded
+        clearInputs()
+        routes_editing_id(NULL)
+        routes_adding_new(FALSE)
+        routes_expanded_id(clicked_id)
+      } else {
+        clearInputs()
+        routes_editing_id(clicked_id)
+        routes_expanded_id(clicked_id)
+        routes_adding_new(FALSE)
+      }
     })
 
     # Duplicate route (copy icon)
@@ -514,8 +567,14 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # Cancel route edit
     observeEvent(input$route_list_cancel_click, {
+      editing_id <- routes_editing_id()
       routes_editing_id(NULL)
       routes_adding_new(FALSE)
+      # Keep the route expanded after canceling
+      if (!is.null(editing_id)) {
+        routes_expanded_id(editing_id)
+        session$sendCustomMessage("scrollToRoute", editing_id)
+      }
     })
 
     # Save route from inline form (handles both add and edit)
@@ -561,6 +620,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         ssfs(current_data)
         routes_adding_new(FALSE)
         routes_expanded_id(new_route_id)
+        session$sendCustomMessage("scrollToRoute", new_route_id)
         showNotification("Route added successfully", type = "message")
       } else if (!is.null(routes_editing_id())) {
         old_route_id <- routes_editing_id()
@@ -602,6 +662,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         }
 
         routes_editing_id(NULL)
+        session$sendCustomMessage("scrollToRoute", new_route_id)
         showNotification("Route updated successfully", type = "message")
       }
     })
@@ -668,6 +729,16 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     # Edit itinerary (pencil icon)
     observeEvent(input$itin_list_edit_click, {
       itin_id <- input$itin_list_edit_click$id
+
+      # If already editing this same itin, toggle off → back to route edit
+      if (!is.null(itin_editing_id()) && itin_editing_id() == itin_id) {
+        clearInputs()
+        return()
+      }
+
+      # Clear any existing itin edit state before switching
+      clearInputs()
+
       current_ssfs_data <- ssfs()
 
       selected_itin <- current_ssfs_data$itin[
@@ -942,6 +1013,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         ssfs(current_data)
         clearInputs()
+        session$sendCustomMessage("scrollToRoute", route_id)
         showNotification("Itinerary saved successfully", type = "message")
       } else if (!is.null(itin_adding_for_route())) {
         # --- ADDING NEW ITINERARY ---
@@ -990,6 +1062,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         ssfs(current_data)
         clearInputs()
+        session$sendCustomMessage("scrollToRoute", route_id)
         showNotification("Itinerary saved successfully", type = "message")
       }
     })
@@ -1084,21 +1157,9 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     # --- Prepend mode toggle
 
-    observeEvent(input$prepend_mode_toggle, {
+    observeEvent(input$prepend_mode_toggle_state, {
       req(active_itin_id())
-      new_state <- !isTRUE(prepend_mode())
-      prepend_mode(new_state)
-      if (new_state) {
-        showNotification(
-          "Prepend mode ON : stop clicks will add to the start of the sequence.",
-          type = "message"
-        )
-      } else {
-        showNotification(
-          "Prepend mode OFF : stop clicks will add to the end (default).",
-          type = "message"
-        )
-      }
+      prepend_mode(isTRUE(input$prepend_mode_toggle_state))
     })
 
     # --- Map initialization and rendering ---

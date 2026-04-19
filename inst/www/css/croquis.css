@@ -417,6 +417,60 @@ body {
   text-align: center;
 }
 
+/* Prepend toggle container */
+.prepend-toggle-container {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #B2182B;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
 /* Route List Panel Styles */
 .route-list-container {
   max-height: calc(100vh - 400px);
@@ -479,11 +533,39 @@ body {
   margin-left: 4px;
 }
 
+.route-expanded-content {
+  padding-left: 20px;
+  border-left: 2px solid var(--border-color);
+  margin-left: 12px;
+}
+
 .route-actions {
   display: flex;
   gap: 4px;
   margin-left: 8px;
   flex-shrink: 0;
+}
+
+/* Route action buttons bar (shown when expanded, below route row) */
+.route-actions-bar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 4px 10px;
+  border-bottom: none;
+  background-color: var(--hover-color);
+  justify-content: center;
+}
+
+.route-actions-bar .route-action-btn {
+  width: auto;
+  padding: 2px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
 }
 
 .route-action-btn {
@@ -518,12 +600,6 @@ body {
 }
 
 /* Itinerary sub-rows */
-.itin-list-container {
-  padding-left: 20px;
-  border-left: 2px solid var(--border-color);
-  margin-left: 12px;
-  margin-bottom: 4px;
-}
 
 .itin-list-row {
   display: flex;
