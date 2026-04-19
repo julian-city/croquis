@@ -83,7 +83,7 @@ gtfs_to_ssfs <- function(
       collapse = ","
     )
 
-    if (length(route_ids_invalid_type) != 0) {
+    if (nrow(routes_invalid_type) != 0) {
       cli::cli_warn(
         "Invalid routes types : routes with the following route_ids were removed from the input GTFS : {route_ids_invalid_type}.
           route_type must be one of the following integer values : 0,1,2,3,4,5,6,7,11,12. 
@@ -984,9 +984,18 @@ gtfs_to_ssfs <- function(
         as_tibble(),
       by = "shape_id"
     ) |>
+    #verification that trips of the same itin do not have various trip headsigns.
+    #In that case, take the trip headsign with the most observations for that itin_id
+    group_by(itin_id, trip_headsign) |>
+    mutate(n = n()) |>
     distinct() |>
+    group_by(itin_id) |>
+    filter(n == max(n)) |>
     select(itin_id, route_id, direction_id, trip_headsign, geometry) |>
     st_as_sf()
+
+  # it is still possible that itins with the same ids could be generated.
+  #Eventually other edge cases that create this situation will need to be addressed.
 
   #define stop_seq by itin_id-----------------------------
 

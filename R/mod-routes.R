@@ -148,6 +148,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     selected_point_index <- reactiveVal(NULL)
     active_itin_id <- reactiveVal(NULL)
     editing_existing_itin <- reactiveVal(FALSE)
+    prepend_mode <- reactiveVal(FALSE)
 
     # Track when a marker was last clicked
     last_marker_click_time <- reactiveVal(0)
@@ -193,21 +194,50 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       active_itin_id(NULL)
       selected_point_index(NULL)
+      prepend_mode(FALSE)
     }
 
     # --- UI Renderers ---
 
     # Render editing instruction for route itinerary drawing
+    # Includes prepend mode toggle
     output$routes_editing_instruction <- renderUI({
       is_editing <- !is.null(active_itin_id()) &&
         (editing_existing_itin() || !is.null(itin_adding_for_route()))
       if (is_editing) {
         itin_id_display <- active_itin_id()
+        is_prepending <- isTRUE(prepend_mode())
+        btn_class <- if (is_prepending) {
+          "btn btn-warning btn-sm"
+        } else {
+          "btn btn-default btn-sm"
+        }
+        btn_label <- if (is_prepending) {
+          HTML(
+            '<i class="fa-solid fa-arrow-left"></i> Prepending - click to stop'
+          )
+        } else {
+          HTML('<i class="fa-solid fa-arrow-left"></i> Prepend stops at start')
+        }
+
         div(
           class = "editing-instruction",
           paste0("Editing: ", itin_id_display),
           tags$br(),
-          tags$small("Click stops to build sequence. Right-click to remove.")
+          tags$small(
+            if (is_prepending) {
+              "Prepend mode: next stop clicks will be added to the START of the sequence."
+            } else {
+              "Click stops to build sequence. Right-click to remove."
+            }
+          ),
+          tags$br(),
+          actionButton(
+            session$ns("prepend_mode_toggle"),
+            btn_label,
+            class = btn_class,
+            style = "margin-top: 6px; width: 100%;"
+          )
         )
       } else {
         NULL
@@ -1052,6 +1082,25 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       showNotification(paste("Duplicated as:", new_itin_id), type = "message")
     })
 
+    # --- Prepend mode toggle
+
+    observeEvent(input$prepend_mode_toggle, {
+      req(active_itin_id())
+      new_state <- !isTRUE(prepend_mode())
+      prepend_mode(new_state)
+      if (new_state) {
+        showNotification(
+          "Prepend mode ON : stop clicks will add to the start of the sequence.",
+          type = "message"
+        )
+      } else {
+        showNotification(
+          "Prepend mode OFF : stop clicks will add to the end (default).",
+          type = "message"
+        )
+      }
+    })
+
     # --- Map initialization and rendering ---
 
     # Initialize routes map
@@ -1619,47 +1668,101 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               return()
             }
 
-            nodes_a_idx_max <- max(curr_nodes$index)
+            if (isTRUE(prepend_mode())) {
+              # --- PREPEND: add clicked stop BEFORE the current first node ---
+              from_point <- c(stop_coords[1], stop_coords[2])
+              to_point <- c(curr_nodes[1, ]$lng, curr_nodes[1, ]$lat)
 
-            from_lng <- curr_nodes[nrow(curr_nodes), ]$lng
-            from_lat <- curr_nodes[nrow(curr_nodes), ]$lat
+              new_segment <- generateRouteSegment(
+                from_point,
+                to_point,
+                drawing_mode = input$drawing_mode,
+                routing_server = routing_server()
+              )
 
-            from_point <- c(from_lng, from_lat)
-            to_point <- c(stop_coords[1], stop_coords[2])
+              # All points except the last one become the new leading points;
+              # the last point of the segment coincides with the old first node,
+              # which already exists in curr_points at its old position.
+              nb_new_points <- nrow(new_segment) - 1
 
-            new_segment <- generateRouteSegment(
-              from_point,
-              to_point,
-              drawing_mode = input$drawing_mode,
-              routing_server = routing_server()
-            )
+              new_points <- new_segment[1:nb_new_points, ] |>
+                mutate(index = row_number(), .before = "lng")
 
-            new_points <-
-              new_segment[2:nrow(new_segment), ] |>
-              mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+              # Shift all existing points' indices up by nb_new_points
+              curr_points <- curr_points |>
+                mutate(index = index + nb_new_points)
 
-            curr_points <- rbind(curr_points, new_points)
-            row.names(curr_points) <- 1:nrow(curr_points)
+              curr_points <- rbind(new_points, curr_points)
+              row.names(curr_points) <- 1:nrow(curr_points)
 
-            new_node_index <- max(curr_points$index)
+              # Shift existing node indices up by nb_new_points; the new node
+              # takes index = 1 (matching the first point).
+              curr_nodes <- curr_nodes |>
+                mutate(index = index + nb_new_points)
 
-            new_node <- data.frame(
-              node_id = max(curr_nodes$node_id) + 1,
-              lng = stop_coords[1],
-              lat = stop_coords[2],
-              is_stop = TRUE,
-              stop_id = clicked_stop$stop_id,
-              stop_name = clicked_stop$stop_name,
-              speed_factor = 1,
-              index = new_node_index,
-              stringsAsFactors = FALSE
-            )
+              new_node <- data.frame(
+                node_id = max(curr_nodes$node_id) + 1,
+                lng = stop_coords[1],
+                lat = stop_coords[2],
+                is_stop = TRUE,
+                stop_id = clicked_stop$stop_id,
+                stop_name = clicked_stop$stop_name,
+                speed_factor = 1,
+                index = 1,
+                stringsAsFactors = FALSE
+              )
 
-            curr_nodes <- rbind(curr_nodes, new_node)
+              curr_nodes <- rbind(new_node, curr_nodes)
+              row.names(curr_nodes) <- 1:nrow(curr_nodes)
 
-            route_points(curr_points)
-            route_nodes(curr_nodes)
+              route_points(curr_points)
+              route_nodes(curr_nodes)
+            } else {
+              #Default append mode : add stops to end of sequence
+
+              nodes_a_idx_max <- max(curr_nodes$index)
+
+              from_lng <- curr_nodes[nrow(curr_nodes), ]$lng
+              from_lat <- curr_nodes[nrow(curr_nodes), ]$lat
+
+              from_point <- c(from_lng, from_lat)
+              to_point <- c(stop_coords[1], stop_coords[2])
+
+              new_segment <- generateRouteSegment(
+                from_point,
+                to_point,
+                drawing_mode = input$drawing_mode,
+                routing_server = routing_server()
+              )
+
+              new_points <-
+                new_segment[2:nrow(new_segment), ] |>
+                mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+
+              curr_points <- rbind(curr_points, new_points)
+              row.names(curr_points) <- 1:nrow(curr_points)
+
+              new_node_index <- max(curr_points$index)
+
+              new_node <- data.frame(
+                node_id = max(curr_nodes$node_id) + 1,
+                lng = stop_coords[1],
+                lat = stop_coords[2],
+                is_stop = TRUE,
+                stop_id = clicked_stop$stop_id,
+                stop_name = clicked_stop$stop_name,
+                speed_factor = 1,
+                index = new_node_index,
+                stringsAsFactors = FALSE
+              )
+
+              curr_nodes <- rbind(curr_nodes, new_node)
+
+              route_points(curr_points)
+              route_nodes(curr_nodes)
+            }
           } else {
+            # first ever node
             route_nodes(data.frame(
               node_id = 1,
               lng = stop_coords[1],
