@@ -196,3 +196,104 @@ gtfs_remove_routes <- function(gtfs, remove_routes) {
 
   gtfs
 }
+
+#' Subset SSFS
+#'
+#' A handy function that outputs a subset of an input ssfs.
+#' You can specify whether you want to remove or retain a based on a set of itin_ids or route_ids.
+#'
+#' @param ssfs An input SSFS
+#' @param subset_id The set of itin_ids or route_ids that you would like to remove or retain
+#' @param operation Specify whether you would like the output ssfs to retain (default) or remove the data associated with subset_id
+#' @param id_type Specify whether subset_id is itin_id (default) or route_id
+#'
+#' @returns A SSFS
+#'
+#' @export
+#' @examples
+#' #Create a subset SSFS that only includes data pertaining to route 160 of the mileend network
+#' ssfs_160 <- ssfs_subset(mileend,subset_id="160",id_type="route_id")
+#'
+#' #create a subset SSFS that excludes secondary itin_ids for various routes in of the mileend network
+#' ssfs_mileend_clean <- ssfs_subset(mileend,subset_id=c("160_0_2","161_1_2"),operation="remove")
+ssfs_subset <- function(
+  ssfs,
+  subset_id,
+  operation = c("retain", "remove"),
+  id_type = c("itin_id", "route_id")
+) {
+  operation <- match.arg(operation)
+
+  id_type <- match.arg(id_type)
+
+  if (operation == "retain") {
+    if (id_type == "route_id") {
+      itin_ids_retain <-
+        ssfs$itin |> filter(route_id %in% subset_id) |> pull(itin_id)
+
+      route_ids_retain <- subset_id
+    } else {
+      itin_ids_retain <- subset_id
+      route_ids_retain <-
+        ssfs$itin |> filter(itin_id %in% subset_id) |> pull(route_id)
+    }
+  } else {
+    if (id_type == "route_id") {
+      itin_ids_retain <-
+        ssfs$itin |> filter(!route_id %in% subset_id) |> pull(itin_id)
+
+      route_ids_retain <-
+        ssfs$itin |> filter(!route_id %in% subset_id) |> pull(route_id)
+    } else {
+      itin_ids_retain <-
+        ssfs$itin |> filter(!itin_id %in% subset_id) |> pull(itin_id)
+
+      route_ids_retain <-
+        ssfs$itin |> filter(!itin_id %in% itin_ids_retain) |> pull(route_id)
+    }
+  }
+
+  ssfs$routes <-
+    ssfs$routes |>
+    filter(route_id %in% route_ids_retain)
+
+  retain_agency_ids <-
+    ssfs$routes |> pull(agency_id) |> unique()
+
+  ssfs$agency <-
+    ssfs$agency |> filter(agency_id %in% retain_agency_ids)
+
+  ssfs$itin <-
+    ssfs$itin |>
+    filter(itin_id %in% itin_ids_retain)
+
+  ssfs$stop_seq <-
+    ssfs$stop_seq |>
+    filter(itin_id %in% itin_ids_retain)
+
+  retain_stop_ids <-
+    ssfs$stop_seq |> pull(stop_id) |> unique()
+
+  ssfs$stops <-
+    ssfs$stops |>
+    filter(stop_id %in% retain_stop_ids)
+
+  ssfs$span <-
+    ssfs$span |>
+    filter(itin_id %in% itin_ids_retain)
+
+  ssfs$hsh <-
+    ssfs$hsh |>
+    filter(itin_id %in% itin_ids_retain)
+
+  retain_service_ids <-
+    ssfs$span |>
+    pull(service_id) |>
+    unique()
+
+  ssfs$calendar <-
+    ssfs$calendar |>
+    filter(service_id %in% retain_service_ids)
+
+  ssfs
+}
