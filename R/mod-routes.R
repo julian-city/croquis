@@ -1525,8 +1525,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       last_marker_click_time(as.numeric(Sys.time()))
 
-      if (!is.null(click) && grepl("^waypoint_", click$id)) {
-        node_id <- as.numeric(gsub("waypoint_", "", click$id))
+      if (!is.null(click) && grepl("^wp_", click$id)) {
+        node_id <- as.numeric(gsub("wp_", "", click$id))
         selected_point_index(node_id)
         showNotification(
           "Waypoint selected. Click on map to move it.",
