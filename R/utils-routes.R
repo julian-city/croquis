@@ -7,55 +7,60 @@
 generateRouteSegment <- function(
   from_point,
   to_point,
-  drawing_mode = "network",
-  routing_server = "OSRM"
+  drawing_mode = c("network", "free"),
+  routing_server = c("Valhalla", "OSRM")
 ) {
-  result_points <- data.frame(lng = numeric(), lat = numeric())
+  drawing_mode <- match.arg(drawing_mode)
+  routing_server <- match.arg(routing_server)
 
-  if (drawing_mode == "network") {
-    tryCatch(
-      {
-        from_sf <- st_sf(
-          geometry = st_sfc(st_point(from_point), crs = 4326)
-        )
-        to_sf <- st_sf(geometry = st_sfc(st_point(to_point), crs = 4326))
-
-        if (routing_server == "OSRM") {
-          route <- osrm::osrmRoute(
-            src = from_sf,
-            dst = to_sf,
-            overview = "full"
-          )
-        } else {
-          route <- valh::vl_route(src = from_sf, dst = to_sf)
-        }
-        route_coords <- st_coordinates(route$geometry)
-
-        for (j in seq_len(nrow(route_coords))) {
-          result_points <- rbind(
-            result_points,
-            data.frame(
-              lng = route_coords[j, 1],
-              lat = route_coords[j, 2]
-            )
-          )
-        }
-      },
-      error = function(e) {
-        result_points <- rbind(
-          data.frame(lng = from_point[1], lat = from_point[2]),
-          data.frame(lng = to_point[1], lat = to_point[2])
-        )
-      }
-    )
-  } else {
-    result_points <- rbind(
-      data.frame(lng = from_point[1], lat = from_point[2]),
-      data.frame(lng = to_point[1], lat = to_point[2])
+  straight_line <- function() {
+    data.frame(
+      lng = c(from_point[1], to_point[1]),
+      lat = c(from_point[2], to_point[2])
     )
   }
 
-  result_points
+  if (drawing_mode != "network") {
+    return(straight_line())
+  }
+
+  from_sf <- st_sf(geometry = st_sfc(st_point(from_point), crs = 4326))
+  to_sf <- st_sf(geometry = st_sfc(st_point(to_point), crs = 4326))
+
+  call_routing <- function() {
+    if (routing_server == "OSRM") {
+      osrm::osrmRoute(src = from_sf, dst = to_sf, overview = "full")
+    } else {
+      valh::vl_route(src = from_sf, dst = to_sf)
+    }
+  }
+
+  # Try twice: transient failures on public routing servers are common.
+  route <- NULL
+  for (attempt in seq_len(2)) {
+    route <- tryCatch(call_routing(), error = function(e) NULL)
+    if (!is.null(route)) {
+      break
+    }
+    if (attempt < 2) Sys.sleep(0.3)
+  }
+
+  if (is.null(route)) {
+    cli::cli_warn(
+      "Routing server ({routing_server}) did not respond; falling back to straight line."
+    )
+    return(straight_line())
+  }
+
+  route_coords <- sf::st_coordinates(route$geometry)
+  if (is.null(route_coords) || nrow(route_coords) < 2) {
+    cli::cli_warn(
+      "Routing server ({routing_server}) returned an empty route; falling back to straight line."
+    )
+    return(straight_line())
+  }
+
+  data.frame(lng = route_coords[, 1], lat = route_coords[, 2])
 }
 
 # Convert route nodes to a stop sequence data frame
