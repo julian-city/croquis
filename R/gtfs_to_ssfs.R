@@ -1239,6 +1239,9 @@ gtfs_to_ssfs <- function(
     ) |>
     mutate(interstop_speed = (interstop_dist / mean_interstop_time) * 3.6) |>
     mutate(speed_factor = round((interstop_speed / itin_speed), 1)) |>
+    #for very short interstop distances with high interstop times, rounding above may result in 0.
+    #speed_factor 0 is problematic for calculating stop_times, overwrite these cases with 0.1
+    mutate(speed_factor = if_else(speed_factor == 0, 0.1, speed_factor)) |>
     select(itin_id, stop_id, stop_sequence, speed_factor)
 
   #this writes a gtfs where
