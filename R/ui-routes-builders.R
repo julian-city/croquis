@@ -209,36 +209,6 @@ build_route_row <- function(route, is_expanded) {
         span(class = "route-short-name", route$route_short_name),
         span(class = "route-long-name", route$route_long_name)
       )
-    ),
-    div(
-      class = "route-actions",
-      tags$button(
-        class = "route-action-btn edit-btn",
-        onclick = sprintf(
-          "event.stopPropagation(); editRouteFromList('%s')",
-          route$route_id
-        ),
-        title = "Edit route",
-        htmltools::HTML("&#9998;")
-      ),
-      tags$button(
-        class = "route-action-btn",
-        onclick = sprintf(
-          "event.stopPropagation(); copyRouteFromList('%s')",
-          route$route_id
-        ),
-        title = "Duplicate route",
-        htmltools::HTML('<i class="fa-solid fa-clone"></i>')
-      ),
-      tags$button(
-        class = "route-action-btn delete-btn",
-        onclick = sprintf(
-          "event.stopPropagation(); deleteRouteFromList('%s')",
-          route$route_id
-        ),
-        title = "Delete route",
-        htmltools::HTML('<i class="fa-solid fa-trash"></i>')
-      )
     )
   )
 }

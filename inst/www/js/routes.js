@@ -69,3 +69,13 @@ $(document).on('keydown', function(e) {
     }
   }
 });
+
+// Scroll to a specific route row after list rebuild
+Shiny.addCustomMessageHandler('scrollToRoute', function(routeId) {
+  setTimeout(function() {
+    var el = document.getElementById('route-row-' + routeId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 100);
+});

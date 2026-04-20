@@ -1,6 +1,6 @@
 var schedNs = '';
 
-Shiny.addCustomMessageHandler('setShedNs', function(ns) {
+Shiny.addCustomMessageHandler('setSchedNs', function(ns) {
   schedNs = ns;
 });
 
@@ -12,6 +12,6 @@ function schedToggleRoute(routeId) {
 
 // Click the pencil icon on a route row to trigger schedule editing
 function schedEditRoute(routeId) {
-  Shiny.setInputValue('sched_route_edit_click',
+  Shiny.setInputValue(schedNs + 'sched_route_edit_click',
     {id: routeId, ts: Math.random()}, {priority: 'event'});
 }
