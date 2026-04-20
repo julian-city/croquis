@@ -457,6 +457,21 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           current_data$itin$route_id == route_id
         ]
         highlighted_itin_ids(route_itin_ids)
+
+        # Zoom map to route's itineraries
+        route_itins <- current_data$itin[
+          current_data$itin$route_id == route_id,
+        ]
+        if (nrow(route_itins) > 0) {
+          bbox <- st_bbox(route_itins$geometry)
+          leaflet::leafletProxy("routes_map") |>
+            leaflet::fitBounds(
+              lng1 = bbox[["xmin"]],
+              lat1 = bbox[["ymin"]],
+              lng2 = bbox[["xmax"]],
+              lat2 = bbox[["ymax"]]
+            )
+        }
       }
     })
 
@@ -1339,13 +1354,26 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             "#05AEEF"
           }
 
+          route_type_i <- if (nrow(route_row) > 0) {
+            route_row$route_type[1]
+          } else {
+            NA
+          }
+          line_weight <- switch(
+            as.character(route_type_i),
+            "1" = 5,
+            "2" = 4,
+            "0" = 3,
+            2
+          )
+
           proxy <- proxy |>
             leaflet::addPolylines(
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "routes",
               color = line_color,
-              weight = 2,
+              weight = line_weight,
               opacity = 0.6,
               label = hover_label,
               labelOptions = leaflet::labelOptions(
@@ -1354,7 +1382,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                 offset = c(0, -8)
               ),
               highlightOptions = leaflet::highlightOptions(
-                weight = 6,
+                weight = line_weight + 4,
                 opacity = 0.9,
                 bringToFront = TRUE
               )
