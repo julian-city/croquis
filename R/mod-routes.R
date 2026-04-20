@@ -274,9 +274,17 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       }
 
       # Route rows
+      # We order the rows by route type (low to high) and then by short name to have a consistent order (e.g. bus routes grouped together and ordered by route number)
       if (nrow(current_data$routes) > 0) {
-        for (i in 1:nrow(current_data$routes)) {
-          route <- current_data$routes[i, ]
+        sorted_routes <- current_data$routes[
+          order(
+            current_data$routes$route_type,
+            current_data$routes$route_short_name
+          ),
+        ]
+
+        for (i in 1:nrow(sorted_routes)) {
+          route <- sorted_routes[i, ]
           is_expanded <- !is.null(expanded_route) &&
             expanded_route == route$route_id
           is_editing <- !is.null(editing_route_id) &&
@@ -1252,7 +1260,23 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::clearGroup("routes")
 
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
-        for (i in 1:nrow(current_data$itin)) {
+        # Build draw order: High route_type first, low route_type last (drawn on stop)
+        # We also order by route_short_name to have a consistent order for same-type routes (e.g. bus routes with same route_type)
+        route_type_lookup <- setNames(
+          current_data$routes$route_type,
+          current_data$routes$route_id
+        )
+
+        route_name_lookup <- setNames(
+          current_data$routes$route_short_name,
+          current_data$routes$route_id
+        )
+
+        itin_route_types <- route_type_lookup[current_data$itin$route_id]
+        itin_route_names <- route_name_lookup[current_data$itin$route_id]
+        draw_order <- order(-itin_route_types, itin_route_names)
+
+        for (i in draw_order) {
           if (
             !is.null(current_active) &&
               current_data$itin$itin_id[i] == current_active
