@@ -1814,7 +1814,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                 mutate(index = index + nb_new_points)
 
               new_node <- data.frame(
-                node_id = max(curr_nodes$node_id) + 1,
+                node_id = 1,
                 lng = stop_coords[1],
                 lat = stop_coords[2],
                 is_stop = TRUE,
@@ -1825,7 +1825,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                 stringsAsFactors = FALSE
               )
 
-              curr_nodes <- rbind(new_node, curr_nodes)
+              curr_nodes <- rbind(new_node, curr_nodes) |>
+                mutate(node_id = row_number())
               row.names(curr_nodes) <- 1:nrow(curr_nodes)
 
               route_points(curr_points)
@@ -2388,6 +2389,12 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       curr_nodes <- route_nodes()
       curr_points <- route_points()
 
+      #DEBUG
+      assign("curr_nodes_i", curr_nodes, envir = .GlobalEnv)
+      assign("curr_points_i", curr_points, envir = .GlobalEnv)
+      assign("click_i", click, envir = .GlobalEnv)
+      assign("current_zoom_i", current_zoom(), envir = .GlobalEnv)
+
       if (nrow(curr_nodes) == 0) {
         return()
       }
@@ -2398,8 +2405,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       closest_idx <- which.min(distances)
 
       if (distances[closest_idx] < calculateThreshold(current_zoom())) {
-        # REMOVING FIRST NODE OR ONLY NODE
         if (closest_idx == 1) {
+          # REMOVING FIRST NODE OR ONLY NODE
           if (nrow(curr_nodes) > 1) {
             curr_nodes <- curr_nodes[-closest_idx, ]
             curr_nodes$node_id <- 1:nrow(curr_nodes)
@@ -2438,6 +2445,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
           # REMOVING LAST NODE
         } else if (closest_idx == nrow(curr_nodes)) {
+          #LAST NODE
           curr_nodes <- curr_nodes[-closest_idx, ]
           row.names(curr_nodes) <- 1:nrow(curr_nodes)
 
@@ -2457,9 +2465,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
           route_nodes(curr_nodes)
           route_points(curr_points)
-
-          # REMOVING NODE IN MIDDLE
         } else if (nrow(curr_nodes) > 2) {
+          # REMOVING NODE IN MIDDLE
           before_idx <- closest_idx - 1
           after_idx <- closest_idx + 1
 
@@ -2474,27 +2481,39 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           nb_points_b_before <-
             min(points_c$index) - max(points_a$index) - 1
 
-          from_point <- c(
-            curr_nodes[before_idx, ]$lng,
-            curr_nodes[before_idx, ]$lat
-          )
-          to_point <- c(
-            curr_nodes[after_idx, ]$lng,
-            curr_nodes[after_idx, ]$lat
-          )
+          if (input$drawing_mode == "free") {
+            #if drawing mode is free, then there is no need to calculate the segment in between. It disappears.
+            nb_points_b_after <- 0
+          } else {
+            #Draw by network : calculate segment
 
-          segment_b <- generateRouteSegment(
-            from_point,
-            to_point,
-            drawing_mode = input$drawing_mode,
-            routing_server = routing_server()
-          )
+            from_point <- c(
+              curr_nodes[before_idx, ]$lng,
+              curr_nodes[before_idx, ]$lat
+            )
+            to_point <- c(
+              curr_nodes[after_idx, ]$lng,
+              curr_nodes[after_idx, ]$lat
+            )
 
-          points_b <-
-            segment_b[2:(nrow(segment_b) - 1), ] |>
-            mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+            segment_b <- generateRouteSegment(
+              from_point,
+              to_point,
+              drawing_mode = input$drawing_mode,
+              routing_server = routing_server()
+            )
 
-          nb_points_b_after <- nrow(points_b)
+            #check : segment_b must contain at least 3 rows. Otherwise, nb_points_b_after is 0
+            if (nrow(segment_b) < 3) {
+              nb_points_b_after <- 0
+            } else {
+              points_b <-
+                segment_b[2:(nrow(segment_b) - 1), ] |>
+                mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
+
+              nb_points_b_after <- nrow(points_b)
+            }
+          }
           adj_index_c <- nb_points_b_after - nb_points_b_before
 
           points_c <-
@@ -2505,7 +2524,12 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             nodes_c |>
             mutate(index = index + adj_index_c)
 
-          curr_points <- rbind(points_a, points_b, points_c)
+          if (nb_points_b_after == 0) {
+            curr_points <- rbind(points_a, points_c)
+          } else {
+            curr_points <- rbind(points_a, points_b, points_c)
+          }
+
           curr_nodes <-
             rbind(nodes_a, nodes_c) |>
             mutate(node_id = row_number())
