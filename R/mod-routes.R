@@ -53,17 +53,9 @@ routesUI <- function(id) {
           ),
           div(
             class = "floating-panel-content",
-            radioButtons(
-              ns("drawing_mode"),
-              NULL,
-              choices = c(
-                "Road Network" = "network",
-                "Free Drawing" = "free"
-              ),
-              selected = "network"
-            ),
+            uiOutput(ns("drawing_mode_toggle_ui")),
             tags$small(
-              "Network mode routes along streets. Free mode draws straight lines."
+              "Network mode routes along streets. Free mode draws straight lines between stops and waypoints."
             )
           )
         ),
@@ -149,6 +141,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     active_itin_id <- reactiveVal(NULL)
     editing_existing_itin <- reactiveVal(FALSE)
     prepend_mode <- reactiveVal(FALSE)
+    drawing_mode_reactive <- reactiveVal("network")
 
     # Track when a marker was last clicked
     last_marker_click_time <- reactiveVal(0)
@@ -195,6 +188,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       active_itin_id(NULL)
       selected_point_index(NULL)
       prepend_mode(FALSE)
+      drawing_mode_reactive("network")
     }
 
     # --- UI Renderers ---
@@ -235,7 +229,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             ),
             tags$span(
               style = "font-size: 12px;",
-              "Prepend to start"
+              "Prepend stops to start of sequence"
             )
           )
         )
@@ -1185,6 +1179,46 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       prepend_mode(isTRUE(input$prepend_mode_toggle_state))
     })
 
+    # --- Drawing mode toggle
+    # Checked = "free" (straight lines), unchecked = "network" (road routing, default).
+    # Render inside the Drawing Mode floating panel; the `checked` attribute is
+    # driven by drawing_mode_reactive(), so resetting the reactive re-renders the
+    # DOM to match (same pattern as the prepend toggle).
+
+    output$drawing_mode_toggle_ui <- renderUI({
+      is_free <- isTRUE(drawing_mode_reactive() == "free")
+
+      div(
+        class = "prepend-toggle-container",
+        tags$span(
+          style = "font-size: 12px;",
+          "Road Network"
+        ),
+        tags$label(
+          class = "toggle-switch",
+          tags$input(
+            type = "checkbox",
+            checked = if (is_free) "checked" else NULL,
+            onchange = sprintf(
+              "Shiny.setInputValue('%s', this.checked, {priority: 'event'})",
+              session$ns("drawing_mode_toggle_state")
+            )
+          ),
+          tags$span(class = "toggle-slider")
+        ),
+        tags$span(
+          style = "font-size: 12px;",
+          "Free Drawing"
+        )
+      )
+    })
+
+    observeEvent(input$drawing_mode_toggle_state, {
+      drawing_mode_reactive(
+        if (isTRUE(input$drawing_mode_toggle_state)) "free" else "network"
+      )
+    })
+
     # --- Map initialization and rendering ---
 
     # Initialize routes map
@@ -1644,7 +1678,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               segment_b <- generateRouteSegment(
                 from_point,
                 to_point,
-                drawing_mode = input$drawing_mode,
+                drawing_mode = drawing_mode_reactive(),
                 routing_server = routing_server()
               )
 
@@ -1699,7 +1733,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             segment_b <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -1721,7 +1755,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             segment_c <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -1789,7 +1823,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               new_segment <- generateRouteSegment(
                 from_point,
                 to_point,
-                drawing_mode = input$drawing_mode,
+                drawing_mode = drawing_mode_reactive(),
                 routing_server = routing_server()
               )
 
@@ -1845,7 +1879,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               new_segment <- generateRouteSegment(
                 from_point,
                 to_point,
-                drawing_mode = input$drawing_mode,
+                drawing_mode = drawing_mode_reactive(),
                 routing_server = routing_server()
               )
 
@@ -1936,7 +1970,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             new_segment <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -1974,7 +2008,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             new_segment <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -2019,7 +2053,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             segment_b <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -2038,7 +2072,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             segment_c <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -2177,7 +2211,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               new_segment <- generateRouteSegment(
                 from_point,
                 to_point,
-                drawing_mode = input$drawing_mode,
+                drawing_mode = drawing_mode_reactive(),
                 routing_server = routing_server()
               )
 
@@ -2219,7 +2253,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             new_segment <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -2481,7 +2515,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           nb_points_b_before <-
             min(points_c$index) - max(points_a$index) - 1
 
-          if (input$drawing_mode == "free") {
+          if (drawing_mode_reactive() == "free") {
             #if drawing mode is free, then there is no need to calculate the segment in between. It disappears.
             nb_points_b_after <- 0
           } else {
@@ -2499,7 +2533,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             segment_b <- generateRouteSegment(
               from_point,
               to_point,
-              drawing_mode = input$drawing_mode,
+              drawing_mode = drawing_mode_reactive(),
               routing_server = routing_server()
             )
 
@@ -2589,18 +2623,21 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
     output$selected_stops_table <- DT::renderDT({
       req(current_sequence())
 
+      # Select only the columns we want to display, in display order.
+      display_df <- current_sequence()[,
+        c("stop_sequence", "stop_name"),
+        drop = FALSE
+      ]
+
       DT::datatable(
-        current_sequence(),
-        selection = 'single',
+        display_df,
+        selection = "single",
         rownames = FALSE,
+        colnames = c("#" = "stop_sequence", "Stop name" = "stop_name"),
         options = list(
           pageLength = -1,
-          dom = 't',
-          ordering = FALSE,
-          columnDefs = list(
-            list(visible = FALSE, targets = c(0:1, 3)),
-            list(visible = TRUE, targets = c(2, 4))
-          )
+          dom = "t",
+          ordering = FALSE
         )
       )
     })

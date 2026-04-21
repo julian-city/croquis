@@ -426,6 +426,14 @@ body {
   gap: 8px;
 }
 
+/* Drawing mode toggle: inherits .prepend-toggle-container layout;
+   with horizontal breathing room  forlabels on both sides. */
+#routes-drawing-panel .prepend-toggle-container {
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-bottom: 6px;
+}
+
 /* Toggle switch */
 .toggle-switch {
   position: relative;
@@ -473,7 +481,7 @@ body {
 
 /* Route List Panel Styles */
 .route-list-container {
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 450px);
   overflow-y: auto;
   margin-bottom: 10px;
 }
