@@ -160,7 +160,7 @@ croquis <- function(ssfs = NULL) {
           wellPanel(
             h3("Load a GTFS"),
             p(
-              "You can load an existing GTFS here (WARNING uploading a GTFS with more than 5 routes may take several minutes)"
+              "You can load an existing GTFS here. Larger files may take several minutes (maximum size: 100MB)."
             ),
             fileInput(
               "load_gtfs",
@@ -958,6 +958,8 @@ croquis <- function(ssfs = NULL) {
   shiny::addResourcePath("www", system.file("www", package = "croquis"))
 
   server <- function(input, output, session) {
+    options(shiny.maxRequestSize = 100 * 1024^2)
+
     #   #   #
     #
     #   REACTIVE VALUES AND FUNCTIONS
