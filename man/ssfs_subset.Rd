@@ -31,6 +31,6 @@ You can specify whether you want to remove or retain a based on a set of itin_id
 #Create a subset SSFS that only includes data pertaining to route 160 of the mileend network
 ssfs_160 <- ssfs_subset(mileend,subset_id="160",id_type="route_id")
 
-#create a subset SSFS that excludes secondary itin_ids for various routes in of the mileend network
+#create a subset SSFS that excludes secondary itineraries for various routes in of the mileend network
 ssfs_mileend_clean <- ssfs_subset(mileend,subset_id=c("160_0_2","161_1_2"),operation="remove")
 }
