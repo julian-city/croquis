@@ -1419,10 +1419,18 @@ gtfs_to_ssfs <- function(
   hsh <-
     stop_times_revised |>
     filter(stop_sequence == 1) |>
+    select(-c(stop_id, stop_sequence)) |>
+    # Remove duplicate itin_id & service_id & departure_time
+    group_by(itin_id, service_id, departure_time) |>
+    arrange(itin_id, service_id, departure_time) |>
+    mutate(row_n = row_number()) |>
+    filter(row_n == 1) |>
+    select(-row_n) |>
+    ungroup() |>
     left_join(
       trips |>
-        select(trip_id, speed),
-      by = "trip_id"
+        select(trip_id, service_id, speed),
+      by = c("trip_id", "service_id")
     ) |>
     mutate(
       hour_dep = sprintf("%02d:00:00", as.numeric(floor(departure_time / 3600)))
