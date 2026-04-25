@@ -816,6 +816,7 @@ gtfs_to_ssfs <- function(
     gtfs$shapes <-
       gtfs$shapes |>
       arrange(shape_id, shape_pt_sequence)
+    # Later verification of missing shapes for specific trips
   }
 
   #refining trip details : based on new service ids------
@@ -878,6 +879,130 @@ gtfs_to_ssfs <- function(
         shape_id
       ) |>
       arrange(service_id, itin_id)
+  }
+
+  #Verify that there are no missing shapes and create them if so
+  itin_ids_noshape <-
+    trips |>
+    filter(shape_id == "" | is.null(shape_id) | is.na(shape_id)) |>
+    pull(itin_id) |>
+    unique()
+
+  if (length(itin_ids_noshape) > 0) {
+    #there are itin ids without shapes, create them
+
+    #CREATE EMPTY SHAPES
+    shapes_new <- data.table(
+      shape_id = character(),
+      shape_pt_lat = numeric(),
+      shape_pt_lon = numeric(),
+      shape_pt_sequence = integer()
+    )
+
+    #
+    for (itin_id_i in itin_ids_noshape) {
+      stops_itin_i <-
+        stop_seq_proto |>
+        filter(itin_id == itin_id_i) |>
+        arrange(stop_sequence) |>
+        select(stop_id) |>
+        left_join(stops |> as_tibble(), by = "stop_id") |>
+        st_as_sf()
+
+      #return route type of itin_id_i
+
+      route_id_i <-
+        itin_to_stop_seq |>
+        filter(itin_id == itin_id_i) |>
+        pull(route_id) |>
+        unique()
+
+      route_type_i <-
+        route_info |>
+        filter(route_id == route_id_i) |>
+        pull(route_type) |>
+        unique()
+
+      if (route_type_i %in% c(3, 5, 11)) {
+        if (routing_server == "OSRM") {
+          shape_i <-
+            osrm::osrmRoute(loc = stops_itin_i, overview = "full")
+        } else {
+          # Valhalla routing instead of OSRM
+          shape_i <-
+            valh::vl_route(loc = stops_itin_i)
+        }
+
+        shapes_i <-
+          shape_i |>
+          select(geometry) |>
+          st_cast("POINT") |>
+          mutate(coords = st_coordinates(geometry)) |>
+          mutate(
+            shape_pt_lon = coords[, "X"],
+            shape_pt_lat = coords[, "Y"],
+            shape_pt_sequence = row_number(),
+            shape_id = itin_id_i
+          ) |>
+          as.data.table() |>
+          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
+      } else {
+        #else (for example, if metro or ferry or light rail),
+        #shapes is only made up of points that are also stops
+
+        shapes_i <-
+          stops_itin_i |>
+          select(geometry) |>
+          mutate(coords = st_coordinates(geometry)) |>
+          mutate(
+            shape_pt_lon = coords[, "X"],
+            shape_pt_lat = coords[, "Y"],
+            shape_pt_sequence = row_number(),
+            shape_id = itin_id_i
+          ) |>
+          as.data.table() |>
+          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
+      }
+
+      shapes_new <-
+        rbind(shapes_new, shapes_i)
+    }
+
+    # add shapes_new to existing gtfs$shapes
+
+    gtfs$shapes <-
+      rbind(gtfs$shapes, shapes_new)
+
+    # add shape id to trip_id and trips
+
+    gtfs$trips <-
+      gtfs$trips |>
+      left_join(trip_id_to_itin_id, by = "trip_id") |>
+      mutate(
+        shape_id = if_else(
+          shape_id == "" | is.na(shape_id) | is.null(shape_id),
+          itin_id,
+          shape_id
+        )
+      ) |>
+      select(-itin_id)
+
+    trips <-
+      trips |>
+      mutate(
+        shape_id = if_else(
+          shape_id == "" | is.na(shape_id) | is.null(shape_id),
+          itin_id,
+          shape_id
+        )
+      )
+
+    message(
+      paste0(
+        "Shapes missing from GTFS created for the following itineraries: ",
+        paste0(itin_ids_noshape, collapse = ", ")
+      )
+    )
   }
 
   trips_speed <-
