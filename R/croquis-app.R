@@ -3640,7 +3640,7 @@ croquis <- function(ssfs = NULL) {
     #
     #   #   #
 
-    scheduleServer("schedule", ssfs, map_center)
+    scheduleServer("schedule", ssfs, map_center, service_patterns)
 
     ###
     #

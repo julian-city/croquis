@@ -894,3 +894,128 @@ body {
 #sched-filter-panel .floating-panel-content {
   overflow: visible;
 }
+
+ .sched-editing-container {
+   display: flex;
+   gap: 15px;
+   min-height: 300px;
+ }
+
+ .sched-route-panel {
+   flex: 1;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+   overflow-y: auto;
+   max-height: 70vh;
+ }
+
+ .sched-itin-panel {
+   flex: 1;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+   overflow-y: auto;
+   max-height: 70vh;
+ }
+
+ /* Itinerary rows in the schedule route panel */
+ .sched-itin-row {
+   display: flex;
+   align-items: flex-start;
+   padding: 8px 10px;
+   border-bottom: 1px solid var(--border-color);
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-itin-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-itin-row.sched-itin-active {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-itin-row.sched-itin-inactive {
+   opacity: 0.5;
+   background-color: rgba(127, 127, 127, 0.05);
+ }
+
+ .sched-itin-main {
+   flex: 1;
+   min-width: 0;
+   overflow: hidden;
+ }
+
+ .sched-itin-header {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+ }
+
+ .sched-itin-detail {
+   font-size: 11px;
+   color: #888;
+   margin-top: 2px;
+ }
+
+ .sched-itin-spans {
+   font-size: 11px;
+   color: #666;
+   margin-top: 1px;
+ }
+
+ .sched-itin-speed {
+   font-size: 11px;
+   color: #666;
+   margin-top: 1px;
+   font-style: italic;
+ }
+
+ .sched-batch-section {
+   border-top: 1px solid var(--border-color);
+   margin-top: 12px;
+   padding-top: 12px;
+ }
+
+ .sched-batch-row {
+   display: flex;
+   align-items: flex-end;
+   gap: 8px;
+   margin-bottom: 10px;
+   flex-wrap: wrap;
+ }
+
+ .sched-batch-row label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-batch-row input,
+ .sched-batch-row select {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-batch-row .sched-time-input {
+   width: 100px;
+ }
+
+ .sched-batch-row button {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+   white-space: nowrap;
+ }
