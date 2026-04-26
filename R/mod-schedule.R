@@ -68,6 +68,9 @@ scheduleUI <- function(id) {
               choices = sprintf("%02d:00:00", 1:29),
               selected = "08:00:00",
               width = "100%"
+            ),
+            tags$small(
+              "Click on any route segment on the map to view cumulative service level for this service and hour."
             )
           )
         )
@@ -102,55 +105,6 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
     # service_id selected in the route-level schedule panel
     # (separate from the map filter panel's sched_service_id)
     sched_edit_service_id <- reactiveVal(NULL)
-
-    # --- /Helper functions/----
-
-    sched_format_time <- function(time_str) {
-      clean_str <- gsub("[^0-9:]", "", time_str)
-      parts <- strsplit(clean_str, ":")[[1]]
-      if (length(parts) == 1) {
-        hours <- as.numeric(parts[1])
-        mins <- 0
-        secs <- 0
-      } else if (length(parts) == 2) {
-        hours <- as.numeric(parts[1])
-        mins <- as.numeric(parts[2])
-        secs <- 0
-      } else if (length(parts) == 3) {
-        hours <- as.numeric(parts[1])
-        mins <- as.numeric(parts[2])
-        secs <- as.numeric(parts[3])
-      } else {
-        return(NULL)
-      }
-      if (
-        hours < 0 ||
-          hours > 30 ||
-          mins < 0 ||
-          mins > 59 ||
-          secs < 0 ||
-          secs > 59
-      ) {
-        return(NULL)
-      }
-      sprintf("%02d:%02d:%02d", hours, mins, secs)
-    }
-
-    sched_get_speed_for_itin <- function(itin_id, current_data) {
-      itin_row <- current_data$itin[current_data$itin$itin_id == itin_id, ]
-      if (nrow(itin_row) == 0) {
-        return(20)
-      }
-      route_id <- itin_row$route_id[1]
-      route_row <- current_data$routes[
-        current_data$routes$route_id == route_id,
-      ]
-      if (nrow(route_row) == 0) {
-        return(20)
-      }
-      route_type <- route_row$route_type[1]
-      if (!is.na(route_type) && route_type %in% c(1, 2, 12)) 40 else 20
-    }
 
     # Initialise service_id dropdown from calendar
     observe({
@@ -1002,10 +956,11 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
             label = "Service",
             choices = service_choices,
             selected = selected_service,
-            width = "100%"
+            width = "50%"
           ),
 
           # Itinerary rows
+          h5("Itineraries"),
           do.call(tagList, itin_rows),
 
           # ── Batch actions ──
@@ -1056,7 +1011,7 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
                   ns("sched_batch_preset"),
                   label = NULL,
                   choices = preset_choices,
-                  width = "100%"
+                  width = "50%"
                 )
               ),
               tags$button(
@@ -1198,6 +1153,16 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
             current_data$span$service_id == service_id),
         ]
 
+        # Stash existing hsh entries for this itin + service
+        # (to join later and add headway and speeds info)
+
+        stash_headways_speeds <-
+          current_data$hsh[
+            (current_data$hsh$itin_id == itin_id &
+              current_data$hsh$service_id == service_id),
+          ] |>
+          select(hour_dep, headway, speed)
+
         # Remove existing hsh entries for this itin + service
         current_data$hsh <- current_data$hsh[
           !(current_data$hsh$itin_id == itin_id &
@@ -1215,16 +1180,36 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
         )
         current_data$span <- rbind(current_data$span, new_span)
 
+        # speed values for new hour deps
+        if (length(stash_headways_speeds$speed) > 0) {
+          speed_value <- round(mean(stash_headways_speeds$speed), 1)
+        } else {
+          speed_value <- sched_get_speed_for_itin(itin_id, current_data)
+        }
+
         # Add new hsh entries
-        speed_value <- sched_get_speed_for_itin(itin_id, current_data)
         new_hsh <- data.frame(
           itin_id = rep(itin_id, length(new_hours)),
           service_id = rep(service_id, length(new_hours)),
           hour_dep = new_hours,
-          headway = NA_integer_,
-          speed = speed_value,
           stringsAsFactors = FALSE
         )
+
+        # apply stashed headways and speeds
+        if (length(stash_headways_speeds$speed) > 0) {
+          new_hsh <-
+            new_hsh |>
+            left_join(stash_headways_speeds, by = "hour_dep") |>
+            mutate(
+              headway = if_else(is.na(headway), NA_real_, headway),
+              speed = if_else(is.na(speed), speed_value, speed)
+            )
+        } else {
+          new_hsh <-
+            new_hsh |>
+            mutate(headway = NA_real_, speed = speed_value)
+        }
+
         current_data$hsh <- rbind(current_data$hsh, new_hsh)
       }
 
