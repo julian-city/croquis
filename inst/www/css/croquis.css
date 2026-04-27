@@ -1018,4 +1018,12 @@ body {
    border-radius: 4px;
    cursor: pointer;
    white-space: nowrap;
- }
+  }
+
+  .sched-batch-row .form-group {
+  margin-bottom: 0;
+}
+
+.sched-batch-row .shiny-input-container {
+  margin-bottom: 0;
+}

@@ -956,7 +956,7 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
             label = "Service",
             choices = service_choices,
             selected = selected_service,
-            width = "50%"
+            width = "100%"
           ),
 
           # Itinerary rows
@@ -1011,7 +1011,7 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
                   ns("sched_batch_preset"),
                   label = NULL,
                   choices = preset_choices,
-                  width = "50%"
+                  width = "100%"
                 )
               ),
               tags$button(
