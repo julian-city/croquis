@@ -46,3 +46,14 @@ sched_get_speed_for_itin <- function(itin_id, current_data) {
   route_type <- route_row$route_type[1]
   if (!is.na(route_type) && route_type %in% c(1, 2, 12)) 40 else 20
 }
+
+sched_parse_time_to_seconds <- function(time_str) {
+  parts <- as.numeric(strsplit(time_str, ":")[[1]])
+  parts[1] * 3600 + parts[2] * 60 + parts[3]
+}
+
+sched_get_hours_for_span <- function(first_dep, last_dep) {
+  first_hour <- as.numeric(substr(first_dep, 1, 2))
+  last_hour <- as.numeric(substr(last_dep, 1, 2))
+  sprintf("%02d:00:00", first_hour:last_hour)
+}

@@ -1027,3 +1027,113 @@ body {
 .sched-batch-row .shiny-input-container {
   margin-bottom: 0;
 }
+
+/* Span editing rows */
+
+ .sched-span-row {
+   display: flex;
+   align-items: center;
+   padding: 6px 10px;
+   border-bottom: 1px solid var(--border-color);
+   transition: background-color 0.15s ease;
+   font-size: 12px;
+ }
+
+ .sched-span-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-span-row.sched-span-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-span-info {
+   flex: 1;
+   min-width: 0;
+ }
+
+ .sched-span-label {
+   font-size: 10px;
+   color: #888;
+ }
+
+ .sched-span-times {
+   font-weight: 500;
+ }
+
+ .sched-span-actions {
+   display: flex;
+   gap: 4px;
+   margin-left: 8px;
+   flex-shrink: 0;
+ }
+
+ .sched-span-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 4px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-span-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-span-edit-form input {
+   width: 110px;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   margin-bottom: 6px;
+ }
+
+ .sched-span-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-span-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-span-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-span-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-span-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ .sched-span-add-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-span-add-row:hover {
+   background-color: var(--hover-color);
+ }

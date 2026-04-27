@@ -106,6 +106,10 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
     # (separate from the map filter panel's sched_service_id)
     sched_edit_service_id <- reactiveVal(NULL)
 
+    # span editing
+    sched_span_editing_idx <- reactiveVal(NULL)
+    sched_span_adding <- reactiveVal(FALSE)
+
     # Initialise service_id dropdown from calendar
     observe({
       current_data <- ssfs()
@@ -1059,27 +1063,30 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
       )
     })
 
-    # Placeholder for right-side itinerary level schedule editor
+    # Right-side itinerary level schedule editor
     output$sched_itin_editing_ui <- renderUI({
       editing_itin <- sched_editing_itin_id()
+      span_editing_idx <- sched_span_editing_idx()
+      is_adding <- sched_span_adding()
+      ns <- session$ns
 
       if (is.null(editing_itin)) {
         return(
           div(
             style = "color: grey; text-align: center; padding: 40px 20px;",
             tags$em(
-              "Click the pencil icon on an itinerary to edit its
-                      headways and speeds."
+              "Click the pencil icon on an itinerary to edit its headways and speeds."
             )
           )
         )
       }
 
       current_data <- ssfs()
+      service_id <- sched_edit_service_id()
+
       itin_row <- current_data$itin[
         current_data$itin$itin_id == editing_itin,
       ]
-
       if (nrow(itin_row) == 0) {
         return(NULL)
       }
@@ -1091,11 +1098,183 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
         ")"
       )
 
-      wellPanel(
+      itin_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+      if (nrow(itin_spans) > 0) {
+        itin_spans <- itin_spans[order(itin_spans$service_window), ]
+      }
+
+      span_rows <- list()
+
+      if (nrow(itin_spans) > 0) {
+        for (s in seq_len(nrow(itin_spans))) {
+          sw <- itin_spans$service_window[s]
+          fd <- itin_spans$first_dep[s]
+          ld <- itin_spans$last_dep[s]
+          is_editing_this <- !is.null(span_editing_idx) &&
+            span_editing_idx == s
+
+          if (is_editing_this) {
+            span_rows[[length(span_rows) + 1]] <- div(
+              class = "sched-span-edit-form",
+              div(
+                class = "sched-span-label",
+                paste0("Service window ", sw)
+              ),
+              div(
+                style = "display: flex; gap: 8px; align-items: flex-end;",
+                div(
+                  tags$label("First departure"),
+                  tags$input(
+                    type = "text",
+                    id = ns("sched_span_edit_first_dep"),
+                    value = fd,
+                    placeholder = "HH:MM:SS"
+                  )
+                ),
+                div(
+                  tags$label("Last departure"),
+                  tags$input(
+                    type = "text",
+                    id = ns("sched_span_edit_last_dep"),
+                    value = ld,
+                    placeholder = "HH:MM:SS"
+                  )
+                )
+              ),
+              div(
+                class = "btn-row",
+                tags$button(
+                  class = "btn-save",
+                  onclick = "schedSaveSpanEdit()",
+                  htmltools::HTML("&#10003; Save")
+                ),
+                tags$button(
+                  class = "btn-cancel",
+                  onclick = "schedCancelSpanEdit()",
+                  "Cancel"
+                )
+              )
+            )
+          } else {
+            span_rows[[length(span_rows) + 1]] <- div(
+              class = "sched-span-row",
+              div(
+                class = "sched-span-info",
+                div(class = "sched-span-label", paste0("Window ", sw)),
+                div(class = "sched-span-times", paste0(fd, " \u2014 ", ld))
+              ),
+              div(
+                class = "sched-span-actions",
+                tags$button(
+                  class = "route-action-btn edit-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); schedEditSpan(%d)",
+                    s
+                  ),
+                  title = "Edit service window",
+                  htmltools::HTML("&#9998;")
+                ),
+                tags$button(
+                  class = "route-action-btn delete-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); schedDeleteSpan(%d)",
+                    s
+                  ),
+                  title = "Delete service window",
+                  htmltools::HTML(
+                    '<i class="fa-solid fa-trash"></i>'
+                  )
+                )
+              )
+            )
+          }
+        }
+      }
+
+      if (is_adding) {
+        existing_spans <- current_data$span[
+          current_data$span$itin_id == editing_itin &
+            current_data$span$service_id == service_id,
+        ]
+        if (nrow(existing_spans) == 0) {
+          default_first <- "05:00:00"
+          default_last <- "23:00:00"
+        } else {
+          max_window <- max(existing_spans$service_window, na.rm = TRUE)
+          prev_last <- existing_spans$last_dep[
+            existing_spans$service_window == max_window
+          ][1]
+          prev_last_hour <- as.numeric(substr(prev_last, 1, 2))
+          default_first <- sprintf("%02d:00:00", prev_last_hour + 1)
+          default_last <- sprintf("%02d:00:00", min(prev_last_hour + 4, 29))
+        }
+
+        span_rows[[length(span_rows) + 1]] <- div(
+          class = "sched-span-edit-form",
+          div(
+            class = "sched-span-label",
+            "New service window"
+          ),
+          div(
+            style = "display: flex; gap: 8px; align-items: flex-end;",
+            div(
+              tags$label("First departure"),
+              tags$input(
+                type = "text",
+                id = ns("sched_span_edit_first_dep"),
+                value = default_first,
+                placeholder = "HH:MM:SS"
+              )
+            ),
+            div(
+              tags$label("Last departure"),
+              tags$input(
+                type = "text",
+                id = ns("sched_span_edit_last_dep"),
+                value = default_last,
+                placeholder = "HH:MM:SS"
+              )
+            )
+          ),
+          div(
+            class = "btn-row",
+            tags$button(
+              class = "btn-save",
+              onclick = "schedSaveNewSpan()",
+              "Create"
+            ),
+            tags$button(
+              class = "btn-cancel",
+              onclick = "schedCancelSpanEdit()",
+              "Cancel"
+            )
+          )
+        )
+      } else {
+        span_rows[[length(span_rows) + 1]] <- div(
+          class = "sched-span-add-row",
+          onclick = "schedAddSpan()",
+          tags$button(
+            class = "stop-action-btn add-btn",
+            onclick = "event.stopPropagation(); schedAddSpan()",
+            title = "Add new service window",
+            htmltools::HTML("+")
+          ),
+          span(style = "margin-left: 8px;", "Add new service window")
+        )
+      }
+
+      tagList(
         h4(paste0("Itinerary: ", itin_display)),
+        h5("Service windows"),
+        do.call(tagList, span_rows),
+        hr(),
         tags$em(
           style = "color: grey;",
-          "Headway and speed editing table will appear here."
+          "Headway and speed editing table will appear below."
         )
       )
     })
@@ -1339,6 +1518,364 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
           length(route_itin_ids),
           " itinerary(ies)."
         ),
+        type = "message"
+      )
+    })
+
+    # Span observers
+
+    observeEvent(input$sched_span_edit_click, {
+      sched_span_adding(FALSE)
+      sched_span_editing_idx(input$sched_span_edit_click$idx)
+    })
+
+    observeEvent(input$sched_span_cancel_edit, {
+      sched_span_editing_idx(NULL)
+      sched_span_adding(FALSE)
+    })
+
+    observeEvent(input$sched_span_add_click, {
+      sched_span_editing_idx(NULL)
+      sched_span_adding(TRUE)
+    })
+
+    # Save edit to existing span
+    observeEvent(input$sched_span_save_edit, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      idx <- sched_span_editing_idx()
+      req(editing_itin, service_id, idx)
+
+      data <- input$sched_span_save_edit
+
+      new_first_dep <- sched_format_time(data$first_dep)
+      new_last_dep <- sched_format_time(data$last_dep)
+
+      if (is.null(new_first_dep) || is.null(new_last_dep)) {
+        showNotification(
+          "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
+          type = "error"
+        )
+        return()
+      }
+
+      if (new_first_dep >= new_last_dep) {
+        showNotification(
+          "First departure must be before last departure.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data <- ssfs()
+
+      itin_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+      itin_spans <- itin_spans[order(itin_spans$service_window), ]
+
+      if (idx < 1 || idx > nrow(itin_spans)) {
+        showNotification("Span not found.", type = "error")
+        return()
+      }
+
+      target_sw <- itin_spans$service_window[idx]
+      old_first_dep <- itin_spans$first_dep[idx]
+      old_last_dep <- itin_spans$last_dep[idx]
+
+      if (idx > 1) {
+        prev_last <- itin_spans$last_dep[idx - 1]
+        prev_last_sec <- sched_parse_time_to_seconds(prev_last)
+        new_first_sec <- sched_parse_time_to_seconds(new_first_dep)
+        if (new_first_sec <= prev_last_sec + 59) {
+          showNotification(
+            paste0(
+              "Must start after ",
+              prev_last,
+              " (end of previous window)."
+            ),
+            type = "error"
+          )
+          return()
+        }
+      }
+
+      if (idx < nrow(itin_spans)) {
+        next_first <- itin_spans$first_dep[idx + 1]
+        next_first_sec <- sched_parse_time_to_seconds(next_first)
+        new_last_sec <- sched_parse_time_to_seconds(new_last_dep)
+        if (new_last_sec >= next_first_sec - 59) {
+          showNotification(
+            paste0("Must end before ", next_first, " (start of next window)."),
+            type = "error"
+          )
+          return()
+        }
+      }
+
+      full_idx <- which(
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id &
+          current_data$span$service_window == target_sw
+      )
+
+      current_data$span$first_dep[full_idx] <- new_first_dep
+      current_data$span$last_dep[full_idx] <- new_last_dep
+
+      old_hours <- sched_get_hours_for_span(old_first_dep, old_last_dep)
+      new_hours <- sched_get_hours_for_span(new_first_dep, new_last_dep)
+
+      all_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+      all_covered_hours <- unique(unlist(
+        lapply(seq_len(nrow(all_spans)), function(r) {
+          sched_get_hours_for_span(
+            all_spans$first_dep[r],
+            all_spans$last_dep[r]
+          )
+        })
+      ))
+
+      hours_to_remove <- setdiff(old_hours, new_hours)
+      hours_to_remove <- setdiff(hours_to_remove, all_covered_hours)
+
+      if (length(hours_to_remove) > 0) {
+        current_data$hsh <- current_data$hsh[
+          !(current_data$hsh$itin_id == editing_itin &
+            current_data$hsh$service_id == service_id &
+            current_data$hsh$hour_dep %in% hours_to_remove),
+        ]
+      }
+
+      existing_hours <- current_data$hsh$hour_dep[
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id
+      ]
+      hours_to_add <- setdiff(new_hours, existing_hours)
+
+      if (length(hours_to_add) > 0) {
+        existing_hsh <- current_data$hsh[
+          current_data$hsh$itin_id == editing_itin &
+            current_data$hsh$service_id == service_id,
+        ]
+        speed_value <- if (
+          nrow(existing_hsh) > 0 &&
+            any(!is.na(existing_hsh$speed))
+        ) {
+          round(mean(existing_hsh$speed, na.rm = TRUE), 1)
+        } else {
+          sched_get_speed_for_itin(editing_itin, current_data)
+        }
+
+        new_hsh_rows <- data.frame(
+          itin_id = rep(editing_itin, length(hours_to_add)),
+          service_id = rep(service_id, length(hours_to_add)),
+          hour_dep = hours_to_add,
+          headway = NA_real_,
+          speed = speed_value,
+          stringsAsFactors = FALSE
+        )
+        current_data$hsh <- rbind(current_data$hsh, new_hsh_rows)
+      }
+
+      ssfs(current_data)
+      sched_span_editing_idx(NULL)
+
+      showNotification("Service window updated.", type = "message")
+    })
+
+    # Save new span (created on save, not on add click)
+    observeEvent(input$sched_span_save_new, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      req(editing_itin, service_id)
+
+      data <- input$sched_span_save_new
+
+      first_dep <- sched_format_time(data$first_dep)
+      last_dep <- sched_format_time(data$last_dep)
+
+      if (is.null(first_dep) || is.null(last_dep)) {
+        showNotification(
+          "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
+          type = "error"
+        )
+        return()
+      }
+
+      if (first_dep >= last_dep) {
+        showNotification(
+          "First departure must be before last departure.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data <- ssfs()
+
+      existing_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+
+      if (nrow(existing_spans) == 0) {
+        new_service_window <- 1L
+      } else {
+        max_window <- max(existing_spans$service_window, na.rm = TRUE)
+        new_service_window <- as.integer(max_window + 1)
+
+        prev_last <- existing_spans$last_dep[
+          existing_spans$service_window == max_window
+        ][1]
+        prev_last_sec <- sched_parse_time_to_seconds(prev_last)
+        new_first_sec <- sched_parse_time_to_seconds(first_dep)
+
+        if (new_first_sec <= prev_last_sec + 59) {
+          showNotification(
+            paste0(
+              "Service window ",
+              new_service_window,
+              " must start after ",
+              prev_last,
+              " (the end of service window ",
+              max_window,
+              ")."
+            ),
+            type = "error"
+          )
+          return()
+        }
+      }
+
+      new_span <- data.frame(
+        itin_id = editing_itin,
+        service_id = service_id,
+        service_window = new_service_window,
+        first_dep = first_dep,
+        last_dep = last_dep,
+        stringsAsFactors = FALSE
+      )
+      current_data$span <- rbind(current_data$span, new_span)
+
+      new_hours <- sched_get_hours_for_span(first_dep, last_dep)
+
+      existing_hsh_hours <- current_data$hsh$hour_dep[
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id
+      ]
+      hours_to_add <- setdiff(new_hours, existing_hsh_hours)
+
+      if (length(hours_to_add) > 0) {
+        existing_hsh <- current_data$hsh[
+          current_data$hsh$itin_id == editing_itin &
+            current_data$hsh$service_id == service_id,
+        ]
+        speed_value <- if (
+          nrow(existing_hsh) > 0 &&
+            any(!is.na(existing_hsh$speed))
+        ) {
+          round(mean(existing_hsh$speed, na.rm = TRUE), 1)
+        } else {
+          sched_get_speed_for_itin(editing_itin, current_data)
+        }
+
+        new_hsh_rows <- data.frame(
+          itin_id = rep(editing_itin, length(hours_to_add)),
+          service_id = rep(service_id, length(hours_to_add)),
+          hour_dep = hours_to_add,
+          headway = NA_real_,
+          speed = speed_value,
+          stringsAsFactors = FALSE
+        )
+        current_data$hsh <- rbind(current_data$hsh, new_hsh_rows)
+      }
+
+      ssfs(current_data)
+      sched_span_adding(FALSE)
+
+      showNotification(
+        paste0(
+          "Service window ",
+          new_service_window,
+          " added (",
+          first_dep,
+          " - ",
+          last_dep,
+          ") with ",
+          length(hours_to_add),
+          " headway entries created."
+        ),
+        type = "message"
+      )
+    })
+
+    # Delete span
+    observeEvent(input$sched_span_delete_click, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      idx <- input$sched_span_delete_click$idx
+      req(editing_itin, service_id, idx)
+
+      current_data <- ssfs()
+
+      itin_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+      itin_spans <- itin_spans[order(itin_spans$service_window), ]
+
+      if (idx < 1 || idx > nrow(itin_spans)) {
+        showNotification("Span not found.", type = "error")
+        return()
+      }
+
+      target_sw <- itin_spans$service_window[idx]
+      deleted_first <- itin_spans$first_dep[idx]
+      deleted_last <- itin_spans$last_dep[idx]
+
+      current_data$span <- current_data$span[
+        !(current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id &
+          current_data$span$service_window == target_sw),
+      ]
+
+      deleted_hours <- sched_get_hours_for_span(deleted_first, deleted_last)
+
+      remaining_spans <- current_data$span[
+        current_data$span$itin_id == editing_itin &
+          current_data$span$service_id == service_id,
+      ]
+
+      if (nrow(remaining_spans) > 0) {
+        remaining_hours <- unique(unlist(
+          lapply(seq_len(nrow(remaining_spans)), function(r) {
+            sched_get_hours_for_span(
+              remaining_spans$first_dep[r],
+              remaining_spans$last_dep[r]
+            )
+          })
+        ))
+        hours_to_remove <- setdiff(deleted_hours, remaining_hours)
+      } else {
+        hours_to_remove <- deleted_hours
+      }
+
+      if (length(hours_to_remove) > 0) {
+        current_data$hsh <- current_data$hsh[
+          !(current_data$hsh$itin_id == editing_itin &
+            current_data$hsh$service_id == service_id &
+            current_data$hsh$hour_dep %in% hours_to_remove),
+        ]
+      }
+
+      ssfs(current_data)
+      sched_span_editing_idx(NULL)
+
+      showNotification(
+        paste0("Service window ", target_sw, " deleted."),
         type = "message"
       )
     })
