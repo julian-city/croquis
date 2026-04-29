@@ -110,6 +110,26 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
     sched_span_editing_idx <- reactiveVal(NULL)
     sched_span_adding <- reactiveVal(FALSE)
 
+    #schedule preset choices
+    sched_preset_choices <- reactive({
+      sp_data <- service_patterns()
+      if (
+        !is.null(sp_data$service_pattern_names) &&
+          nrow(sp_data$service_pattern_names) > 0
+      ) {
+        setNames(
+          sp_data$service_pattern_names$pattern_id,
+          paste0(
+            sp_data$service_pattern_names$pattern_id,
+            " - ",
+            sp_data$service_pattern_names$pattern_name
+          )
+        )
+      } else {
+        character(0)
+      }
+    })
+
     # Initialise service_id dropdown from calendar
     observe({
       current_data <- ssfs()
@@ -822,22 +842,7 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
       editing_itin <- sched_editing_itin_id()
 
       # Service level preset choices
-      sp_data <- service_patterns()
-      preset_choices <- if (
-        !is.null(sp_data$service_pattern_names) &&
-          nrow(sp_data$service_pattern_names) > 0
-      ) {
-        setNames(
-          sp_data$service_pattern_names$pattern_id,
-          paste0(
-            sp_data$service_pattern_names$pattern_id,
-            " - ",
-            sp_data$service_pattern_names$pattern_name
-          )
-        )
-      } else {
-        character(0)
-      }
+      preset_choices <- sched_preset_choices()
 
       # ── Build itinerary rows ──
       itin_rows <- list()
@@ -1083,6 +1088,7 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
 
       current_data <- ssfs()
       service_id <- sched_edit_service_id()
+      preset_choices <- sched_preset_choices()
 
       itin_row <- current_data$itin[
         current_data$itin$itin_id == editing_itin,
@@ -1271,6 +1277,66 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
         h4(paste0("Itinerary: ", itin_display)),
         h5("Service windows"),
         do.call(tagList, span_rows),
+        hr(),
+
+        # Itinerary-level batch: preset + speed side by side
+        div(
+          class = "sched-itin-batch-row",
+
+          # Apply service level preset
+          div(
+            style = "flex: 1; min-width: 0;",
+            tags$label("Apply service level preset"),
+            div(
+              style = "display: flex; gap: 6px; align-items: flex-end;",
+              div(
+                style = "flex: 1; min-width: 0;",
+                selectInput(
+                  ns("sched_itin_preset"),
+                  label = NULL,
+                  choices = preset_choices,
+                  width = "100%"
+                )
+              ),
+              tags$button(
+                class = "btn-save",
+                style = "margin-bottom: 0;",
+                onclick = sprintf(
+                  "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+                  ns("sched_itin_apply_preset")
+                ),
+                "Apply"
+              )
+            )
+          ),
+
+          # Apply speed
+          div(
+            style = "flex-shrink: 0;",
+            tags$label("Apply speed to all hours (km/h)"),
+            div(
+              style = "display: flex; gap: 6px; align-items: flex-end;",
+              numericInput(
+                ns("sched_itin_speed"),
+                label = NULL,
+                value = 20,
+                min = 5,
+                max = 431,
+                width = "80px"
+              ),
+              tags$button(
+                class = "btn-save",
+                style = "margin-bottom: 0;",
+                onclick = sprintf(
+                  "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+                  ns("sched_itin_apply_speed")
+                ),
+                "Apply"
+              )
+            )
+          )
+        ),
+
         hr(),
         tags$em(
           style = "color: grey;",
@@ -1876,6 +1942,105 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
 
       showNotification(
         paste0("Service window ", target_sw, " deleted."),
+        type = "message"
+      )
+    })
+
+    # Apply service level preset to single itinerary
+    observeEvent(input$sched_itin_apply_preset, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      pattern_id <- input$sched_itin_preset
+      req(editing_itin, service_id, pattern_id)
+
+      current_data <- ssfs()
+      sp_data <- service_patterns()
+
+      if (!pattern_id %in% names(sp_data$service_patterns)) {
+        showNotification("Selected preset not found.", type = "error")
+        return()
+      }
+
+      pattern_data <- sp_data$service_patterns[[pattern_id]]
+      pattern_headways <- setNames(pattern_data$headway, pattern_data$hour)
+
+      match_idx <- which(
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id
+      )
+
+      if (length(match_idx) == 0) {
+        showNotification(
+          "No headway entries found. Define spans first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      updated_count <- 0L
+      for (idx in match_idx) {
+        hour <- current_data$hsh$hour_dep[idx]
+        if (hour %in% names(pattern_headways)) {
+          current_data$hsh$headway[idx] <- pattern_headways[[hour]]
+          updated_count <- updated_count + 1L
+        }
+      }
+
+      ssfs(current_data)
+
+      pattern_name <- sp_data$service_pattern_names$pattern_name[
+        sp_data$service_pattern_names$pattern_id == pattern_id
+      ]
+
+      showNotification(
+        paste0(
+          "Applied '",
+          pattern_name,
+          "' to ",
+          editing_itin,
+          ". ",
+          updated_count,
+          " hour entries updated."
+        ),
+        type = "message"
+      )
+    })
+
+    # Apply speed to single itinerary
+    observeEvent(input$sched_itin_apply_speed, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      speed_value <- input$sched_itin_speed
+      req(editing_itin, service_id, speed_value)
+
+      current_data <- ssfs()
+
+      match_idx <- which(
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id
+      )
+
+      if (length(match_idx) == 0) {
+        showNotification(
+          "No headway entries found. Define spans first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data$hsh$speed[match_idx] <- speed_value
+      ssfs(current_data)
+
+      showNotification(
+        paste0(
+          "Speed set to ",
+          speed_value,
+          " km/h for ",
+          length(match_idx),
+          " entries on ",
+          editing_itin,
+          "."
+        ),
         type = "message"
       )
     })

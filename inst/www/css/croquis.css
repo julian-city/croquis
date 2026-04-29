@@ -1137,3 +1137,31 @@ body {
  .sched-span-add-row:hover {
    background-color: var(--hover-color);
  }
+
+ .sched-itin-batch-row {
+   display: flex;
+   gap: 12px;
+   align-items: flex-end;
+   margin-bottom: 10px;
+ }
+
+ .sched-itin-batch-row .form-group,
+ .sched-itin-batch-row .shiny-input-container {
+   margin-bottom: 0;
+ }
+
+ .sched-itin-batch-row label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-itin-batch-row button {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+   white-space: nowrap;
+ }
