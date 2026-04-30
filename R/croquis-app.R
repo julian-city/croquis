@@ -441,9 +441,6 @@ croquis <- function(ssfs = NULL) {
       #routes tab (consolidated routes + itineraries)
       routesUI("routes"),
 
-      #calendar tab
-      calendarUI("calendar"),
-
       #Service patterns tab
       tabPanel(
         "headway presets",
@@ -1700,14 +1697,6 @@ croquis <- function(ssfs = NULL) {
       current_zoom,
       reactive(input$settings_routing_server)
     )
-
-    #   #   #
-    #
-    ##   CALENDAR MODULE--------
-    #
-    #   #   #
-
-    calendarServer("calendar", ssfs)
 
     #   #   #
     #
