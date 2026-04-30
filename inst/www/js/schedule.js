@@ -35,7 +35,7 @@ function schedEditItin(itinId) {
  }
 
  function schedDeleteSpan(idx) {
-   if (confirm('Delete this service window? Associated headway entries will also be removed.')) {
+   if (confirm('Delete this service window and associated headway by hour entries?')) {
      Shiny.setInputValue(schedNs + 'sched_span_delete_click',
        {idx: idx, ts: Math.random()}, {priority: 'event'});
    }
@@ -90,5 +90,55 @@ function schedEditItin(itinId) {
 
  function schedCancelHshEdit() {
    Shiny.setInputValue(schedNs + 'sched_hsh_cancel_edit',
+     Math.random(), {priority: 'event'});
+ }
+
+ // Calendar config
+
+  function schedEditCalendarRow(serviceId) {
+   Shiny.setInputValue(schedNs + 'sched_cal_edit_click',
+     {id: serviceId, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedDeleteCalendarRow(serviceId) {
+   if (confirm('Delete service "' + serviceId + '"? This will remove all schedule data associated with this route.')) {
+     Shiny.setInputValue(schedNs + 'sched_cal_delete_click',
+       {id: serviceId, ts: Math.random()}, {priority: 'event'});
+   }
+ }
+
+ function schedAddCalendarRow() {
+   Shiny.setInputValue(schedNs + 'sched_cal_add_click',
+     Math.random(), {priority: 'event'});
+ }
+
+ function schedSaveCalendarEdit() {
+   var sid = document.getElementById(schedNs + 'sched_cal_edit_service_id');
+   var mon = document.getElementById(schedNs + 'sched_cal_mon');
+   var tue = document.getElementById(schedNs + 'sched_cal_tue');
+   var wed = document.getElementById(schedNs + 'sched_cal_wed');
+   var thu = document.getElementById(schedNs + 'sched_cal_thu');
+   var fri = document.getElementById(schedNs + 'sched_cal_fri');
+   var sat = document.getElementById(schedNs + 'sched_cal_sat');
+   var sun = document.getElementById(schedNs + 'sched_cal_sun');
+   var sd = document.getElementById(schedNs + 'sched_cal_start_date');
+   var ed = document.getElementById(schedNs + 'sched_cal_end_date');
+   Shiny.setInputValue(schedNs + 'sched_cal_save_edit', {
+     service_id: sid ? sid.value : '',
+     monday: mon ? (mon.checked ? 1 : 0) : 0,
+     tuesday: tue ? (tue.checked ? 1 : 0) : 0,
+     wednesday: wed ? (wed.checked ? 1 : 0) : 0,
+     thursday: thu ? (thu.checked ? 1 : 0) : 0,
+     friday: fri ? (fri.checked ? 1 : 0) : 0,
+     saturday: sat ? (sat.checked ? 1 : 0) : 0,
+     sunday: sun ? (sun.checked ? 1 : 0) : 0,
+     start_date: sd ? sd.value : '',
+     end_date: ed ? ed.value : '',
+     ts: Math.random()
+   }, {priority: 'event'});
+ }
+
+ function schedCancelCalendarEdit() {
+   Shiny.setInputValue(schedNs + 'sched_cal_cancel_edit',
      Math.random(), {priority: 'event'});
  }

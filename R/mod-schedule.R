@@ -76,11 +76,34 @@ scheduleUI <- function(id) {
         )
       ),
 
-      # Below-map area: placeholder for schedule editing
+      # Below-map area: placeholder for schedule editing and config buttons for calendar and service level presets
       div(
         id = "sched-editing-area",
         style = "margin-top: 15px;",
-        uiOutput(ns("sched_editing_ui"))
+        uiOutput(ns("sched_editing_ui")),
+
+        # Configuration buttons — always visible below editing panels
+        div(
+          class = "sched-config-buttons",
+          tags$button(
+            class = "sched-config-btn",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_open_calendar")
+            ),
+            tags$span(icon("gear")),
+            "Configure service calendar"
+          ),
+          tags$button(
+            class = "sched-config-btn",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_open_presets")
+            ),
+            tags$span(icon("gear")),
+            "Manage service level presets"
+          )
+        )
       )
     )
   )
@@ -132,6 +155,10 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
 
     # Hour dep of hsh row being edited
     sched_hsh_editing_hour <- reactiveVal(NULL)
+
+    #calendar editing
+    sched_cal_editing_id <- reactiveVal(NULL) # service_id being edited
+    sched_cal_adding <- reactiveVal(FALSE) # TRUE when add form is open
 
     # Initialise service_id dropdown from calendar
     observe({
@@ -2257,6 +2284,462 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
           ", speed = ",
           new_speed,
           " km/h"
+        ),
+        type = "message"
+      )
+    })
+
+    # Calendar modal popup observers
+    # Calendar modal opener
+    observeEvent(input$sched_open_calendar, {
+      sched_cal_editing_id(NULL)
+      sched_cal_adding(FALSE)
+      showModal(modalDialog(
+        title = "Service Calendar",
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        uiOutput(ns("sched_calendar_modal_ui"))
+      ))
+    })
+
+    # Calendar modal content
+    output$sched_calendar_modal_ui <- renderUI({
+      current_data <- ssfs()
+      cal <- current_data$calendar
+      editing_id <- sched_cal_editing_id()
+      is_adding <- sched_cal_adding()
+      ns <- session$ns
+
+      day_cols <- c(
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      )
+      day_abbrs <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+      cal_rows <- list()
+
+      if (nrow(cal) > 0) {
+        for (r in seq_len(nrow(cal))) {
+          sid <- cal$service_id[r]
+          is_editing_this <- !is.null(editing_id) && editing_id == sid
+
+          if (is_editing_this) {
+            # Inline edit form
+            day_checkboxes <- mapply(
+              function(col, abbr) {
+                checked <- if (cal[[col]][r] == 1) "checked" else NULL
+                tags$label(
+                  tags$input(
+                    type = "checkbox",
+                    id = ns(paste0("sched_cal_", tolower(substr(abbr, 1, 3)))),
+                    checked = checked
+                  ),
+                  abbr
+                )
+              },
+              day_cols,
+              day_abbrs,
+              SIMPLIFY = FALSE
+            )
+
+            cal_rows[[length(cal_rows) + 1]] <- tags$tr(
+              class = "sched-cal-row sched-cal-editing",
+              tags$td(
+                colspan = "11",
+                div(
+                  class = "sched-cal-edit-form",
+                  div(
+                    style = "margin-bottom: 6px;",
+                    tags$label("Service ID"),
+                    tags$input(
+                      type = "text",
+                      id = ns("sched_cal_edit_service_id"),
+                      value = sid,
+                      style = "width: 120px;"
+                    )
+                  ),
+                  tags$label("Days of operation"),
+                  div(
+                    class = "day-checkboxes",
+                    do.call(tagList, day_checkboxes)
+                  ),
+                  div(
+                    class = "date-fields",
+                    div(
+                      tags$label("Start date"),
+                      tags$input(
+                        type = "date",
+                        id = ns("sched_cal_start_date"),
+                        value = cal$start_date[r]
+                      )
+                    ),
+                    div(
+                      tags$label("End date"),
+                      tags$input(
+                        type = "date",
+                        id = ns("sched_cal_end_date"),
+                        value = cal$end_date[r]
+                      )
+                    )
+                  ),
+                  div(
+                    class = "btn-row",
+                    tags$button(
+                      class = "btn-save",
+                      onclick = "schedSaveCalendarEdit()",
+                      htmltools::HTML("&#10003; Save")
+                    ),
+                    tags$button(
+                      class = "btn-cancel",
+                      onclick = "schedCancelCalendarEdit()",
+                      "Cancel"
+                    )
+                  )
+                )
+              )
+            )
+          } else {
+            # Normal display row
+            day_cells <- lapply(day_cols, function(col) {
+              val <- cal[[col]][r]
+              if (val == 1) {
+                tags$td(
+                  class = "sched-cal-day-active",
+                  htmltools::HTML("&#10003;")
+                )
+              } else {
+                tags$td(
+                  class = "sched-cal-day-inactive",
+                  htmltools::HTML("&mdash;")
+                )
+              }
+            })
+
+            cal_rows[[length(cal_rows) + 1]] <- tags$tr(
+              class = "sched-cal-row",
+              tags$td(sid),
+              do.call(tagList, day_cells),
+              tags$td(cal$start_date[r]),
+              tags$td(cal$end_date[r]),
+              tags$td(
+                style = "text-align: right; white-space: nowrap;",
+                tags$button(
+                  class = "route-action-btn edit-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); schedEditCalendarRow('%s')",
+                    sid
+                  ),
+                  title = "Edit service",
+                  htmltools::HTML("&#9998;")
+                ),
+                tags$button(
+                  class = "route-action-btn delete-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); schedDeleteCalendarRow('%s')",
+                    sid
+                  ),
+                  title = "Delete service",
+                  htmltools::HTML('<i class="fa-solid fa-trash"></i>')
+                )
+              )
+            )
+          }
+        }
+      }
+
+      # Add new service form or button
+      if (is_adding) {
+        # Generate next service ID
+        if (nrow(cal) == 0) {
+          next_id <- "S1"
+        } else {
+          existing_ids <- cal$service_id
+          numeric_part <- suppressWarnings(
+            as.integer(gsub("\\D", "", existing_ids))
+          )
+          numeric_part <- numeric_part[!is.na(numeric_part)]
+          next_num <- if (length(numeric_part) > 0) {
+            max(numeric_part) + 1
+          } else {
+            nrow(cal) + 1
+          }
+          next_id <- paste0("S", next_num)
+        }
+
+        day_checkboxes_new <- mapply(
+          function(col, abbr) {
+            # Default: check Mon-Fri
+            default_checked <- col %in%
+              c("monday", "tuesday", "wednesday", "thursday", "friday")
+            tags$label(
+              tags$input(
+                type = "checkbox",
+                id = ns(paste0("sched_cal_", tolower(substr(abbr, 1, 3)))),
+                checked = if (default_checked) "checked" else NULL
+              ),
+              abbr
+            )
+          },
+          day_cols,
+          day_abbrs,
+          SIMPLIFY = FALSE
+        )
+
+        add_form <- tags$tr(
+          class = "sched-cal-row sched-cal-editing",
+          tags$td(
+            colspan = "11",
+            div(
+              class = "sched-cal-edit-form",
+              div(
+                style = "margin-bottom: 6px;",
+                tags$label("Service ID"),
+                tags$input(
+                  type = "text",
+                  id = ns("sched_cal_edit_service_id"),
+                  value = next_id,
+                  style = "width: 120px;"
+                )
+              ),
+              tags$label("Days of operation"),
+              div(
+                class = "day-checkboxes",
+                do.call(tagList, day_checkboxes_new)
+              ),
+              div(
+                class = "date-fields",
+                div(
+                  tags$label("Start date"),
+                  tags$input(
+                    type = "date",
+                    id = ns("sched_cal_start_date"),
+                    value = "2000-01-01"
+                  )
+                ),
+                div(
+                  tags$label("End date"),
+                  tags$input(
+                    type = "date",
+                    id = ns("sched_cal_end_date"),
+                    value = "2099-12-31"
+                  )
+                )
+              ),
+              div(
+                class = "btn-row",
+                tags$button(
+                  class = "btn-save",
+                  onclick = "schedSaveCalendarEdit()",
+                  "Create"
+                ),
+                tags$button(
+                  class = "btn-cancel",
+                  onclick = "schedCancelCalendarEdit()",
+                  "Cancel"
+                )
+              )
+            )
+          )
+        )
+        cal_rows[[length(cal_rows) + 1]] <- add_form
+      }
+
+      # Build the table
+      tagList(
+        tags$table(
+          class = "sched-cal-table",
+          tags$thead(
+            tags$tr(
+              tags$th("Service ID"),
+              tags$th("Mon"),
+              tags$th("Tue"),
+              tags$th("Wed"),
+              tags$th("Thu"),
+              tags$th("Fri"),
+              tags$th("Sat"),
+              tags$th("Sun"),
+              tags$th("Start date"),
+              tags$th("End date"),
+              tags$th(style = "width: 60px;", "")
+            )
+          ),
+          tags$tbody(
+            do.call(tagList, cal_rows)
+          )
+        ),
+        if (!is_adding) {
+          div(
+            class = "sched-cal-add-row",
+            onclick = "schedAddCalendarRow()",
+            tags$button(
+              class = "stop-action-btn add-btn",
+              onclick = "event.stopPropagation(); schedAddCalendarRow()",
+              title = "Add new service",
+              htmltools::HTML("+")
+            ),
+            span(style = "margin-left: 8px;", "Add new service")
+          )
+        }
+      )
+    })
+
+    # ── Calendar CRUD observers ──
+
+    # Edit click
+    observeEvent(input$sched_cal_edit_click, {
+      sched_cal_adding(FALSE)
+      sched_cal_editing_id(input$sched_cal_edit_click$id)
+    })
+
+    # Cancel edit
+    observeEvent(input$sched_cal_cancel_edit, {
+      sched_cal_editing_id(NULL)
+      sched_cal_adding(FALSE)
+    })
+
+    # Add click (open form)
+    observeEvent(input$sched_cal_add_click, {
+      sched_cal_editing_id(NULL)
+      sched_cal_adding(TRUE)
+    })
+
+    # Save edit (handles both edit and add)
+    observeEvent(input$sched_cal_save_edit, {
+      data <- input$sched_cal_save_edit
+      current_data <- ssfs()
+
+      service_id <- trimws(data$service_id)
+
+      if (nchar(service_id) == 0) {
+        showNotification("Service ID cannot be empty.", type = "error")
+        return()
+      }
+
+      start_date <- data$start_date
+      end_date <- data$end_date
+
+      if (nchar(start_date) == 0 || nchar(end_date) == 0) {
+        showNotification("Start and end dates are required.", type = "error")
+        return()
+      }
+
+      if (start_date > end_date) {
+        showNotification(
+          "Start date must be before end date.",
+          type = "warning"
+        )
+        return()
+      }
+
+      new_row <- data.frame(
+        service_id = service_id,
+        monday = as.integer(data$monday),
+        tuesday = as.integer(data$tuesday),
+        wednesday = as.integer(data$wednesday),
+        thursday = as.integer(data$thursday),
+        friday = as.integer(data$friday),
+        saturday = as.integer(data$saturday),
+        sunday = as.integer(data$sunday),
+        start_date = start_date,
+        end_date = end_date,
+        stringsAsFactors = FALSE
+      )
+
+      if (sched_cal_adding()) {
+        # Adding new service
+        if (service_id %in% current_data$calendar$service_id) {
+          showNotification(
+            "Service ID already exists. Please use a different ID.",
+            type = "warning"
+          )
+          return()
+        }
+        current_data$calendar <- rbind(current_data$calendar, new_row)
+        ssfs(current_data)
+        sched_cal_adding(FALSE)
+        showNotification(
+          paste0("Service '", service_id, "' created."),
+          type = "message"
+        )
+      } else {
+        # Editing existing service
+        editing_id <- sched_cal_editing_id()
+        req(editing_id)
+
+        row_idx <- which(current_data$calendar$service_id == editing_id)
+        if (length(row_idx) == 0) {
+          showNotification("Service not found.", type = "error")
+          return()
+        }
+
+        # If service_id changed, cascade the rename
+        if (service_id != editing_id) {
+          # Check uniqueness
+          if (service_id %in% current_data$calendar$service_id) {
+            showNotification(
+              "Service ID already exists. Please use a different ID.",
+              type = "warning"
+            )
+            return()
+          }
+
+          # Rename in span
+          span_idx <- which(current_data$span$service_id == editing_id)
+          if (length(span_idx) > 0) {
+            current_data$span$service_id[span_idx] <- service_id
+          }
+
+          # Rename in hsh
+          hsh_idx <- which(current_data$hsh$service_id == editing_id)
+          if (length(hsh_idx) > 0) {
+            current_data$hsh$service_id[hsh_idx] <- service_id
+          }
+        }
+
+        current_data$calendar[row_idx, ] <- new_row
+        ssfs(current_data)
+        sched_cal_editing_id(NULL)
+        showNotification(
+          paste0("Service '", service_id, "' updated."),
+          type = "message"
+        )
+      }
+    })
+
+    # Delete service
+    observeEvent(input$sched_cal_delete_click, {
+      service_id <- input$sched_cal_delete_click$id
+      current_data <- ssfs()
+
+      # Remove from calendar
+      current_data$calendar <- current_data$calendar[
+        current_data$calendar$service_id != service_id,
+      ]
+
+      # Remove associated spans
+      current_data$span <- current_data$span[
+        current_data$span$service_id != service_id,
+      ]
+
+      # Remove associated hsh entries
+      current_data$hsh <- current_data$hsh[
+        current_data$hsh$service_id != service_id,
+      ]
+
+      ssfs(current_data)
+      sched_cal_editing_id(NULL)
+
+      showNotification(
+        paste0(
+          "Service '",
+          service_id,
+          "' deleted with associated spans and headway entries."
         ),
         type = "message"
       )

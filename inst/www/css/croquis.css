@@ -1266,3 +1266,177 @@ body {
    background-color: #6c757d;
    color: white;
  }
+
+ /* Calendar config */
+
+ .modal-content {
+  background-color: #F9F5ED;
+}
+
+ .sched-config-buttons {
+   display: flex;
+   gap: 15px;
+   margin-top: 15px;
+ }
+
+ .sched-config-btn {
+   flex: 1;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+   padding: 10px 16px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   background-color: var(--panel-bg);
+   color: var(--text-color);
+   font-size: 14px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-config-btn:hover {
+   background-color: var(--hover-color);
+ }
+
+ /* Calendar modal table */
+ .sched-cal-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-cal-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: center;
+   padding: 5px 6px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-cal-table th:first-child {
+   text-align: left;
+ }
+
+ .sched-cal-table td {
+   padding: 4px 6px;
+   border-bottom: 1px solid var(--border-color);
+   text-align: center;
+ }
+
+ .sched-cal-table td:first-child {
+   text-align: left;
+   font-weight: 500;
+ }
+
+ .sched-cal-row {
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-cal-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-cal-row.sched-cal-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-cal-day-active {
+   color: #2B5D2C;
+   font-weight: 600;
+ }
+
+ .sched-cal-day-inactive {
+   color: #ccc;
+ }
+
+ .sched-cal-edit-form {
+   padding: 10px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 4px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-cal-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-cal-edit-form input[type="text"],
+ .sched-cal-edit-form input[type="date"] {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-cal-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-cal-edit-form .day-checkboxes {
+   display: flex;
+   gap: 10px;
+   flex-wrap: wrap;
+   margin: 6px 0;
+ }
+
+ .sched-cal-edit-form .day-checkboxes label {
+   display: flex;
+   align-items: center;
+   gap: 4px;
+   font-size: 12px;
+   font-weight: 400;
+   cursor: pointer;
+ }
+
+ .sched-cal-edit-form .date-fields {
+   display: flex;
+   gap: 10px;
+   margin: 6px 0;
+ }
+
+ .sched-cal-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 8px;
+ }
+
+ .sched-cal-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-cal-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-cal-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ .sched-cal-add-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-cal-add-row:hover {
+   background-color: var(--hover-color);
+ }
