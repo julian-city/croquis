@@ -1164,4 +1164,105 @@ body {
    border-radius: 4px;
    cursor: pointer;
    white-space: nowrap;
+  }
+
+  /* - Headway and speed editing table -*/
+
+  .sched-hsh-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-hsh-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: left;
+   padding: 5px 8px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-hsh-table td {
+   padding: 4px 8px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-hsh-row {
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-hsh-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-hsh-row.sched-hsh-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-hsh-row td.hsh-cell-na {
+   color: #aaa;
+   font-style: italic;
+ }
+
+ .sched-hsh-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 2px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-hsh-edit-form .edit-fields {
+   display: flex;
+   gap: 8px;
+   align-items: flex-end;
+ }
+
+ .sched-hsh-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-hsh-edit-form input {
+   width: 80px;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-hsh-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-hsh-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-hsh-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-hsh-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-hsh-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
  }

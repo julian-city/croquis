@@ -130,6 +130,9 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
       }
     })
 
+    # Hour dep of hsh row being edited
+    sched_hsh_editing_hour <- reactiveVal(NULL)
+
     # Initialise service_id dropdown from calendar
     observe({
       current_data <- ssfs()
@@ -1273,6 +1276,139 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
         )
       }
 
+      # headways and speeds editing UI
+      hsh_editing_hour <- sched_hsh_editing_hour()
+
+      itin_hsh <- current_data$hsh[
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id,
+      ]
+
+      if (nrow(itin_hsh) > 0) {
+        itin_hsh <- itin_hsh[order(itin_hsh$hour_dep), ]
+
+        hsh_rows <- list()
+
+        for (h in seq_len(nrow(itin_hsh))) {
+          hour_val <- itin_hsh$hour_dep[h]
+          hdwy_val <- itin_hsh$headway[h]
+          speed_val <- itin_hsh$speed[h]
+          is_editing_this <- !is.null(hsh_editing_hour) &&
+            hsh_editing_hour == hour_val
+
+          if (is_editing_this) {
+            hsh_rows[[length(hsh_rows) + 1]] <- tags$tr(
+              class = "sched-hsh-row sched-hsh-editing",
+              tags$td(
+                colspan = "4",
+                div(
+                  class = "sched-hsh-edit-form",
+                  div(
+                    class = "edit-fields",
+                    div(
+                      tags$label("Hour"),
+                      tags$input(
+                        type = "text",
+                        value = hour_val,
+                        disabled = "disabled",
+                        style = "background-color: #eee; color: #888;"
+                      )
+                    ),
+                    div(
+                      tags$label("Headway (min)"),
+                      tags$input(
+                        type = "number",
+                        id = ns("sched_hsh_edit_headway"),
+                        value = if (!is.na(hdwy_val)) hdwy_val else "",
+                        min = "1",
+                        max = "60",
+                        placeholder = "e.g. 10"
+                      )
+                    ),
+                    div(
+                      tags$label("Speed (km/h)"),
+                      tags$input(
+                        type = "number",
+                        id = ns("sched_hsh_edit_speed"),
+                        value = if (!is.na(speed_val)) speed_val else "20",
+                        min = "5",
+                        max = "431"
+                      )
+                    )
+                  ),
+                  div(
+                    class = "btn-row",
+                    tags$button(
+                      class = "btn-save",
+                      onclick = "schedSaveHshEdit()",
+                      htmltools::HTML("&#10003; Save")
+                    ),
+                    tags$button(
+                      class = "btn-cancel",
+                      onclick = "schedCancelHshEdit()",
+                      "Cancel"
+                    )
+                  )
+                )
+              )
+            )
+          } else {
+            hdwy_display <- if (is.na(hdwy_val)) {
+              "\u2014"
+            } else {
+              as.character(hdwy_val)
+            }
+            speed_display <- if (is.na(speed_val)) {
+              "\u2014"
+            } else {
+              as.character(speed_val)
+            }
+            hdwy_class <- if (is.na(hdwy_val)) "hsh-cell-na" else ""
+            speed_class <- if (is.na(speed_val)) "hsh-cell-na" else ""
+
+            hsh_rows[[length(hsh_rows) + 1]] <- tags$tr(
+              class = "sched-hsh-row",
+              onclick = sprintf("schedEditHshRow('%s')", hour_val),
+              tags$td(hour_val),
+              tags$td(class = hdwy_class, hdwy_display),
+              tags$td(class = speed_class, speed_display),
+              tags$td(
+                style = "text-align: right;",
+                tags$button(
+                  class = "route-action-btn edit-btn",
+                  onclick = sprintf(
+                    "event.stopPropagation(); schedEditHshRow('%s')",
+                    hour_val
+                  ),
+                  title = "Edit row",
+                  htmltools::HTML("&#9998;")
+                )
+              )
+            )
+          }
+        }
+
+        hsh_table_ui <- tags$table(
+          class = "sched-hsh-table",
+          tags$thead(
+            tags$tr(
+              tags$th("Hour"),
+              tags$th("Headway (min)"),
+              tags$th("Speed (km/h)"),
+              tags$th(style = "width: 40px;", "")
+            )
+          ),
+          tags$tbody(
+            do.call(tagList, hsh_rows)
+          )
+        )
+      } else {
+        hsh_table_ui <- div(
+          style = "color: grey; text-align: center; padding: 15px;",
+          tags$em("No headway entries. Add a service window first.")
+        )
+      }
+
       tagList(
         h4(paste0("Itinerary: ", itin_display)),
         h5("Service windows"),
@@ -1338,10 +1474,8 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
         ),
 
         hr(),
-        tags$em(
-          style = "color: grey;",
-          "Headway and speed editing table will appear below."
-        )
+        h5("Headways & speeds by hour"),
+        hsh_table_ui
       )
     })
 
@@ -2040,6 +2174,89 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
           " entries on ",
           editing_itin,
           "."
+        ),
+        type = "message"
+      )
+    })
+
+    # Edit hsh row (pencil click or row click)
+    observeEvent(input$sched_hsh_edit_click, {
+      sched_hsh_editing_hour(input$sched_hsh_edit_click$hour)
+    })
+
+    # Cancel hsh edit
+    observeEvent(input$sched_hsh_cancel_edit, {
+      sched_hsh_editing_hour(NULL)
+    })
+
+    # Save hsh edit
+    observeEvent(input$sched_hsh_save_edit, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      editing_hour <- sched_hsh_editing_hour()
+      req(editing_itin, service_id, editing_hour)
+
+      data <- input$sched_hsh_save_edit
+
+      # Parse headway
+      new_headway <- suppressWarnings(as.numeric(data$headway))
+      if (!is.na(new_headway)) {
+        if (new_headway < 1 || new_headway > 60) {
+          showNotification(
+            "Headway must be between 1 and 60 minutes.",
+            type = "error"
+          )
+          return()
+        }
+        new_headway <- as.integer(round(new_headway))
+      }
+      # If empty string or unparseable, set to NA
+      if (is.na(new_headway) && nchar(trimws(data$headway)) > 0) {
+        showNotification("Invalid headway value.", type = "error")
+        return()
+      }
+      if (nchar(trimws(data$headway)) == 0) {
+        new_headway <- NA_integer_
+      }
+
+      # Parse speed
+      new_speed <- suppressWarnings(as.numeric(data$speed))
+      if (is.na(new_speed) || new_speed < 5 || new_speed > 431) {
+        showNotification(
+          "Speed must be between 5 and 431 km/h.",
+          type = "error"
+        )
+        return()
+      }
+
+      current_data <- ssfs()
+
+      match_idx <- which(
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id &
+          current_data$hsh$hour_dep == editing_hour
+      )
+
+      if (length(match_idx) == 0) {
+        showNotification("Row not found.", type = "error")
+        return()
+      }
+
+      current_data$hsh$headway[match_idx] <- new_headway
+      current_data$hsh$speed[match_idx] <- new_speed
+
+      ssfs(current_data)
+      sched_hsh_editing_hour(NULL)
+
+      showNotification(
+        paste0(
+          "Updated ",
+          editing_hour,
+          ": headway = ",
+          if (is.na(new_headway)) "—" else paste0(new_headway, " min"),
+          ", speed = ",
+          new_speed,
+          " km/h"
         ),
         type = "message"
       )

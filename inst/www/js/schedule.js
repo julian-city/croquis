@@ -70,3 +70,25 @@ function schedEditItin(itinId) {
    Shiny.setInputValue(schedNs + 'sched_span_cancel_edit',
      Math.random(), {priority: 'event'});
  }
+
+ // Headway and speed editing
+
+ function schedEditHshRow(hour) {
+   Shiny.setInputValue(schedNs + 'sched_hsh_edit_click',
+     {hour: hour, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedSaveHshEdit() {
+   var hdwy = document.getElementById(schedNs + 'sched_hsh_edit_headway');
+   var spd = document.getElementById(schedNs + 'sched_hsh_edit_speed');
+   Shiny.setInputValue(schedNs + 'sched_hsh_save_edit', {
+     headway: hdwy ? hdwy.value : '',
+     speed: spd ? spd.value : '',
+     ts: Math.random()
+   }, {priority: 'event'});
+ }
+
+ function schedCancelHshEdit() {
+   Shiny.setInputValue(schedNs + 'sched_hsh_cancel_edit',
+     Math.random(), {priority: 'event'});
+ }
