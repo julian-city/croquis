@@ -1440,3 +1440,164 @@ body {
  .sched-cal-add-row:hover {
    background-color: var(--hover-color);
  }
+
+ /* ── Service level presets modal ── */
+ 
+ .sched-preset-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+   transition: background-color 0.15s ease;
+   cursor: pointer;
+ }
+
+ .sched-preset-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-preset-row.sched-preset-active {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-preset-info {
+   flex: 1;
+   min-width: 0;
+ }
+
+ .sched-preset-id {
+   font-weight: 600;
+   font-size: 12px;
+ }
+
+ .sched-preset-name {
+   font-size: 12px;
+   color: #666;
+   margin-left: 6px;
+ }
+
+ .sched-preset-actions {
+   display: flex;
+   gap: 4px;
+   flex-shrink: 0;
+ }
+
+ .sched-preset-detail {
+   margin-top: 12px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-preset-name-input {
+   width: 100%;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   margin-bottom: 8px;
+ }
+
+ .sched-preset-name-input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-preset-hour-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-preset-hour-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: left;
+   padding: 5px 8px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-preset-hour-table td {
+   padding: 4px 8px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-preset-hour-table .sched-preset-hour-row td:last-child {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--border-color);
+}
+
+ .sched-preset-hour-row {
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-preset-hour-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-preset-hour-row.sched-preset-hour-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-preset-hour-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 2px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-preset-hour-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-preset-hour-edit-form input,
+ .sched-preset-hour-edit-form select {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-preset-hour-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-preset-hour-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-preset-hour-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-preset-hour-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-preset-hour-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }

@@ -160,6 +160,12 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
     sched_cal_editing_id <- reactiveVal(NULL) # service_id being edited
     sched_cal_adding <- reactiveVal(FALSE) # TRUE when add form is open
 
+    #Service level preset editing
+    sched_preset_editing_id <- reactiveVal(NULL) # pattern_id being viewed/edited
+    sched_preset_adding <- reactiveVal(FALSE) # TRUE when creating new preset
+    sched_preset_hour_editing <- reactiveVal(NULL) # hour being edited in detail table
+    sched_preset_hour_adding <- reactiveVal(FALSE) # TRUE when adding new hour row
+
     # Initialise service_id dropdown from calendar
     observe({
       current_data <- ssfs()
@@ -2741,6 +2747,754 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
           service_id,
           "' deleted with associated spans and headway entries."
         ),
+        type = "message"
+      )
+    })
+
+    # Presets modal opener
+    observeEvent(input$sched_open_presets, {
+      sched_preset_editing_id(NULL)
+      sched_preset_adding(FALSE)
+      sched_preset_hour_editing(NULL)
+      sched_preset_hour_adding(FALSE)
+      showModal(modalDialog(
+        title = "Service Level Presets",
+        size = "m",
+        easyClose = TRUE,
+        footer = modalButton("Close"),
+        uiOutput(ns("sched_presets_modal_ui"))
+      ))
+    })
+
+    # Presets modal content
+    output$sched_presets_modal_ui <- renderUI({
+      sp_data <- service_patterns()
+      names_df <- sp_data$service_pattern_names
+      editing_id <- sched_preset_editing_id()
+      is_adding <- sched_preset_adding()
+      hour_editing <- sched_preset_hour_editing()
+      hour_adding <- sched_preset_hour_adding()
+      ns <- session$ns
+
+      # ── Preset list rows ──
+      preset_rows <- list()
+
+      if (!is.null(names_df) && nrow(names_df) > 0) {
+        for (r in seq_len(nrow(names_df))) {
+          pid <- names_df$pattern_id[r]
+          pname <- names_df$pattern_name[r]
+          is_active <- !is.null(editing_id) && editing_id == pid
+
+          preset_rows[[length(preset_rows) + 1]] <- div(
+            class = paste0(
+              "sched-preset-row",
+              if (is_active) " sched-preset-active" else ""
+            ),
+            onclick = sprintf("schedEditPreset('%s')", pid),
+            div(
+              class = "sched-preset-info",
+              span(class = "sched-preset-id", pid),
+              span(class = "sched-preset-name", paste0("\u2014 ", pname))
+            ),
+            div(
+              class = "sched-preset-actions",
+              tags$button(
+                class = "route-action-btn edit-btn",
+                onclick = sprintf(
+                  "event.stopPropagation(); schedEditPreset('%s')",
+                  pid
+                ),
+                title = "Edit preset",
+                htmltools::HTML("&#9998;")
+              ),
+              tags$button(
+                class = "route-action-btn delete-btn",
+                onclick = sprintf(
+                  "event.stopPropagation(); schedDeletePreset('%s')",
+                  pid
+                ),
+                title = "Delete preset",
+                htmltools::HTML('<i class="fa-solid fa-trash"></i>')
+              )
+            )
+          )
+        }
+      }
+
+      # Add new preset row (only show when not already adding)
+      if (!is_adding) {
+        preset_rows[[length(preset_rows) + 1]] <- div(
+          class = "sched-cal-add-row",
+          onclick = "schedAddPreset()",
+          tags$button(
+            class = "stop-action-btn add-btn",
+            onclick = "event.stopPropagation(); schedAddPreset()",
+            title = "Add new service level preset",
+            htmltools::HTML("+")
+          ),
+          span(style = "margin-left: 8px;", "Add new service level preset")
+        )
+      }
+
+      # ── Detail area (shown when a preset is selected or being created) ──
+      detail_ui <- NULL
+
+      if (is_adding) {
+        # Creating a new preset — show name input and empty hour table
+        # with just the add-hour form
+        if (hour_adding) {
+          all_hours <- sprintf("%02d:00:00", 0:29)
+          add_form <- div(
+            class = "sched-preset-hour-edit-form",
+            div(
+              style = "display: flex; gap: 8px; align-items: flex-end;",
+              div(
+                tags$label("Hour"),
+                tags$select(
+                  id = ns("sched_preset_hour_new_hour"),
+                  lapply(all_hours, function(h) {
+                    tags$option(value = h, h)
+                  })
+                )
+              ),
+              div(
+                tags$label("Headway (min)"),
+                tags$input(
+                  type = "number",
+                  id = ns("sched_preset_hour_edit_headway"),
+                  value = "10",
+                  min = "1",
+                  max = "60",
+                  style = "width: 80px;"
+                )
+              )
+            ),
+            div(
+              class = "btn-row",
+              tags$button(
+                class = "btn-save",
+                onclick = "schedSavePresetNewHour()",
+                "Create"
+              ),
+              tags$button(
+                class = "btn-cancel",
+                onclick = "schedCancelPresetHourEdit()",
+                "Cancel"
+              )
+            )
+          )
+        } else {
+          add_form <- NULL
+        }
+
+        detail_ui <- div(
+          class = "sched-preset-detail",
+          tags$label("Preset name"),
+          tags$input(
+            type = "text",
+            id = ns("sched_preset_name_input"),
+            class = "sched-preset-name-input",
+            value = "",
+            placeholder = "e.g. Peak Frequent"
+          ),
+          tags$button(
+            class = "btn-save",
+            style = "margin-bottom: 10px;",
+            onclick = "schedSavePresetName()",
+            "Save preset"
+          ),
+          tags$button(
+            class = "btn-cancel",
+            style = "margin-bottom: 10px; margin-left: 6px;",
+            onclick = "schedCancelPresetHourEdit()",
+            "Cancel"
+          ),
+          h5("Hours"),
+          tags$em(
+            style = "color: grey; font-size: 11px;",
+            "Add hours to build the preset."
+          ),
+          add_form,
+          if (!hour_adding) {
+            div(
+              class = "sched-cal-add-row",
+              onclick = "schedAddPresetHour()",
+              tags$button(
+                class = "stop-action-btn add-btn",
+                onclick = "event.stopPropagation(); schedAddPresetHour()",
+                htmltools::HTML("+")
+              ),
+              span(style = "margin-left: 8px;", "Add new hour")
+            )
+          }
+        )
+      } else if (!is.null(editing_id)) {
+        # Viewing/editing an existing preset
+        pattern_data <- sp_data$service_patterns[[editing_id]]
+        pattern_name <- names_df$pattern_name[
+          names_df$pattern_id == editing_id
+        ]
+
+        # Build hour rows
+        hour_rows <- list()
+
+        if (!is.null(pattern_data) && nrow(pattern_data) > 0) {
+          pattern_data <- pattern_data[order(pattern_data$hour), ]
+
+          for (h in seq_len(nrow(pattern_data))) {
+            hour_val <- pattern_data$hour[h]
+            hdwy_val <- pattern_data$headway[h]
+            is_editing_hour <- !is.null(hour_editing) &&
+              hour_editing == hour_val
+
+            if (is_editing_hour) {
+              hour_rows[[length(hour_rows) + 1]] <- tags$tr(
+                class = "sched-preset-hour-row sched-preset-hour-editing",
+                tags$td(
+                  colspan = "3",
+                  div(
+                    class = "sched-preset-hour-edit-form",
+                    div(
+                      style = "display: flex; gap: 8px; align-items: flex-end;",
+                      div(
+                        tags$label("Hour"),
+                        tags$input(
+                          type = "text",
+                          value = hour_val,
+                          disabled = "disabled",
+                          style = "width: 100px; background-color: #eee; color: #888;"
+                        )
+                      ),
+                      div(
+                        tags$label("Headway (min)"),
+                        tags$input(
+                          type = "number",
+                          id = ns("sched_preset_hour_edit_headway"),
+                          value = if (!is.na(hdwy_val)) hdwy_val else "",
+                          min = "1",
+                          max = "60",
+                          style = "width: 80px;"
+                        )
+                      )
+                    ),
+                    div(
+                      class = "btn-row",
+                      tags$button(
+                        class = "btn-save",
+                        onclick = "schedSavePresetHourEdit()",
+                        htmltools::HTML("&#10003; Save")
+                      ),
+                      tags$button(
+                        class = "btn-cancel",
+                        onclick = "schedCancelPresetHourEdit()",
+                        "Cancel"
+                      )
+                    )
+                  )
+                )
+              )
+            } else {
+              hdwy_display <- if (is.na(hdwy_val)) {
+                "\u2014"
+              } else {
+                as.character(hdwy_val)
+              }
+
+              hour_rows[[length(hour_rows) + 1]] <- tags$tr(
+                class = "sched-preset-hour-row",
+                tags$td(hour_val),
+                tags$td(hdwy_display),
+                tags$td(
+                  style = "text-align: right; white-space: nowrap;",
+                  tags$button(
+                    class = "route-action-btn edit-btn",
+                    onclick = sprintf(
+                      "event.stopPropagation(); schedEditPresetHour('%s')",
+                      hour_val
+                    ),
+                    title = "Edit headway",
+                    htmltools::HTML("&#9998;")
+                  ),
+                  tags$button(
+                    class = "route-action-btn delete-btn",
+                    onclick = sprintf(
+                      "event.stopPropagation(); schedDeletePresetHour('%s')",
+                      hour_val
+                    ),
+                    title = "Delete hour",
+                    htmltools::HTML('<i class="fa-solid fa-trash"></i>')
+                  )
+                )
+              )
+            }
+          }
+        }
+
+        # Add new hour form or button
+        if (hour_adding) {
+          # Determine available hours
+          existing_hours <- if (
+            !is.null(pattern_data) &&
+              nrow(pattern_data) > 0
+          ) {
+            pattern_data$hour
+          } else {
+            character(0)
+          }
+
+          # If there are existing hours, next hour is last + 1
+          if (length(existing_hours) > 0) {
+            last_hour_num <- max(as.numeric(
+              substr(existing_hours, 1, 2)
+            ))
+            next_hour_num <- last_hour_num + 1
+            if (next_hour_num > 29) {
+              next_hour_display <- NULL # no more hours available
+            } else {
+              next_hour_display <- sprintf("%02d:00:00", next_hour_num)
+            }
+          } else {
+            next_hour_display <- NULL # will show dropdown
+          }
+
+          if (is.null(next_hour_display) && length(existing_hours) > 0) {
+            # All hours used up after last
+            add_hour_ui <- div(
+              style = "padding: 8px; color: grey;",
+              tags$em("No more hours available (max 29:00:00).")
+            )
+          } else if (is.null(next_hour_display)) {
+            # No existing hours — show dropdown to pick starting hour
+            all_hours <- sprintf("%02d:00:00", 0:29)
+            available <- setdiff(all_hours, existing_hours)
+
+            add_hour_ui <- tags$tr(
+              class = "sched-preset-hour-row sched-preset-hour-editing",
+              tags$td(
+                colspan = "3",
+                div(
+                  class = "sched-preset-hour-edit-form",
+                  div(
+                    style = "display: flex; gap: 8px; align-items: flex-end;",
+                    div(
+                      tags$label("Hour"),
+                      tags$select(
+                        id = ns("sched_preset_hour_new_hour"),
+                        lapply(available, function(hh) {
+                          tags$option(value = hh, hh)
+                        })
+                      )
+                    ),
+                    div(
+                      tags$label("Headway (min)"),
+                      tags$input(
+                        type = "number",
+                        id = ns("sched_preset_hour_edit_headway"),
+                        value = "10",
+                        min = "1",
+                        max = "60",
+                        style = "width: 80px;"
+                      )
+                    )
+                  ),
+                  div(
+                    class = "btn-row",
+                    tags$button(
+                      class = "btn-save",
+                      onclick = "schedSavePresetNewHour()",
+                      "Create"
+                    ),
+                    tags$button(
+                      class = "btn-cancel",
+                      onclick = "schedCancelPresetHourEdit()",
+                      "Cancel"
+                    )
+                  )
+                )
+              )
+            )
+          } else {
+            # Next hour is deterministic
+            add_hour_ui <- tags$tr(
+              class = "sched-preset-hour-row sched-preset-hour-editing",
+              tags$td(
+                colspan = "3",
+                div(
+                  class = "sched-preset-hour-edit-form",
+                  div(
+                    style = "display: flex; gap: 8px; align-items: flex-end;",
+                    div(
+                      tags$label("Hour"),
+                      tags$input(
+                        type = "text",
+                        id = ns("sched_preset_hour_new_hour"),
+                        value = next_hour_display,
+                        disabled = "disabled",
+                        style = "width: 100px; background-color: #eee; color: #888;"
+                      )
+                    ),
+                    div(
+                      tags$label("Headway (min)"),
+                      tags$input(
+                        type = "number",
+                        id = ns("sched_preset_hour_edit_headway"),
+                        value = "10",
+                        min = "1",
+                        max = "60",
+                        style = "width: 80px;"
+                      )
+                    )
+                  ),
+                  div(
+                    class = "btn-row",
+                    tags$button(
+                      class = "btn-save",
+                      onclick = "schedSavePresetNewHour()",
+                      "Create"
+                    ),
+                    tags$button(
+                      class = "btn-cancel",
+                      onclick = "schedCancelPresetHourEdit()",
+                      "Cancel"
+                    )
+                  )
+                )
+              )
+            )
+          }
+
+          hour_rows[[length(hour_rows) + 1]] <- add_hour_ui
+        }
+
+        # Build the hour table
+        hour_table <- tags$table(
+          class = "sched-preset-hour-table",
+          tags$thead(
+            tags$tr(
+              tags$th("Hour"),
+              tags$th("Headway (min)"),
+              tags$th(style = "width: 60px;", "")
+            )
+          ),
+          tags$tbody(
+            do.call(tagList, hour_rows)
+          )
+        )
+
+        # Add hour button (show when not already adding)
+        add_hour_btn <- if (!hour_adding) {
+          div(
+            class = "sched-cal-add-row",
+            onclick = "schedAddPresetHour()",
+            tags$button(
+              class = "stop-action-btn add-btn",
+              onclick = "event.stopPropagation(); schedAddPresetHour()",
+              htmltools::HTML("+")
+            ),
+            span(style = "margin-left: 8px;", "Add new hour")
+          )
+        } else {
+          NULL
+        }
+
+        detail_ui <- div(
+          class = "sched-preset-detail",
+          tags$label("Preset name"),
+          div(
+            style = "display: flex; gap: 6px; align-items: flex-end; margin-bottom: 10px;",
+            tags$input(
+              type = "text",
+              id = ns("sched_preset_name_input"),
+              class = "sched-preset-name-input",
+              value = pattern_name,
+              style = "margin-bottom: 0; flex: 1;"
+            ),
+            tags$button(
+              class = "btn-save",
+              onclick = "schedSavePresetName()",
+              "Rename"
+            )
+          ),
+          h5("Hours"),
+          hour_table,
+          add_hour_btn
+        )
+      }
+
+      # ── Assemble ──
+      tagList(
+        do.call(tagList, preset_rows),
+        detail_ui
+      )
+    })
+
+    # ── Preset-level observers ──
+
+    # Select/edit preset
+    observeEvent(input$sched_preset_edit_click, {
+      pid <- input$sched_preset_edit_click$id
+      if (
+        !is.null(sched_preset_editing_id()) &&
+          sched_preset_editing_id() == pid
+      ) {
+        # Toggle off
+        sched_preset_editing_id(NULL)
+      } else {
+        sched_preset_editing_id(pid)
+        sched_preset_adding(FALSE)
+        sched_preset_hour_editing(NULL)
+        sched_preset_hour_adding(FALSE)
+      }
+    })
+
+    # Add new preset (open form)
+    observeEvent(input$sched_preset_add_click, {
+      sched_preset_editing_id(NULL)
+      sched_preset_adding(TRUE)
+      sched_preset_hour_editing(NULL)
+      sched_preset_hour_adding(FALSE)
+    })
+
+    # Save preset name (handles both rename and create)
+    observeEvent(input$sched_preset_save_name, {
+      new_name <- trimws(input$sched_preset_save_name$name)
+
+      if (nchar(new_name) == 0) {
+        showNotification("Preset name cannot be empty.", type = "error")
+        return()
+      }
+
+      sp_data <- service_patterns()
+
+      if (sched_preset_adding()) {
+        # Creating new preset
+        existing_ids <- names(sp_data$service_patterns)
+        nums <- suppressWarnings(as.numeric(gsub("\\D", "", existing_ids)))
+        nums <- nums[!is.na(nums)]
+        next_num <- if (length(nums) > 0) max(nums) + 1 else 1
+        new_id <- paste0("SP", next_num)
+
+        # Create empty pattern
+        sp_data$service_patterns[[new_id]] <- data.frame(
+          hour = character(),
+          headway = integer(),
+          stringsAsFactors = FALSE
+        )
+
+        # Add to names
+        sp_data$service_pattern_names <- rbind(
+          sp_data$service_pattern_names,
+          data.frame(
+            pattern_id = new_id,
+            pattern_name = new_name,
+            stringsAsFactors = FALSE
+          )
+        )
+
+        service_patterns(sp_data)
+        sched_preset_adding(FALSE)
+        sched_preset_editing_id(new_id)
+
+        showNotification(
+          paste0("Preset '", new_id, " - ", new_name, "' created."),
+          type = "message"
+        )
+      } else {
+        # Renaming existing preset
+        editing_id <- sched_preset_editing_id()
+        req(editing_id)
+
+        name_idx <- which(
+          sp_data$service_pattern_names$pattern_id == editing_id
+        )
+        if (length(name_idx) > 0) {
+          sp_data$service_pattern_names$pattern_name[name_idx] <- new_name
+          service_patterns(sp_data)
+          showNotification(
+            paste0("Preset renamed to '", new_name, "'."),
+            type = "message"
+          )
+        }
+      }
+    })
+
+    # Delete preset
+    observeEvent(input$sched_preset_delete_click, {
+      pid <- input$sched_preset_delete_click$id
+      sp_data <- service_patterns()
+
+      # Remove from patterns list
+      sp_data$service_patterns[[pid]] <- NULL
+
+      # Remove from names
+      sp_data$service_pattern_names <- sp_data$service_pattern_names[
+        sp_data$service_pattern_names$pattern_id != pid,
+      ]
+
+      service_patterns(sp_data)
+
+      if (
+        !is.null(sched_preset_editing_id()) &&
+          sched_preset_editing_id() == pid
+      ) {
+        sched_preset_editing_id(NULL)
+      }
+
+      showNotification(
+        paste0("Preset '", pid, "' deleted."),
+        type = "message"
+      )
+    })
+
+    # ── Hour-level observers ──
+
+    # Edit hour row
+    observeEvent(input$sched_preset_hour_edit_click, {
+      sched_preset_hour_adding(FALSE)
+      sched_preset_hour_editing(input$sched_preset_hour_edit_click$hour)
+    })
+
+    # Cancel hour edit/add
+    observeEvent(input$sched_preset_hour_cancel_edit, {
+      sched_preset_hour_editing(NULL)
+      sched_preset_hour_adding(FALSE)
+
+      # If was adding a new preset with no hours and cancelled, cancel the add
+      if (sched_preset_adding()) {
+        sched_preset_adding(FALSE)
+      }
+    })
+
+    # Add hour (open form)
+    observeEvent(input$sched_preset_hour_add_click, {
+      sched_preset_hour_editing(NULL)
+      sched_preset_hour_adding(TRUE)
+    })
+
+    # Save hour edit (existing hour)
+    observeEvent(input$sched_preset_hour_save_edit, {
+      editing_id <- sched_preset_editing_id()
+      editing_hour <- sched_preset_hour_editing()
+      req(editing_id, editing_hour)
+
+      data <- input$sched_preset_hour_save_edit
+      new_headway <- suppressWarnings(as.numeric(data$headway))
+
+      # Allow blank/NA headway
+      if (nchar(trimws(data$headway)) == 0) {
+        new_headway <- NA_integer_
+      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 60) {
+        showNotification(
+          "Headway must be between 1 and 60, or left blank.",
+          type = "error"
+        )
+        return()
+      } else {
+        new_headway <- as.integer(round(new_headway))
+      }
+
+      sp_data <- service_patterns()
+      pattern_data <- sp_data$service_patterns[[editing_id]]
+
+      hour_idx <- which(pattern_data$hour == editing_hour)
+      if (length(hour_idx) > 0) {
+        pattern_data$headway[hour_idx] <- new_headway
+        sp_data$service_patterns[[editing_id]] <- pattern_data
+        service_patterns(sp_data)
+      }
+
+      sched_preset_hour_editing(NULL)
+      showNotification("Hour updated.", type = "message")
+    })
+
+    # Save new hour
+    observeEvent(input$sched_preset_hour_save_new, {
+      editing_id <- sched_preset_editing_id()
+      data <- input$sched_preset_hour_save_new
+
+      # For new presets being created, editing_id might be NULL
+      # In that case this is adding to a preset that was just created
+      if (is.null(editing_id) && sched_preset_adding()) {
+        # Preset not yet created — save name first
+        showNotification(
+          "Please save the preset name first.",
+          type = "warning"
+        )
+        return()
+      }
+      req(editing_id)
+
+      hour_val <- data$hour
+      if (nchar(trimws(hour_val)) == 0) {
+        showNotification("Please select an hour.", type = "error")
+        return()
+      }
+
+      new_headway <- suppressWarnings(as.numeric(data$headway))
+      if (nchar(trimws(data$headway)) == 0) {
+        new_headway <- NA_integer_
+      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 60) {
+        showNotification(
+          "Headway must be between 1 and 60, or left blank.",
+          type = "error"
+        )
+        return()
+      } else {
+        new_headway <- as.integer(round(new_headway))
+      }
+
+      sp_data <- service_patterns()
+      pattern_data <- sp_data$service_patterns[[editing_id]]
+
+      # Check for duplicate hour
+      if (!is.null(pattern_data) && hour_val %in% pattern_data$hour) {
+        showNotification(
+          "This hour already exists in the preset.",
+          type = "warning"
+        )
+        return()
+      }
+
+      new_row <- data.frame(
+        hour = hour_val,
+        headway = new_headway,
+        stringsAsFactors = FALSE
+      )
+
+      if (is.null(pattern_data) || nrow(pattern_data) == 0) {
+        pattern_data <- new_row
+      } else {
+        pattern_data <- rbind(pattern_data, new_row)
+      }
+
+      pattern_data <- pattern_data[order(pattern_data$hour), ]
+      sp_data$service_patterns[[editing_id]] <- pattern_data
+      service_patterns(sp_data)
+      sched_preset_hour_adding(FALSE)
+
+      showNotification(
+        paste0("Hour ", hour_val, " added."),
+        type = "message"
+      )
+    })
+
+    # Delete hour
+    observeEvent(input$sched_preset_hour_delete_click, {
+      editing_id <- sched_preset_editing_id()
+      hour_val <- input$sched_preset_hour_delete_click$hour
+      req(editing_id, hour_val)
+
+      sp_data <- service_patterns()
+      pattern_data <- sp_data$service_patterns[[editing_id]]
+
+      pattern_data <- pattern_data[pattern_data$hour != hour_val, ]
+      sp_data$service_patterns[[editing_id]] <- pattern_data
+      service_patterns(sp_data)
+
+      sched_preset_hour_editing(NULL)
+
+      showNotification(
+        paste0("Hour ", hour_val, " removed."),
         type = "message"
       )
     })

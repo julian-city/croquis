@@ -142,3 +142,68 @@ function schedEditItin(itinId) {
    Shiny.setInputValue(schedNs + 'sched_cal_cancel_edit',
      Math.random(), {priority: 'event'});
  }
+
+ // --- Service level presets modal ---
+
+ function schedEditPreset(patternId) {
+   Shiny.setInputValue(schedNs + 'sched_preset_edit_click',
+     {id: patternId, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedDeletePreset(patternId) {
+   if (confirm('Delete preset "' + patternId + '"?')) {
+     Shiny.setInputValue(schedNs + 'sched_preset_delete_click',
+       {id: patternId, ts: Math.random()}, {priority: 'event'});
+   }
+ }
+
+ function schedAddPreset() {
+   Shiny.setInputValue(schedNs + 'sched_preset_add_click',
+     Math.random(), {priority: 'event'});
+ }
+
+ function schedSavePresetName() {
+   var nameInput = document.getElementById(schedNs + 'sched_preset_name_input');
+   Shiny.setInputValue(schedNs + 'sched_preset_save_name', {
+     name: nameInput ? nameInput.value : '',
+     ts: Math.random()
+   }, {priority: 'event'});
+ }
+
+  function schedEditPresetHour(hour) {
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_edit_click',
+     {hour: hour, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedDeletePresetHour(hour) {
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_delete_click',
+     {hour: hour, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedAddPresetHour() {
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_add_click',
+     Math.random(), {priority: 'event'});
+ }
+
+ function schedSavePresetHourEdit() {
+   var hdwy = document.getElementById(schedNs + 'sched_preset_hour_edit_headway');
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_save_edit', {
+     headway: hdwy ? hdwy.value : '',
+     ts: Math.random()
+   }, {priority: 'event'});
+ }
+
+ function schedSavePresetNewHour() {
+   var hourSel = document.getElementById(schedNs + 'sched_preset_hour_new_hour');
+   var hdwy = document.getElementById(schedNs + 'sched_preset_hour_edit_headway');
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_save_new', {
+     hour: hourSel ? hourSel.value : '',
+     headway: hdwy ? hdwy.value : '10',
+     ts: Math.random()
+   }, {priority: 'event'});
+ }
+
+ function schedCancelPresetHourEdit() {
+   Shiny.setInputValue(schedNs + 'sched_preset_hour_cancel_edit',
+     Math.random(), {priority: 'event'});
+ }
