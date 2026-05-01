@@ -109,7 +109,7 @@ scheduleUI <- function(id) {
   )
 }
 
-scheduleServer <- function(id, ssfs, map_center, service_patterns) {
+scheduleServer <- function(id, ssfs, map_center) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -132,6 +132,117 @@ scheduleServer <- function(id, ssfs, map_center, service_patterns) {
     # span editing
     sched_span_editing_idx <- reactiveVal(NULL)
     sched_span_adding <- reactiveVal(FALSE)
+
+    #service level presets
+    service_patterns <- reactiveVal(
+      list(
+        service_patterns = list(
+          SP1 = data.frame(
+            hour = c(
+              "05:00:00",
+              "06:00:00",
+              "07:00:00",
+              "08:00:00",
+              "09:00:00",
+              "10:00:00",
+              "11:00:00",
+              "12:00:00",
+              "13:00:00",
+              "14:00:00",
+              "15:00:00",
+              "16:00:00",
+              "17:00:00",
+              "18:00:00",
+              "19:00:00",
+              "20:00:00",
+              "21:00:00",
+              "22:00:00",
+              "23:00:00",
+              "24:00:00",
+              "25:00:00"
+            ),
+            headway = c(
+              15,
+              5,
+              5,
+              5,
+              5,
+              8,
+              8,
+              8,
+              8,
+              8,
+              5,
+              5,
+              5,
+              5,
+              12,
+              12,
+              15,
+              15,
+              15,
+              15,
+              15
+            ),
+            stringsAsFactors = FALSE
+          ),
+          SP2 = data.frame(
+            hour = c(
+              "05:00:00",
+              "06:00:00",
+              "07:00:00",
+              "08:00:00",
+              "09:00:00",
+              "10:00:00",
+              "11:00:00",
+              "12:00:00",
+              "13:00:00",
+              "14:00:00",
+              "15:00:00",
+              "16:00:00",
+              "17:00:00",
+              "18:00:00",
+              "19:00:00",
+              "20:00:00",
+              "21:00:00",
+              "22:00:00",
+              "23:00:00",
+              "24:00:00",
+              "25:00:00"
+            ),
+            headway = c(
+              30,
+              10,
+              10,
+              10,
+              10,
+              30,
+              30,
+              30,
+              30,
+              30,
+              10,
+              10,
+              10,
+              10,
+              30,
+              30,
+              30,
+              30,
+              30,
+              30,
+              30
+            ),
+            stringsAsFactors = FALSE
+          )
+        ),
+        service_pattern_names = data.frame(
+          pattern_id = c("SP1", "SP2"),
+          pattern_name = c("All Day Frequent", "Peak Frequent"),
+          stringsAsFactors = FALSE
+        )
+      )
+    )
 
     #schedule preset choices
     sched_preset_choices <- reactive({
