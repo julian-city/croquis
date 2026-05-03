@@ -1116,6 +1116,17 @@ scheduleServer <- function(id, ssfs, map_center) {
 
       sched_speed_profile_ui <- NULL
       if (!is.null(sched_editing_itin_id())) {
+        #display info for div title
+        itin_trip_headsign <-
+          route_itins |>
+          filter(itin_id == editing_itin) |>
+          pull(trip_headsign)
+        itin_display <- paste0(
+          itin_trip_headsign,
+          " (",
+          editing_itin,
+          ")"
+        )
         sched_speed_profile_ui <- div(
           class = "sched-speed-profile-section",
 
@@ -1125,7 +1136,7 @@ scheduleServer <- function(id, ssfs, map_center) {
             # Left: controls
             div(
               class = "sched-speed-profile-controls",
-              h5("Speed profile"),
+              h4(paste0("Speed profile: ", itin_display)),
               tags$label("Hour"),
               selectInput(
                 ns("sched_sp_hour"),
@@ -1135,9 +1146,9 @@ scheduleServer <- function(id, ssfs, map_center) {
               ),
               div(
                 class = "info-text",
-                "Changing service or hour only changes the displayed ",
-                "speeds (km/h). Speed factors are defined once per ",
-                "itinerary and apply to all services and hours."
+                "Speed factors are defined once per itinerary ",
+                "and apply to all services and hours. Changing ",
+                "hour only changes the displayed speeds (km/h)"
               )
             ),
 
@@ -1159,14 +1170,21 @@ scheduleServer <- function(id, ssfs, map_center) {
               onclick = "schedSpToggleFactors()",
               span(
                 id = ns("sched_sf_arrow"),
-                class = "toggle-arrow",
+                class = paste0(
+                  "toggle-arrow",
+                  if (sched_sp_factors_visible()) " expanded" else ""
+                ),
                 htmltools::HTML("&#9654;")
               ),
               "Adjust speed factors"
             ),
             div(
               id = ns("sched_sf_content"),
-              style = "display: none;",
+              style = if (sched_sp_factors_visible()) {
+                "display: block;"
+              } else {
+                "display: none;"
+              },
               uiOutput(ns("sched_sp_table_ui"))
             )
           )
@@ -3920,14 +3938,6 @@ scheduleServer <- function(id, ssfs, map_center) {
         div(
           class = "sched-sf-actions",
           tags$button(
-            class = "btn-save",
-            onclick = sprintf(
-              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
-              ns("sched_sp_save")
-            ),
-            "Save speed factors"
-          ),
-          tags$button(
             style = "background-color: #F4A582; color: white;",
             onclick = sprintf(
               "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
@@ -3994,7 +4004,26 @@ scheduleServer <- function(id, ssfs, map_center) {
       if (length(current) >= i) {
         current[i] <- min(2.5, current[i] + 0.1)
         current[i] <- round(current[i], 1)
-        sched_sp_speed_factors(sched_sp_normalize(current))
+        current <- sched_sp_normalize(current)
+        sched_sp_speed_factors(current)
+
+        # Write directly to ssfs
+        editing_itin <- sched_editing_itin_id()
+        stop_data <- sched_sp_stop_data()
+        if (!is.null(editing_itin) && !is.null(stop_data)) {
+          current_data <- ssfs()
+          for (j in seq_along(current)) {
+            match_idx <- which(
+              current_data$stop_seq$itin_id == editing_itin &
+                current_data$stop_seq$stop_sequence ==
+                  stop_data$stop_sequence[j]
+            )
+            if (length(match_idx) == 1) {
+              current_data$stop_seq$speed_factor[match_idx] <- current[j]
+            }
+          }
+          ssfs(current_data)
+        }
       }
     })
 
@@ -4006,30 +4035,22 @@ scheduleServer <- function(id, ssfs, map_center) {
         current[i] <- round(current[i], 1)
         sched_sp_speed_factors(sched_sp_normalize(current))
       }
-    })
-
-    # ── Save speed factors ──
-
-    observeEvent(input$sched_sp_save, {
+      # Write directly to ssfs
       editing_itin <- sched_editing_itin_id()
-      req(editing_itin, sched_sp_speed_factors(), sched_sp_stop_data())
-
-      current_data <- ssfs()
       stop_data <- sched_sp_stop_data()
-      sf_values <- sched_sp_speed_factors()
-
-      for (i in seq_along(sf_values)) {
-        match_idx <- which(
-          current_data$stop_seq$itin_id == editing_itin &
-            current_data$stop_seq$stop_sequence == stop_data$stop_sequence[i]
-        )
-        if (length(match_idx) == 1) {
-          current_data$stop_seq$speed_factor[match_idx] <- sf_values[i]
+      if (!is.null(editing_itin) && !is.null(stop_data)) {
+        current_data <- ssfs()
+        for (j in seq_along(current)) {
+          match_idx <- which(
+            current_data$stop_seq$itin_id == editing_itin &
+              current_data$stop_seq$stop_sequence == stop_data$stop_sequence[j]
+          )
+          if (length(match_idx) == 1) {
+            current_data$stop_seq$speed_factor[match_idx] <- current[j]
+          }
         }
+        ssfs(current_data)
       }
-
-      ssfs(current_data)
-      showNotification("Speed factors saved.", type = "message")
     })
 
     # ── Reset speed factors ──
@@ -4037,7 +4058,29 @@ scheduleServer <- function(id, ssfs, map_center) {
     observeEvent(input$sched_sp_reset, {
       req(sched_sp_speed_factors())
       n <- length(sched_sp_speed_factors())
-      sched_sp_speed_factors(rep(1.0, n))
+      new_factors <- rep(1.0, n)
+      sched_sp_speed_factors(new_factors)
+
+      editing_itin <- sched_editing_itin_id()
+      stop_data <- sched_sp_stop_data()
+      if (!is.null(editing_itin) && !is.null(stop_data)) {
+        current_data <- ssfs()
+        for (j in seq_along(new_factors)) {
+          match_idx <- which(
+            current_data$stop_seq$itin_id == editing_itin &
+              current_data$stop_seq$stop_sequence == stop_data$stop_sequence[j]
+          )
+          if (length(match_idx) == 1) {
+            current_data$stop_seq$speed_factor[match_idx] <- new_factors[j]
+          }
+        }
+        ssfs(current_data)
+      }
+    })
+
+    #Track speed factors toggle
+    observeEvent(input$sched_sf_toggle, {
+      sched_sp_factors_visible(input$sched_sf_toggle)
     })
   })
 }

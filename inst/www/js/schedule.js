@@ -220,14 +220,16 @@ function schedEditItin(itinId) {
      {index: i, ts: Math.random()}, {priority: 'event'});
  }
 
- function schedSpToggleFactors() {
-   var content = document.getElementById(schedNs + 'sched_sf_content');
-   var arrow = document.getElementById(schedNs + 'sched_sf_arrow');
-   if (content.style.display === 'none') {
-     content.style.display = 'block';
-     arrow.classList.add('expanded');
-   } else {
-     content.style.display = 'none';
-     arrow.classList.remove('expanded');
-   }
- }
+function schedSpToggleFactors() {
+  var content = document.getElementById(schedNs + 'sched_sf_content');
+  var arrow = document.getElementById(schedNs + 'sched_sf_arrow');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    arrow.classList.add('expanded');
+    Shiny.setInputValue(schedNs + 'sched_sf_toggle', true, {priority: 'event'});
+  } else {
+    content.style.display = 'none';
+    arrow.classList.remove('expanded');
+    Shiny.setInputValue(schedNs + 'sched_sf_toggle', false, {priority: 'event'});
+  }
+}

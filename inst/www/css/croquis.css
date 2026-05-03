@@ -1663,7 +1663,7 @@ body {
    gap: 6px;
    cursor: pointer;
    padding: 6px 0;
-   font-size: 12px;
+   font-size: 14px;
    font-weight: 500;
    color: var(--text-color);
    user-select: none;
