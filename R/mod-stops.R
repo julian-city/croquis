@@ -373,7 +373,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
 
       if (!is.null(temp)) {
         icon_size <- as.integer(
-          (calculateMarkerSize(isolate(current_zoom())) + 2) * 2
+          (calculateMarkerSize(isolate(current_zoom())) + 4) * 2
         )
 
         # Create SVG circle as data URI

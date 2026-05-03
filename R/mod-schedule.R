@@ -955,7 +955,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       route_display <- if (nrow(route_row) > 0) {
         paste0(
           route_row$route_short_name[1],
-          " \u2014 ",
+          " - ",
           route_row$route_long_name[1]
         )
       } else {
@@ -2397,7 +2397,7 @@ scheduleServer <- function(id, ssfs, map_center) {
           "Updated ",
           editing_hour,
           ": headway = ",
-          if (is.na(new_headway)) "—" else paste0(new_headway, " min"),
+          if (is.na(new_headway)) "-" else paste0(new_headway, " min"),
           ", speed = ",
           new_speed,
           " km/h"
@@ -2951,7 +2951,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       detail_ui <- NULL
 
       if (is_adding) {
-        # Creating a new preset — show name input and empty hour table
+        # Creating a new preset : show name input and empty hour table
         # with just the add-hour form
         if (hour_adding) {
           all_hours <- sprintf("%02d:00:00", 0:29)
@@ -3175,7 +3175,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               tags$em("No more hours available (max 29:00:00).")
             )
           } else if (is.null(next_hour_display)) {
-            # No existing hours — show dropdown to pick starting hour
+            # No existing hours : show dropdown to pick starting hour
             all_hours <- sprintf("%02d:00:00", 0:29)
             available <- setdiff(all_hours, existing_hours)
 
@@ -3526,7 +3526,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       # For new presets being created, editing_id might be NULL
       # In that case this is adding to a preset that was just created
       if (is.null(editing_id) && sched_preset_adding()) {
-        # Preset not yet created — save name first
+        # Preset not yet created : save name first
         showNotification(
           "Please save the preset name first.",
           type = "warning"
