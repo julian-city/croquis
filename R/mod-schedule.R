@@ -1172,7 +1172,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                 id = ns("sched_sf_arrow"),
                 class = paste0(
                   "toggle-arrow",
-                  if (sched_sp_factors_visible()) " expanded" else ""
+                  if (isolate(sched_sp_factors_visible())) " expanded" else ""
                 ),
                 htmltools::HTML("&#9654;")
               ),
@@ -1180,7 +1180,7 @@ scheduleServer <- function(id, ssfs, map_center) {
             ),
             div(
               id = ns("sched_sf_content"),
-              style = if (sched_sp_factors_visible()) {
+              style = if (isolate(sched_sp_factors_visible())) {
                 "display: block;"
               } else {
                 "display: none;"
@@ -3948,6 +3948,9 @@ scheduleServer <- function(id, ssfs, map_center) {
         )
       )
     })
+
+    # Force table to render even when collapsed, so it's ready on first expand
+    outputOptions(output, "sched_sp_table_ui", suspendWhenHidden = FALSE)
 
     # ── Create text outputs for speed factor and speed values ──
 
