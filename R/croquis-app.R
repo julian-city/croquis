@@ -446,7 +446,7 @@ croquis <- function(ssfs = NULL) {
 
       #export tab
       tabPanel(
-        "export",
+        tags$span(icon("floppy-disk", class = "fa-solid")),
         fluidPage(
           titlePanel("export or save your project"),
 
