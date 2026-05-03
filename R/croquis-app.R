@@ -297,22 +297,13 @@ croquis <- function(ssfs = NULL) {
         fluidPage(
           titlePanel("agency"),
 
-          # Agency map - top 30% of page
-          div(
-            style = "width: 100%; height: 30vh; min-height: 200px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden;",
-            leaflet::leafletOutput(
-              "agency_map",
-              height = "100%",
-              width = "100%"
-            )
-          ),
-
-          # City selector and agency form side by side below the map
+          # Top row: Project Location + Map side by side
           fluidRow(
-            # Left column: City selector
+            # Left column: Project Location
             column(
               4,
               wellPanel(
+                style = "height: 30vh; min-height: 200px; overflow-y: auto; margin-bottom: 15px;",
                 h4("Project Location"),
                 p("Set the map center and timezone:"),
                 div(
@@ -334,9 +325,25 @@ croquis <- function(ssfs = NULL) {
                 tags$small("Updates the map center and fetches timezone")
               )
             ),
-            # Middle column: Agency form
+            # Right column: Map
             column(
-              4,
+              8,
+              div(
+                style = "height: 30vh; min-height: 200px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden;",
+                leaflet::leafletOutput(
+                  "agency_map",
+                  height = "100%",
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Bottom row: Agency form + Agency table
+          fluidRow(
+            # Left column: Agency form
+            column(
+              6,
               wellPanel(
                 h4("Agency Details"),
                 textInput(
@@ -425,7 +432,7 @@ croquis <- function(ssfs = NULL) {
             ),
             # Right column: Agency table
             column(
-              4,
+              6,
               wellPanel(
                 h4("Agencies"),
                 DT::DTOutput("agency_table")
@@ -1386,7 +1393,7 @@ croquis <- function(ssfs = NULL) {
     output$agency_map <- leaflet::renderLeaflet({
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
-        addBaseMaps() |>
+        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 10)
     })
 
