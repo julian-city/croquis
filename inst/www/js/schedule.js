@@ -207,3 +207,27 @@ function schedEditItin(itinId) {
    Shiny.setInputValue(schedNs + 'sched_preset_hour_cancel_edit',
      Math.random(), {priority: 'event'});
  }
+
+ // Speed profile view and speed factor edit
+
+ function schedSpUp(i) {
+   Shiny.setInputValue(schedNs + 'sched_sp_up',
+     {index: i, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedSpDown(i) {
+   Shiny.setInputValue(schedNs + 'sched_sp_down',
+     {index: i, ts: Math.random()}, {priority: 'event'});
+ }
+
+ function schedSpToggleFactors() {
+   var content = document.getElementById(schedNs + 'sched_sf_content');
+   var arrow = document.getElementById(schedNs + 'sched_sf_arrow');
+   if (content.style.display === 'none') {
+     content.style.display = 'block';
+     arrow.classList.add('expanded');
+   } else {
+     content.style.display = 'none';
+     arrow.classList.remove('expanded');
+   }
+ }

@@ -57,3 +57,13 @@ sched_get_hours_for_span <- function(first_dep, last_dep) {
   last_hour <- as.numeric(substr(last_dep, 1, 2))
   sprintf("%02d:00:00", first_hour:last_hour)
 }
+
+#  normalize speed factors if average drifts
+sched_sp_normalize <- function(values, threshold = 0.1) {
+  avg <- mean(values)
+  if (abs(avg - 1.0) > threshold) {
+    normalized <- values / avg
+    return(round(normalized, 1))
+  }
+  round(values, 1)
+}
