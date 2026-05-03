@@ -1650,6 +1650,26 @@ scheduleServer <- function(id, ssfs, map_center) {
         )
       }
 
+      # Default preset name from route, itin, and service context
+      route_id_for_itin <- current_data$itin$route_id[
+        current_data$itin$itin_id == editing_itin
+      ][1]
+      route_short_for_preset <- if (!is.null(route_id_for_itin)) {
+        r <- current_data$routes$route_short_name[
+          current_data$routes$route_id == route_id_for_itin
+        ]
+        if (length(r) > 0) r[1] else ""
+      } else {
+        ""
+      }
+      default_preset_name <- paste0(
+        route_short_for_preset,
+        " - ",
+        editing_itin,
+        " - ",
+        service_id
+      )
+
       tagList(
         h4(paste0("Itinerary: ", itin_display)),
         h5("Service windows"),
@@ -1716,11 +1736,36 @@ scheduleServer <- function(id, ssfs, map_center) {
 
         hr(),
         h5("Headways & speeds by hour"),
-        hsh_table_ui
+        hsh_table_ui,
+
+        div(
+          class = "sched-batch-row",
+          style = "margin-top: 10px;",
+          div(
+            style = "flex: 1; min-width: 0;",
+            tags$label("Save current headways as a new service level preset"),
+            tags$input(
+              type = "text",
+              id = ns("sched_save_as_preset_name"),
+              value = default_preset_name,
+              style = "width: 100%; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px;"
+            )
+          ),
+          tags$button(
+            class = "btn-save",
+            style = "margin-bottom: 0;",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', {name: document.getElementById('%s').value, ts: Math.random()}, {priority:'event'})",
+              ns("sched_save_as_preset"),
+              ns("sched_save_as_preset_name")
+            ),
+            "Save as preset"
+          )
+        ),
       )
     })
 
-    # route-level batch action edit observers
+    # OBSERVERS : route-level batch action edit observers-----------
 
     # --- Apply span to all route itineraries ---
 
@@ -1963,7 +2008,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       )
     })
 
-    # Span observers
+    # OBSERVERS : ITINERARY-LEVEL SPAN, HEADWAY AND SPEED EDITING---------
 
     observeEvent(input$sched_span_edit_click, {
       sched_span_adding(FALSE)
@@ -2503,7 +2548,78 @@ scheduleServer <- function(id, ssfs, map_center) {
       )
     })
 
-    # Calendar modal popup observers
+    # Save hour and headway combination for selected itin and service to service level preset
+    observeEvent(input$sched_save_as_preset, {
+      editing_itin <- sched_editing_itin_id()
+      curr_service_id <- sched_edit_service_id()
+      req(editing_itin, curr_service_id)
+
+      preset_name <- trimws(input$sched_save_as_preset$name)
+
+      if (nchar(preset_name) == 0) {
+        showNotification("Preset name cannot be empty.", type = "error")
+        return()
+      }
+
+      current_data <- ssfs()
+
+      itin_hsh <- current_data$hsh |>
+        filter(itin_id == editing_itin, service_id == curr_service_id)
+
+      if (nrow(itin_hsh) == 0) {
+        showNotification(
+          "No headway values defined. Set headways before saving as preset.",
+          type = "warning"
+        )
+        return()
+      }
+
+      itin_hsh <- itin_hsh[order(itin_hsh$hour_dep), ]
+
+      sp_data <- service_patterns()
+
+      existing_ids <- names(sp_data$service_patterns)
+      nums <- suppressWarnings(as.numeric(gsub("\\D", "", existing_ids)))
+      nums <- nums[!is.na(nums)]
+      next_num <- if (length(nums) > 0) max(nums) + 1 else 1
+      new_id <- paste0("SP", next_num)
+
+      sp_data$service_patterns[[new_id]] <- data.frame(
+        hour = itin_hsh$hour_dep,
+        headway = ifelse(
+          is.na(itin_hsh$headway),
+          NA_integer_,
+          as.integer(itin_hsh$headway)
+        ),
+        stringsAsFactors = FALSE
+      )
+
+      sp_data$service_pattern_names <- rbind(
+        sp_data$service_pattern_names,
+        data.frame(
+          pattern_id = new_id,
+          pattern_name = preset_name,
+          stringsAsFactors = FALSE
+        )
+      )
+
+      service_patterns(sp_data)
+
+      showNotification(
+        paste0(
+          "Saved as '",
+          new_id,
+          " - ",
+          preset_name,
+          "' with ",
+          nrow(itin_hsh),
+          " hours."
+        ),
+        type = "message"
+      )
+    })
+
+    # OBSERVERS : CALENDAR MODAL POPUP------------
     # Calendar modal opener
     observeEvent(input$sched_open_calendar, {
       sched_cal_editing_id(NULL)
@@ -2803,7 +2919,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       )
     })
 
-    # ── Calendar CRUD observers ──
+    # -- Calendar CRUD observers --
 
     # Edit click
     observeEvent(input$sched_cal_edit_click, {
@@ -2958,6 +3074,8 @@ scheduleServer <- function(id, ssfs, map_center) {
         type = "message"
       )
     })
+
+    # OBSERVERS : SERVICE LEVEL PRESETS MODAL ---------------
 
     # Presets modal opener
     observeEvent(input$sched_open_presets, {
@@ -3707,6 +3825,8 @@ scheduleServer <- function(id, ssfs, map_center) {
       )
     })
 
+    # OBSERVERS : SPEED PROFILE PANEL-------------------
+
     #Load speed profile
     observe({
       editing_itin <- sched_editing_itin_id()
@@ -3771,7 +3891,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       }
     })
 
-    # ── Observer: update base speed when hour select changes ──
+    # -- Observer: update base speed when hour select changes --
 
     observeEvent(
       input$sched_sp_hour,
@@ -3797,7 +3917,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       ignoreInit = TRUE
     )
 
-    # ── Render plotly graph ──
+    # -- Render plotly graph --
 
     output$sched_sp_plot <- plotly::renderPlotly({
       req(sched_sp_speed_factors(), sched_sp_stop_data())
@@ -3865,7 +3985,7 @@ scheduleServer <- function(id, ssfs, map_center) {
         plotly::config(displayModeBar = FALSE)
     })
 
-    # ── Render speed factors table ──
+    # -- Render speed factors table --
 
     output$sched_sp_table_ui <- renderUI({
       req(sched_sp_speed_factors(), sched_sp_stop_data())
@@ -3952,7 +4072,7 @@ scheduleServer <- function(id, ssfs, map_center) {
     # Force table to render even when collapsed, so it's ready on first expand
     outputOptions(output, "sched_sp_table_ui", suspendWhenHidden = FALSE)
 
-    # ── Create text outputs for speed factor and speed values ──
+    # -- Create text outputs for speed factor and speed values --
 
     observe({
       req(sched_sp_speed_factors(), sched_sp_stop_data())
@@ -3979,7 +4099,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       }
     })
 
-    # ── Up/down button observers ──
+    # -- Up/down button observers --
 
     observe({
       req(sched_sp_speed_factors(), sched_sp_stop_data())
@@ -4056,7 +4176,7 @@ scheduleServer <- function(id, ssfs, map_center) {
       }
     })
 
-    # ── Reset speed factors ──
+    # -- Reset speed factors --
 
     observeEvent(input$sched_sp_reset, {
       req(sched_sp_speed_factors())
