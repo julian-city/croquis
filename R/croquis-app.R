@@ -61,6 +61,7 @@ croquis <- function(ssfs = NULL) {
 
       tags$script(src = "www/js/theme.js"),
       tags$script(src = "www/js/loading.js"),
+      tags$script(src = "www/js/agency.js"),
       tags$script(src = "www/js/stops.js"),
       tags$script(src = "www/js/routes.js"),
       tags$script(src = "www/js/itineraries.js"),
@@ -339,104 +340,13 @@ croquis <- function(ssfs = NULL) {
             )
           ),
 
-          # Bottom row: Agency form + Agency table
-          fluidRow(
-            # Left column: Agency form
-            column(
-              6,
-              wellPanel(
-                h4("Agency Details"),
-                textInput(
-                  "ag_agency_id",
-                  label = tagList(
-                    "Agency ID",
-                    info_popover(
-                      "Identifies a unique transit agency or transit brand.",
-                      "https://gtfs.org/schedule/reference/#agencytxt"
-                    )
-                  ),
-                  placeholder = "e.g., STM"
-                ),
-                textInput(
-                  "ag_agency_name",
-                  label = tagList(
-                    "Agency name",
-                    info_popover(
-                      "Full name of the transit agency.",
-                      "https://gtfs.org/schedule/reference/#agencytxt"
-                    )
-                  ),
-                  placeholder = "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
-                ),
-                textInput(
-                  "ag_agency_url",
-                  label = tagList(
-                    "Agency URL",
-                    info_popover(
-                      "URL of the transit agency.",
-                      "https://gtfs.org/schedule/reference/#agencytxt"
-                    )
-                  ),
-                  placeholder = "e.g., http://www.stm.info"
-                ),
-                textInput(
-                  "ag_agency_timezone",
-                  label = tagList(
-                    "Agency timezone",
-                    info_popover(
-                      "Timezone where the transit agency is located in IANA timezone database (tz database) format.",
-                      "https://gtfs.org/schedule/reference/#agencytxt"
-                    )
-                  ),
-                  placeholder = "e.g., America/Montreal"
-                ),
-                hr(),
-                conditionalPanel(
-                  condition = "output.editing_agency == true",
-                  actionButton(
-                    "save_agency_edit",
-                    "Save changes",
-                    class = "btn-success"
-                  ),
-                  actionButton(
-                    "cancel_agency_edit",
-                    "Cancel",
-                    class = "btn-warning"
-                  )
-                ),
-                conditionalPanel(
-                  condition = "output.editing_agency == false",
-                  actionButton(
-                    "edit_agency_row",
-                    "Edit selected row",
-                    class = "btn-info"
-                  ),
-                  actionButton(
-                    "add_agency",
-                    "Add new agency",
-                    class = "btn-success"
-                  ),
-                  actionButton(
-                    "clear_agency_form",
-                    "Clear form",
-                    class = "btn-warning"
-                  )
-                ),
-                hr(),
-                actionButton(
-                  "delete_selected_agency",
-                  "Delete selected agency",
-                  class = "btn-danger"
-                )
-              )
-            ),
-            # Right column: Agency table
-            column(
-              6,
-              wellPanel(
-                h4("Agencies"),
-                DT::DTOutput("agency_table")
-              )
+          # Agency list (HTML-based)
+          wellPanel(
+            style = "overflow-y: auto; max-height: 60vh;",
+            h4("Agencies"),
+            div(
+              class = "agency-list-container",
+              uiOutput("agency_list_ui")
             )
           )
         )
@@ -1141,8 +1051,8 @@ croquis <- function(ssfs = NULL) {
         # Update map center
         map_center(list(lng = selected_city$long, lat = selected_city$lat))
 
-        # Fill the agency timezone text input with the selected city's timezone
-        updateTextInput(session, "ag_agency_timezone", value = selected_city$tz)
+        # Fill timezone field for new agencies added in the table
+        session$sendCustomMessage("agFillTimezone", selected_city$tz)
 
         # Hide suggestions
         session$sendCustomMessage("hideSuggestions", "")
@@ -1160,207 +1070,283 @@ croquis <- function(ssfs = NULL) {
     #
     #   #   #
 
-    # Editing state for agency form
-    editing_agency <- reactiveVal(FALSE)
+    # -- Agency reactive state --
+    ag_editing_id <- reactiveVal(NULL) # agency_id being edited, or NULL
+    ag_adding <- reactiveVal(FALSE) # TRUE when adding a new agency
 
-    # Expose editing state to conditionalPanel
-    output$editing_agency <- reactive({
-      editing_agency()
-    })
-    shiny::outputOptions(output, "editing_agency", suspendWhenHidden = FALSE)
-
-    # Render agency table
-    output$agency_table <- DT::renderDT({
-      current_data <- ssfs()
-
-      if (nrow(current_data$agency) == 0) {
-        return(DT::datatable(
-          data.frame(
-            agency_id = character(),
-            agency_name = character(),
-            agency_url = character(),
-            agency_timezone = character()
-          ),
-          selection = "single",
-          rownames = FALSE,
-          options = list(
-            pageLength = 10,
-            ordering = FALSE,
-            dom = "t"
+    # -- Helper: build an agency display row --
+    build_agency_row <- function(agency) {
+      div(
+        class = "agency-list-row",
+        div(
+          class = "agency-info",
+          span(class = "agency-id-label", agency$agency_id),
+          span(class = "agency-name-label", agency$agency_name),
+          span(
+            class = "agency-detail-line",
+            paste0(
+              agency$agency_timezone,
+              if (nchar(agency$agency_url) > 0) {
+                paste0(" \u2014 ", agency$agency_url)
+              } else {
+                ""
+              }
+            )
           )
-        ))
-      }
-
-      DT::datatable(
-        current_data$agency,
-        selection = "single",
-        rownames = FALSE,
-        options = list(
-          pageLength = 10,
-          ordering = FALSE,
-          dom = "t"
         ),
-        colnames = c(
-          "Agency ID",
-          "Agency Name",
-          "Agency URL",
-          "Agency Timezone"
+        div(
+          class = "route-actions",
+          tags$button(
+            class = "route-action-btn edit-btn",
+            onclick = sprintf(
+              "event.stopPropagation(); editAgencyFromList('%s')",
+              agency$agency_id
+            ),
+            title = "Edit agency",
+            htmltools::HTML("&#9998;")
+          ),
+          tags$button(
+            class = "route-action-btn delete-btn",
+            onclick = sprintf(
+              "event.stopPropagation(); deleteAgencyFromList('%s')",
+              agency$agency_id
+            ),
+            title = "Delete agency",
+            htmltools::HTML('<i class="fa-solid fa-trash"></i>')
+          )
         )
       )
-    })
+    }
 
-    # Clear agency form
-    observeEvent(input$clear_agency_form, {
-      updateTextInput(session, "ag_agency_id", value = "")
-      updateTextInput(session, "ag_agency_name", value = "")
-      updateTextInput(session, "ag_agency_url", value = "")
-      updateTextInput(session, "ag_agency_timezone", value = "")
-      editing_agency(FALSE)
-    })
-
-    # Edit selected agency row - populate form
-    observeEvent(input$edit_agency_row, {
-      req(input$agency_table_rows_selected)
-      current_data <- ssfs()
-
-      selected_row <- current_data$agency[input$agency_table_rows_selected, ]
-
-      updateTextInput(session, "ag_agency_id", value = selected_row$agency_id)
-      updateTextInput(
-        session,
-        "ag_agency_name",
-        value = selected_row$agency_name
+    # -- Helper: build the inline agency edit/add form --
+    build_agency_form <- function(agency = NULL) {
+      is_new <- is.null(agency)
+      div(
+        class = "agency-edit-form",
+        tags$label(
+          "Agency ID",
+          info_popover(
+            "Identifies a unique transit agency or transit brand.",
+            "https://gtfs.org/schedule/reference/#agencytxt"
+          )
+        ),
+        tags$input(
+          type = "text",
+          id = "inline_ag_agency_id",
+          value = if (!is_new) agency$agency_id else NULL,
+          placeholder = if (is_new) "e.g., STM" else NULL
+        ),
+        tags$label(
+          "Agency name",
+          info_popover(
+            "Full name of the transit agency.",
+            "https://gtfs.org/schedule/reference/#agencytxt"
+          )
+        ),
+        tags$input(
+          type = "text",
+          id = "inline_ag_agency_name",
+          value = if (!is_new) agency$agency_name else NULL,
+          placeholder = if (is_new) {
+            "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
+          } else {
+            NULL
+          }
+        ),
+        tags$label(
+          "Agency URL",
+          info_popover(
+            "URL of the transit agency.",
+            "https://gtfs.org/schedule/reference/#agencytxt"
+          )
+        ),
+        tags$input(
+          type = "text",
+          id = "inline_ag_agency_url",
+          value = if (!is_new) agency$agency_url else NULL,
+          placeholder = if (is_new) "e.g., http://www.stm.info" else NULL
+        ),
+        tags$label(
+          "Agency timezone",
+          info_popover(
+            "Timezone in IANA tz database format.",
+            "https://gtfs.org/schedule/reference/#agencytxt"
+          )
+        ),
+        tags$input(
+          type = "text",
+          id = "inline_ag_agency_timezone",
+          value = if (!is_new) agency$agency_timezone else NULL,
+          placeholder = if (is_new) "e.g., America/Montreal" else NULL
+        ),
+        div(
+          class = "btn-row",
+          tags$button(
+            class = "btn-save",
+            onclick = "saveAgencyFromForm()",
+            if (is_new) "Create" else htmltools::HTML("&#10003; Save")
+          ),
+          tags$button(
+            class = "btn-cancel",
+            onclick = "cancelAgencyEdit()",
+            "Cancel"
+          )
+        )
       )
-      updateTextInput(session, "ag_agency_url", value = selected_row$agency_url)
-      updateTextInput(
-        session,
-        "ag_agency_timezone",
-        value = selected_row$agency_timezone
-      )
+    }
 
-      editing_agency(TRUE)
-    })
-
-    # Cancel agency edit
-    observeEvent(input$cancel_agency_edit, {
-      updateTextInput(session, "ag_agency_id", value = "")
-      updateTextInput(session, "ag_agency_name", value = "")
-      updateTextInput(session, "ag_agency_url", value = "")
-      updateTextInput(session, "ag_agency_timezone", value = "")
-      editing_agency(FALSE)
-    })
-
-    # Save agency edit (update existing row)
-    observeEvent(input$save_agency_edit, {
-      req(input$agency_table_rows_selected)
-      req(input$ag_agency_id)
-
+    # -- Render the agency list UI --
+    output$agency_list_ui <- renderUI({
       current_data <- ssfs()
-      selected_idx <- input$agency_table_rows_selected
-      old_agency_id <- current_data$agency$agency_id[selected_idx]
-      new_agency_id <- trimws(input$ag_agency_id)
+      editing_id <- ag_editing_id()
+      is_adding <- ag_adding()
 
-      # Validate non-empty
+      rows <- list()
+
+      # Agency rows
+      if (nrow(current_data$agency) > 0) {
+        for (i in seq_len(nrow(current_data$agency))) {
+          ag <- current_data$agency[i, ]
+          is_editing_this <- !is.null(editing_id) &&
+            editing_id == ag$agency_id
+
+          # Always show the display row
+          rows[[length(rows) + 1]] <- build_agency_row(ag)
+
+          # If editing this row, show form directly below
+          if (is_editing_this) {
+            rows[[length(rows) + 1]] <- build_agency_form(ag)
+          }
+        }
+      }
+
+      # "Add new agency" row or add form
+      if (is_adding) {
+        rows[[length(rows) + 1]] <- build_agency_form()
+      } else {
+        rows[[length(rows) + 1]] <- div(
+          class = "stop-list-row add-row",
+          onclick = "startAddingAgency()",
+          tags$button(
+            class = "stop-action-btn add-btn",
+            onclick = "event.stopPropagation(); startAddingAgency()",
+            title = "Add new agency",
+            htmltools::HTML("+")
+          ),
+          span(style = "margin-left: 8px;", "Add new agency")
+        )
+      }
+
+      do.call(tagList, rows)
+    })
+
+    # -- Edit agency (pencil click) --
+    observeEvent(input$ag_list_edit_click, {
+      clicked_id <- input$ag_list_edit_click$id
+      # Toggle: if already editing this one, cancel
+      if (!is.null(ag_editing_id()) && ag_editing_id() == clicked_id) {
+        ag_editing_id(NULL)
+      } else {
+        ag_editing_id(clicked_id)
+        ag_adding(FALSE)
+      }
+    })
+
+    # -- Start adding new agency --
+    observeEvent(input$ag_list_add_click, {
+      ag_adding(TRUE)
+      ag_editing_id(NULL)
+    })
+
+    # -- Cancel edit / add --
+    observeEvent(input$ag_list_cancel_click, {
+      ag_editing_id(NULL)
+      ag_adding(FALSE)
+    })
+
+    # -- Save agency (handles both add and edit) --
+    observeEvent(input$ag_list_save_data, {
+      data <- input$ag_list_save_data
+      new_agency_id <- trimws(data$agency_id)
+
       if (nchar(new_agency_id) == 0) {
         showNotification("Agency ID cannot be empty.", type = "warning")
         return()
       }
 
-      # If agency_id is being changed, check for conflict
-      if (new_agency_id != old_agency_id) {
-        other_agency_ids <- current_data$agency$agency_id[-selected_idx]
-        if (new_agency_id %in% other_agency_ids) {
+      current_data <- ssfs()
+
+      if (ag_adding()) {
+        # -- Adding a new agency --
+        if (new_agency_id %in% current_data$agency$agency_id) {
           showNotification(
             "This agency ID already exists. Please use a different ID.",
             type = "warning"
           )
           return()
         }
-      }
 
-      # Update the row
-      current_data$agency$agency_id[selected_idx] <- new_agency_id
-      current_data$agency$agency_name[selected_idx] <- trimws(
-        input$ag_agency_name
-      )
-      current_data$agency$agency_url[selected_idx] <- trimws(
-        input$ag_agency_url
-      )
-      current_data$agency$agency_timezone[selected_idx] <- trimws(
-        input$ag_agency_timezone
-      )
-
-      # If agency_id was changed, update references in routes table
-      if (new_agency_id != old_agency_id && nrow(current_data$routes) > 0) {
-        current_data$routes$agency_id[
-          current_data$routes$agency_id == old_agency_id
-        ] <- new_agency_id
-      }
-
-      ssfs(current_data)
-
-      # Clear form and exit edit mode
-      updateTextInput(session, "ag_agency_id", value = "")
-      updateTextInput(session, "ag_agency_name", value = "")
-      updateTextInput(session, "ag_agency_url", value = "")
-      updateTextInput(session, "ag_agency_timezone", value = "")
-      editing_agency(FALSE)
-
-      showNotification("Agency updated successfully", type = "message")
-    })
-
-    # Add new agency
-    observeEvent(input$add_agency, {
-      req(input$ag_agency_id)
-
-      current_data <- ssfs()
-      new_agency_id <- trimws(input$ag_agency_id)
-
-      # Validate non-empty
-      if (nchar(new_agency_id) == 0) {
-        showNotification("Agency ID cannot be empty.", type = "warning")
-        return()
-      }
-
-      # Check if agency_id already exists
-      if (new_agency_id %in% current_data$agency$agency_id) {
-        showNotification(
-          "This agency ID already exists. Please use a different ID.",
-          type = "warning"
+        new_agency <- data.frame(
+          agency_id = new_agency_id,
+          agency_name = trimws(data$agency_name),
+          agency_url = trimws(data$agency_url),
+          agency_timezone = trimws(data$agency_timezone),
+          stringsAsFactors = FALSE
         )
-        return()
+
+        current_data$agency <- rbind(current_data$agency, new_agency)
+        ssfs(current_data)
+        ag_adding(FALSE)
+
+        showNotification("Agency added successfully", type = "message")
+      } else if (!is.null(ag_editing_id())) {
+        # ── Editing an existing agency ──
+        old_agency_id <- ag_editing_id()
+        idx <- which(current_data$agency$agency_id == old_agency_id)
+
+        if (length(idx) == 0) {
+          showNotification("Agency not found.", type = "error")
+          return()
+        }
+
+        # If agency_id changed, check for conflicts
+        if (new_agency_id != old_agency_id) {
+          other_ids <- current_data$agency$agency_id[-idx]
+          if (new_agency_id %in% other_ids) {
+            showNotification(
+              "This agency ID already exists. Please use a different ID.",
+              type = "warning"
+            )
+            return()
+          }
+        }
+
+        # Update the row
+        current_data$agency$agency_id[idx] <- new_agency_id
+        current_data$agency$agency_name[idx] <- trimws(data$agency_name)
+        current_data$agency$agency_url[idx] <- trimws(data$agency_url)
+        current_data$agency$agency_timezone[idx] <- trimws(data$agency_timezone)
+
+        # Cascade agency_id change to routes
+        if (new_agency_id != old_agency_id && nrow(current_data$routes) > 0) {
+          current_data$routes$agency_id[
+            current_data$routes$agency_id == old_agency_id
+          ] <- new_agency_id
+        }
+
+        ssfs(current_data)
+        ag_editing_id(NULL)
+
+        showNotification("Agency updated successfully", type = "message")
       }
-
-      new_agency <- data.frame(
-        agency_id = new_agency_id,
-        agency_name = trimws(input$ag_agency_name),
-        agency_url = trimws(input$ag_agency_url),
-        agency_timezone = trimws(input$ag_agency_timezone),
-        stringsAsFactors = FALSE
-      )
-
-      current_data$agency <- rbind(current_data$agency, new_agency)
-      ssfs(current_data)
-
-      # Clear form
-      updateTextInput(session, "ag_agency_id", value = "")
-      updateTextInput(session, "ag_agency_name", value = "")
-      updateTextInput(session, "ag_agency_url", value = "")
-      updateTextInput(session, "ag_agency_timezone", value = "")
-
-      showNotification("Agency added successfully", type = "message")
     })
 
-    # Delete selected agency (with protection)
-    observeEvent(input$delete_selected_agency, {
-      req(input$agency_table_rows_selected)
+    # -- Delete agency (with route protection) --
+    observeEvent(input$ag_list_delete_click, {
+      agency_to_delete <- input$ag_list_delete_click$id
       current_data <- ssfs()
 
-      agency_to_delete <- current_data$agency$agency_id[
-        input$agency_table_rows_selected
-      ]
-
-      # Check if any route references this agency
+      # Block deletion if any route references this agency
       if (
         nrow(current_data$routes) > 0 &&
           agency_to_delete %in% current_data$routes$agency_id
@@ -1379,12 +1365,14 @@ croquis <- function(ssfs = NULL) {
       }
 
       current_data$agency <- current_data$agency[
-        -input$agency_table_rows_selected,
+        current_data$agency$agency_id != agency_to_delete,
       ]
       ssfs(current_data)
 
-      # Exit edit mode if active
-      editing_agency(FALSE)
+      # If we were editing the deleted agency, clear state
+      if (!is.null(ag_editing_id()) && ag_editing_id() == agency_to_delete) {
+        ag_editing_id(NULL)
+      }
 
       showNotification("Agency deleted successfully", type = "message")
     })
