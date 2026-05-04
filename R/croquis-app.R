@@ -1054,6 +1054,9 @@ croquis <- function(ssfs = NULL) {
         # Fill timezone field for new agencies added in the table
         session$sendCustomMessage("agFillTimezone", selected_city$tz)
 
+        #store the last selected city's timezone
+        ag_last_tz(selected_city$tz)
+
         # Hide suggestions
         session$sendCustomMessage("hideSuggestions", "")
 
@@ -1073,6 +1076,7 @@ croquis <- function(ssfs = NULL) {
     # -- Agency reactive state --
     ag_editing_id <- reactiveVal(NULL) # agency_id being edited, or NULL
     ag_adding <- reactiveVal(FALSE) # TRUE when adding a new agency
+    ag_last_tz <- reactiveVal(NULL) # timezone associated with selected city
 
     # -- Helper: build an agency display row --
     build_agency_row <- function(agency) {
@@ -1119,7 +1123,7 @@ croquis <- function(ssfs = NULL) {
     }
 
     # -- Helper: build the inline agency edit/add form --
-    build_agency_form <- function(agency = NULL) {
+    build_agency_form <- function(agency = NULL, default_tz = NULL) {
       is_new <- is.null(agency)
       div(
         class = "agency-edit-form",
@@ -1176,7 +1180,7 @@ croquis <- function(ssfs = NULL) {
         tags$input(
           type = "text",
           id = "inline_ag_agency_timezone",
-          value = if (!is_new) agency$agency_timezone else NULL,
+          value = if (!is_new) agency$agency_timezone else default_tz,
           placeholder = if (is_new) "e.g., America/Montreal" else NULL
         ),
         div(
@@ -1222,7 +1226,9 @@ croquis <- function(ssfs = NULL) {
 
       # "Add new agency" row or add form
       if (is_adding) {
-        rows[[length(rows) + 1]] <- build_agency_form()
+        rows[[length(rows) + 1]] <- build_agency_form(
+          default_tz = isolate(ag_last_tz())
+        )
       } else {
         rows[[length(rows) + 1]] <- div(
           class = "stop-list-row add-row",
