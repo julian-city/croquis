@@ -366,6 +366,45 @@ body {
   background-color: var(--hover-color);
 }
 
+/* Other home module styles (e.g. Load network) */
+.collapsible-section {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+ 
+.collapsible-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+ 
+.collapsible-section.collapsed .collapsible-section-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+ 
+.collapsible-section-header h4 {
+  margin: 0;
+}
+ 
+.collapsible-section.collapsed .floating-panel-content {
+  display: none;
+}
+ 
+.collapsible-section .floating-panel-content {
+  padding-top: 10px;
+}
+ 
+.collapsible-section .well {
+  margin-bottom: 10px;
+}
+
 /* Stop List Panel Styles */
 .stop-list-container {
   max-height: calc(100vh - 350px);

@@ -88,223 +88,120 @@ croquis <- function(ssfs = NULL) {
         )
       ),
 
-      #home tab
+      # Home / Agency module
       tabPanel(
         tags$span(icon("house")),
         #unicode house emoji
         fluidPage(
           titlePanel("Home"),
 
-          #Info
-          wellPanel(
-            h3("About Croquis 0.1"),
-            p(
-              "Croquis is a transit sketch planning tool. Use it to create and edit transit networks and schedules in GTFS (General Transit Feed Specification) file format"
+          # -- Load Network (collapsible, collapsed by default) --
+          div(
+            id = "load-network-panel",
+            class = "collapsible-section collapsed",
+            div(
+              class = "collapsible-section-header",
+              onclick = "togglePanel('load-network-panel')",
+              h4("Load Network"),
+              tags$button(
+                class = "floating-panel-toggle",
+                htmltools::HTML("+")
+              )
             ),
-            p(htmltools::HTML(
-              "This is a shiny app prototype by <a href='https://julian.city' target='_blank'>Julian Villafuerte Diaz</a>. This version was deployed in March 2026."
-            )),
-            p(
-              "You can get started on your transit planning project by uploading an existing GTFS or croquis.rds file. You may also follow the instructions below to create a new network and schedule."
-            ),
-            p(
-              "This project is in active development. Please get in touch with your feedback and ideas for improvement !"
-            ),
-            p(htmltools::HTML(
-              "<a href='https://julian.city' target='_blank'>Get in touch</a>"
-            ))
-          ),
-
-          # Upload sample transit systems
-          wellPanel(
-            h3("Load a sample transit network"),
-            p(
-              "To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works."
-            ),
-            actionButton(
-              "load_yellowline_ssfs",
-              "STM Ligne Jaune",
-              class = "btn-success"
-            ),
-            actionButton("load_metro_ssfs", "STM Metro", class = "btn-success"),
-            actionButton(
-              "load_mileend_ssfs",
-              "STM Mile-End bus network",
-              class = "btn-success"
-            ),
-            actionButton(
-              "load_ttcsubway_ssfs",
-              "TTC Subway",
-              class = "btn-success"
+            div(
+              class = "floating-panel-content",
+              # Top row: GTFS + Croquis side by side
+              fluidRow(
+                column(
+                  6,
+                  wellPanel(
+                    h4("Load a GTFS"),
+                    p(
+                      "You can load an existing GTFS here.",
+                      tags$br(),
+                      tags$small(
+                        "Larger files may take several minutes",
+                        "(maximum size: 100MB)."
+                      )
+                    ),
+                    fileInput(
+                      "load_gtfs",
+                      "",
+                      multiple = FALSE,
+                      accept = ".zip",
+                      placeholder = "Drag and drop or click to select file"
+                    ),
+                    tags$small(
+                      "Uploading a GTFS here will convert it to an",
+                      "editable format in Croquis"
+                    )
+                  )
+                ),
+                column(
+                  6,
+                  wellPanel(
+                    h4("Load your croquis"),
+                    p(
+                      "To continue working on a previous croquis,",
+                      "upload your .rds file:"
+                    ),
+                    fileInput(
+                      "load_ssfs",
+                      "",
+                      multiple = FALSE,
+                      accept = ".rds",
+                      placeholder = "Drag and drop or click to select file"
+                    ),
+                    tags$small(
+                      "Upload a transit model .rds file previously",
+                      "created with Croquis"
+                    )
+                  )
+                )
+              ),
+              # Bottom row: Sample networks
+              wellPanel(
+                h4("Load a sample transit network"),
+                p(
+                  "To explore this tool, you can get started by",
+                  "loading a sample network. The Ligne Jaune model",
+                  "is the simplest and will help you familiarize",
+                  "yourself with how Croquis works."
+                ),
+                actionButton(
+                  "load_yellowline_ssfs",
+                  "STM Ligne Jaune",
+                  class = "btn-success"
+                ),
+                actionButton(
+                  "load_metro_ssfs",
+                  "STM Metro",
+                  class = "btn-success"
+                ),
+                actionButton(
+                  "load_mileend_ssfs",
+                  "STM Mile-End bus network",
+                  class = "btn-success"
+                ),
+                actionButton(
+                  "load_ttcsubway_ssfs",
+                  "TTC Subway",
+                  class = "btn-success"
+                )
+              )
             )
           ),
 
-          # ssfs upload section
-          wellPanel(
-            h3("Load your croquis"),
-            p(
-              "To continue working on a previous croquis, upload your .rds file:"
-            ),
-            fileInput(
-              "load_ssfs",
-              "",
-              multiple = FALSE,
-              accept = ".rds",
-              placeholder = "Drag and drop or click to select file"
-            ),
-            tags$small(
-              "Upload a transit model .rds file previously created with Croquis"
-            )
-          ),
-
-          # ssfs upload section
-          wellPanel(
-            h3("Load a GTFS"),
-            p(
-              "You can load an existing GTFS here. Larger files may take several minutes (maximum size: 100MB)."
-            ),
-            fileInput(
-              "load_gtfs",
-              "",
-              multiple = FALSE,
-              accept = ".zip",
-              placeholder = "Drag and drop or click to select file"
-            ),
-            tags$small(
-              "Uploading a gtfs here will convert it to an editable format in Croquis"
-            )
-          ),
-
-          # Instructions
-          wellPanel(
-            h3("Instructions"),
-            p("Build your transit system model by following these steps:"),
-
-            h4("1. Specify the agencies and region of your network"),
-            p(
-              "In the 'agencies' module:",
-              tags$ul(
-                tags$li("Add agencies to the agency table"),
-                tags$li("Edit existing agencies in the table"),
-                tags$li(
-                  "Set the location of your transit network if starting from scratch"
-                )
-              )
-            ),
-
-            h4("2. Create the stops of your transit system"),
-            p(
-              "In the 'stops' module:",
-              tags$ul(
-                tags$li("Click on the map to add stops"),
-                tags$li("Provide unique stop IDs and stop names for each stop"),
-                tags$li("Edit the location and details for existing stops"),
-                tags$li(
-                  "Limitation : for now, it is not possible to delete stops once they have been created"
-                )
-              )
-            ),
-
-            h4("3. Create your routes and route itineraries"),
-            p(
-              "In the 'routes' module:",
-              tags$ul(
-                tags$li(
-                  "Create routes with their details (mode, colours) and define route itineraries within each route."
-                ),
-                tags$li(
-                  "A route itinerary corresponds to a unique stop pattern for trips (e.g. a transit line will have an itinerary for each direction). Each itinerary is associated with a stop sequence and a shape."
-                ),
-                tags$li(
-                  "Create and edit route geometries by selecting stops in the desired order and by creating waypoints by clicking on the map and along the route. You may delete waypoints or remove stops from a route itinerary by right-clicking."
-                ),
-                tags$li(
-                  "Move a waypoint by clicking on it and activating editing mode. Click on the desired location on the map or on a stop to move the waypoint there. If clicked on a stop, it will be added to the sequence."
-                ),
-                tags$li(
-                  "Toggle between network and simple drawing modes. Network drawing mode calculates the path along the Open Street Maps road network between stops and waypoints."
-                )
-              )
-            ),
-
-            h4("4. Define service calendar"),
-            p(
-              "In the 'calendar' module:",
-              tags$ul(
-                tags$li(
-                  "Specify which days of the week each service operates, as well as the date ranges for each services."
-                ),
-                tags$li(
-                  "The table in this module is identical to the calendar table in gtfs and is passed on directly."
-                )
-              )
-            ),
-
-            h4("5. Configure service spans"),
-            p(
-              "In the 'spans' module:",
-              tags$ul(
-                tags$li(
-                  "Define operating hours for each route / service combination."
-                )
-              )
-            ),
-
-            h4("6. Define headway presets"),
-            p(
-              "In the 'headway presets' module:",
-              tags$ul(
-                tags$li(
-                  "Create and edit predefined schedule schemes, including all-day frequent service or peak-frequent service."
-                ),
-                tags$li(
-                  "You can use these presets to set frequencies on routes in the next module quicker."
-                )
-              )
-            ),
-
-            h4("7. Specify headways and speeds by hour"),
-            p(
-              "In 'headways' module:",
-              tags$ul(
-                tags$li(
-                  "After configuring service spans, initialize the headways and speeds by hour table in this module, then edit details by route itinerary, calendar service, and hour."
-                )
-              )
-            ),
-
-            h4("8. Modify interstop speeds"),
-            p(
-              "In 'speed profiles' module:",
-              tags$ul(
-                tags$li(
-                  "Set the speed factors by stop that will be used to adjust interstop speeds."
-                ),
-                tags$li(
-                  "View interstop speeds by hour and by service"
-                )
-              )
-            ),
-
-            h4(
-              "9. When finished, use the 'export' module to create a GTFS or save your croquis in .rds format"
-            )
-          )
-        )
-      ),
-
-      tabPanel(
-        "agency",
-        fluidPage(
-          titlePanel("agency"),
-
-          # Top row: Project Location + Map side by side
+          # -- Project Location + Map --
           fluidRow(
             # Left column: Project Location
             column(
               4,
               wellPanel(
-                style = "height: 30vh; min-height: 200px; overflow-y: auto; margin-bottom: 15px;",
+                style = paste0(
+                  "height: 30vh; min-height: 200px; ",
+                  "overflow-y: auto; margin-bottom: 15px;"
+                ),
                 h4("Project Location"),
                 p("Set the map center and timezone:"),
                 div(
@@ -316,12 +213,21 @@ croquis <- function(ssfs = NULL) {
                   ),
                   div(
                     id = "city_suggestions",
-                    style = "position: absolute; z-index: 1000; background: var(--panel-bg); 
-               border: 1px solid var(--border-color); color: var(--text-color);
-               max-height: 200px; overflow-y: auto; width: 100%; display: none;"
+                    style = paste0(
+                      "position: absolute; z-index: 1000; ",
+                      "background: var(--panel-bg); ",
+                      "border: 1px solid var(--border-color); ",
+                      "color: var(--text-color); ",
+                      "max-height: 200px; overflow-y: auto; ",
+                      "width: 100%; display: none;"
+                    )
                   )
                 ),
-                actionButton("select_city", "Select City", class = "btn-info"),
+                actionButton(
+                  "select_city",
+                  "Select City",
+                  class = "btn-info"
+                ),
                 tags$br(),
                 tags$small("Updates the map center and fetches timezone")
               )
@@ -330,7 +236,12 @@ croquis <- function(ssfs = NULL) {
             column(
               8,
               div(
-                style = "height: 30vh; min-height: 200px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden;",
+                style = paste0(
+                  "height: 30vh; min-height: 200px; ",
+                  "margin-bottom: 15px; ",
+                  "border: 1px solid var(--border-color); ",
+                  "border-radius: 4px; overflow: hidden;"
+                ),
                 leaflet::leafletOutput(
                   "agency_map",
                   height = "100%",
@@ -340,13 +251,108 @@ croquis <- function(ssfs = NULL) {
             )
           ),
 
-          # Agency list (HTML-based)
+          # -- Agency list --
           wellPanel(
             style = "overflow-y: auto; max-height: 60vh;",
             h4("Agencies"),
             div(
               class = "agency-list-container",
               uiOutput("agency_list_ui")
+            )
+          ),
+
+          # -- Instructions --
+          wellPanel(
+            h3("Instructions"),
+            p(
+              "Build your transit system model by following these steps:"
+            ),
+
+            h4(
+              "1. Get started here by loading an existing network or specifying agency details for a new one."
+            ),
+            p(
+              tags$ul(
+                tags$li(
+                  "Load a GTFS or a network that you've previously worked on in Croquis"
+                ),
+                tags$li(
+                  "Set the location of your network, if you're starting a network from scratch"
+                ),
+                tags$li("View and edit agency details.")
+              )
+            ),
+
+            h4("2. Create and edit stops in the stops module"),
+            p(
+              tags$ul(
+                tags$li("Click on the map to add stops"),
+                tags$li(
+                  "Provide unique stop IDs and stop names for each stop"
+                ),
+                tags$li(
+                  "Edit the location and details for existing stops"
+                ),
+              )
+            ),
+
+            h4(
+              "3. Create your routes and route itineraries in the routes module"
+            ),
+            p(
+              tags$ul(
+                tags$li(
+                  "Create routes with their details (mode, colours) and define route itineraries within each route."
+                ),
+                tags$li(
+                  "A route itinerary corresponds to a unique stop pattern for trips. Each itinerary is associated with a stop sequence and a shape."
+                ),
+                tags$li(
+                  "Create and edit route geometries by selecting stops in the desired order and by creating waypoints by clicking on the map and along the route. You may delete waypoints or remove stops from a route itinerary by right-clicking."
+                ),
+                tags$li(
+                  "Move a waypoint by clicking on it and activating editing mode. Click on the desired location on the map or on a stop to move the waypoint there. If clicked on a stop, it will be added to the sequence."
+                ),
+                tags$li(
+                  "Toggle between network and simple drawing modes. Network drawing mode calculates the path along the Open Street Maps road network between stops and waypoints."
+                ),
+                tags$li(
+                  "Toggle between prepending and appending stops when drawing a route itinerary. Prepend mode adds stops clicked to the beginning of the stop sequence (the default is that stops clicks are added to the end)."
+                )
+              )
+            ),
+
+            h4(
+              "4. Define and edit service levels and speeds for routes in the schedule module"
+            ),
+            p(
+              tags$ul(
+                tags$li(
+                  "Bulk apply preset service levels (e.g. all-day frequent or peak frequent), speeds and operating hours to routes by service."
+                ),
+                tags$li(
+                  "View cumulative service-level by route segment by hour by clicking on the map."
+                ),
+                tags$li(
+                  "Apply preset service levels, speeds and operating hours for individual route itineraries."
+                ),
+                tags$li(
+                  "Define and edit headways and speeds by hour in detail for individual route itineraries, if desired."
+                ),
+                tags$li(
+                  "View and toggle interstop speeds at the route itinerary level, if desired."
+                ),
+                tags$li(
+                  "Manage service level presets, create them from scratch, or create them based on the service level of an existing route itinerary."
+                ),
+                tags$li(
+                  "Manage service calendar, including start and end dates for services defined by day of the week active (e.g. weekday vs. weekend service)."
+                )
+              )
+            ),
+
+            h4(
+              "5. Click the save icon to export a GTFS or save your croquis in .rds format to work on it later."
             )
           )
         )
@@ -390,9 +396,9 @@ croquis <- function(ssfs = NULL) {
 
           # Export raw ssfs
           wellPanel(
-            h3("Export raw project file (ssfs)"),
+            h3("Save your project to work on it later"),
             p(
-              "If you want to save your project and continue working later, export .rds file:"
+              "This saves the raw Croquis (SSFS) file as a .rds:"
             ),
             textInput(
               "exportssfs_filename",
@@ -401,13 +407,13 @@ croquis <- function(ssfs = NULL) {
             ),
             downloadButton(
               "download_ssfs",
-              "Download Transit System",
+              "Download Croquis file",
               class = "btn-primary"
             ),
             tags$br(),
             tags$br(),
             tags$small(
-              "Your transit system will be saved as an .rds file that you can reload later"
+              "Your transit system will be saved as an .rds file that you can reload later."
             )
           )
         )
