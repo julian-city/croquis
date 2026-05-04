@@ -384,6 +384,27 @@ scheduleServer <- function(id, ssfs, map_center) {
       once = FALSE
     )
 
+    sched_clear_itin_subedits <- function() {
+      sched_span_editing_idx(NULL)
+      sched_span_adding(FALSE)
+      sched_hsh_editing_hour(NULL)
+    }
+
+    sched_fit_bounds <- function(geom) {
+      if (is.null(geom) || length(geom) == 0) {
+        return(invisible(NULL))
+      }
+
+      bbox <- st_bbox(geom)
+      leaflet::leafletProxy("sched_map") |>
+        leaflet::fitBounds(
+          lng1 = bbox[["xmin"]],
+          lat1 = bbox[["ymin"]],
+          lng2 = bbox[["xmax"]],
+          lat2 = bbox[["ymax"]]
+        )
+    }
+
     sched_draw_highlight_group <- function(proxy, current_data, hl_ids) {
       proxy <- proxy |>
         leaflet::clearGroup("sched_highlight")
@@ -911,8 +932,15 @@ scheduleServer <- function(id, ssfs, map_center) {
         return(do.call(tagList, rows))
       }
 
-      for (r in seq_len(nrow(current_data$routes))) {
-        route <- current_data$routes[r, ]
+      sorted_routes <- current_data$routes[
+        order(
+          current_data$routes$route_type,
+          current_data$routes$route_short_name
+        ),
+      ]
+
+      for (r in seq_len(nrow(sorted_routes))) {
+        route <- sorted_routes[r, ]
 
         rcol <- if (!is.na(route$route_color) && nchar(route$route_color) > 0) {
           paste0("#", route$route_color)
@@ -982,10 +1010,17 @@ scheduleServer <- function(id, ssfs, map_center) {
         sched_highlighted_itin_ids(character(0))
       } else {
         sched_highlighted_route(route_id)
-        route_itin_ids <- current_data$itin$itin_id[
-          current_data$itin$route_id == route_id
+
+        route_itins <- current_data$itin[
+          current_data$itin$route_id == route_id,
         ]
+        route_itin_ids <- route_itins$itin_id
+
         sched_highlighted_itin_ids(route_itin_ids)
+
+        if (nrow(route_itins) > 0) {
+          sched_fit_bounds(route_itins$geometry)
+        }
       }
     })
 
@@ -994,17 +1029,29 @@ scheduleServer <- function(id, ssfs, map_center) {
       route_id <- input$sched_route_edit_click$id
       current_data <- ssfs()
 
-      sched_editing_route_id(route_id)
-      sched_editing_itin_id(NULL) # reset itin selection
-
-      # Highlight this route's itineraries
-      sched_highlighted_route(route_id)
       route_itin_ids <- current_data$itin$itin_id[
         current_data$itin$route_id == route_id
       ]
+
+      if (
+        !is.null(sched_editing_route_id()) &&
+          sched_editing_route_id() == route_id
+      ) {
+        sched_editing_route_id(NULL)
+        sched_editing_itin_id(NULL)
+        sched_clear_itin_subedits()
+        sched_highlighted_route(route_id)
+        sched_highlighted_itin_ids(route_itin_ids)
+        return()
+      }
+
+      sched_clear_itin_subedits()
+      sched_editing_route_id(route_id)
+      sched_editing_itin_id(NULL)
+
+      sched_highlighted_route(route_id)
       sched_highlighted_itin_ids(route_itin_ids)
 
-      # Auto-select service_id: first service that has spans for this route
       route_itin_ids_vec <- current_data$itin$itin_id[
         current_data$itin$route_id == route_id
       ]
@@ -1046,6 +1093,26 @@ scheduleServer <- function(id, ssfs, map_center) {
 
     observeEvent(input$sched_itin_edit_click, {
       itin_id <- input$sched_itin_edit_click$id
+      current_data <- ssfs()
+
+      if (
+        !is.null(sched_editing_itin_id()) &&
+          sched_editing_itin_id() == itin_id
+      ) {
+        sched_editing_itin_id(NULL)
+        sched_clear_itin_subedits()
+
+        editing_route <- sched_editing_route_id()
+        if (!is.null(editing_route)) {
+          route_itin_ids <- current_data$itin$itin_id[
+            current_data$itin$route_id == editing_route
+          ]
+          sched_highlighted_itin_ids(route_itin_ids)
+        }
+        return()
+      }
+
+      sched_clear_itin_subedits()
       sched_editing_itin_id(itin_id)
       sched_highlighted_itin_ids(itin_id)
     })
@@ -2124,8 +2191,18 @@ scheduleServer <- function(id, ssfs, map_center) {
     # OBSERVERS : ITINERARY-LEVEL SPAN, HEADWAY AND SPEED EDITING---------
 
     observeEvent(input$sched_span_edit_click, {
+      idx <- input$sched_span_edit_click$idx
+
+      if (
+        !is.null(sched_span_editing_idx()) && sched_span_editing_idx() == idx
+      ) {
+        sched_span_editing_idx(NULL)
+        sched_span_adding(FALSE)
+        return()
+      }
+
       sched_span_adding(FALSE)
-      sched_span_editing_idx(input$sched_span_edit_click$idx)
+      sched_span_editing_idx(idx)
     })
 
     observeEvent(input$sched_span_cancel_edit, {
