@@ -2849,7 +2849,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                   tags$input(
                     type = "date",
                     id = ns("sched_cal_start_date"),
-                    value = "2000-01-01"
+                    value = format(Sys.Date(), "%Y-%m-%d")
                   )
                 ),
                 div(
@@ -2857,7 +2857,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                   tags$input(
                     type = "date",
                     id = ns("sched_cal_end_date"),
-                    value = "2099-12-31"
+                    value = format(Sys.Date() + 365, "%Y-%m-%d")
                   )
                 )
               ),

@@ -269,7 +269,7 @@ croquis <- function(ssfs = NULL) {
             ),
 
             h4(
-              "1. Get started here by loading an existing network or specifying agency details for a new one."
+              "1. Get started here by loading an existing network or specifying agency details for a new one"
             ),
             p(
               tags$ul(
@@ -352,7 +352,7 @@ croquis <- function(ssfs = NULL) {
             ),
 
             h4(
-              "5. Click the save icon to export a GTFS or save your croquis in .rds format to work on it later."
+              "5. Click the save icon to export a GTFS or save your croquis in .rds format to work on it later"
             )
           )
         )
@@ -566,17 +566,19 @@ croquis <- function(ssfs = NULL) {
             speed_factor = double(),
             stop_name = character()
           ),
+          #default mon-sun service loaded
           calendar = data.frame(
-            service_id = character(),
-            monday = integer(),
-            tuesday = integer(),
-            wednesday = integer(),
-            thursday = integer(),
-            friday = integer(),
-            saturday = integer(),
-            sunday = integer(),
-            start_date = character(),
-            end_date = character()
+            service_id = "mon-sun",
+            monday = 1L,
+            tuesday = 1L,
+            wednesday = 1L,
+            thursday = 1L,
+            friday = 1L,
+            saturday = 1L,
+            sunday = 1L,
+            start_date = format(Sys.Date(), "%Y-%m-%d"),
+            end_date = format(Sys.Date() + 365, "%Y-%m-%d"),
+            stringsAsFactors = FALSE
           ),
           span = data.frame(
             itin_id = character(),
