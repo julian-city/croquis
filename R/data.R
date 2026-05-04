@@ -34,3 +34,12 @@
 #' @format An ssfs object (a named list of 8 tables).
 #' @source Created by the package author based on public TTC GTFS data.
 "ttc_subway"
+
+#' Translink Vancouver network
+#'
+#' A sample SSFS object representing the Translink Vancouver
+#' public transit network.
+#'
+#' @format An ssfs object (a named list of 8 tables).
+#' @source Created by the package author based on public Translink GTFS data.
+"translink"

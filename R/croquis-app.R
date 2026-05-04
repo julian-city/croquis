@@ -187,6 +187,11 @@ croquis <- function(ssfs = NULL) {
                   "load_ttcsubway_ssfs",
                   "TTC Subway",
                   class = "btn-success"
+                ),
+                actionButton(
+                  "load_translink_ssfs",
+                  "TransLink Vancouver",
+                  class = "btn-success"
                 )
               )
             )
@@ -968,6 +973,50 @@ croquis <- function(ssfs = NULL) {
         error = function(e) {
           showNotification(
             paste("Error loading TTC subway network:", e$message),
+            type = "error"
+          )
+        }
+      )
+    })
+
+    #handle load_translink_ssfs
+    observeEvent(input$load_translink_ssfs, {
+      tryCatch(
+        {
+          loaded_ssfs <- croquis::translink
+
+          stop_id_to_stopname <-
+            loaded_ssfs$stops |> as.data.frame() |> select(stop_id, stop_name)
+
+          loaded_ssfs$stop_seq <-
+            loaded_ssfs$stop_seq |>
+            left_join(stop_id_to_stopname, by = "stop_id")
+
+          loaded_ssfs$itin <-
+            loaded_ssfs$itin |>
+            st_transform(4326)
+
+          loaded_ssfs$stops <-
+            loaded_ssfs$stops |>
+            st_transform(4326)
+
+          ssfs(loaded_ssfs)
+
+          bbox <- st_bbox(loaded_ssfs$stops)
+          center <- list(
+            lng = (bbox[["xmin"]] + bbox[["xmax"]]) / 2,
+            lat = (bbox[["ymin"]] + bbox[["ymax"]]) / 2
+          )
+          map_center(center)
+
+          showNotification(
+            "TransLink network loaded successfully",
+            type = "message"
+          )
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error loading TransLink network:", e$message),
             type = "error"
           )
         }
