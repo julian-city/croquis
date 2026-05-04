@@ -147,12 +147,6 @@ body {
   width: 320px;
 }
 
-.floating-panel-right {
-  top: 10px;
-  right: 10px;
-  width: 320px;
-}
-
 .floating-panel-bottom-left {
   bottom: 10px;
   left: 10px;
@@ -165,48 +159,71 @@ body {
   width: 320px;
 }
 
-/* Import/Export panel specific styles */
-.import-export-panel .form-group {
+/* Import / export panel */
+.panel-import-export .form-group {
   margin-bottom: 10px;
 }
 
-.import-export-panel .btn {
+.panel-import-export .btn {
   margin-top: 5px;
   margin-right: 5px;
 }
 
-.import-export-panel hr {
+.panel-import-export hr {
   margin: 12px 0;
   border-color: var(--border-color);
 }
 
-.import-export-panel .selectize-input {
+.panel-import-export .selectize-input {
   min-height: 32px;
   padding: 4px 8px;
 }
 
-/* Fix fileInput alignment */
-.import-export-panel .shiny-input-container {
+.panel-import-export .shiny-input-container {
   width: 100% !important;
 }
 
-.import-export-panel .input-group {
+.panel-import-export .input-group {
   display: flex;
   width: 100%;
 }
 
-.import-export-panel .input-group .form-control {
+.panel-import-export .input-group .form-control {
   flex: 1;
   height: 34px;
 }
 
-.import-export-panel .input-group .input-group-btn {
+.panel-import-export .input-group .input-group-btn {
   width: auto;
 }
 
-.import-export-panel .input-group .input-group-btn .btn {
+.panel-import-export .input-group .input-group-btn .btn {
   margin-top: 0;
   height: 34px;
+}
+
+/* Shared suggestion dropdown */
+.suggestions-panel {
+  position: absolute;
+  z-index: 1000;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+  display: none;
+  font-size: 12px;
+}
+
+.suggestions-panel > div {
+  padding: 4px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.suggestions-panel > div:hover {
+  background-color: var(--hover-color);
 }
 
 /* Collapsible panel header */
@@ -425,11 +442,6 @@ body {
   background-color: var(--hover-color);
 }
 
-.stop-list-row.editing {
-  background-color: rgba(178, 24, 43, 0.1);
-  border-left: 3px solid #B2182B;
-}
-
 .stop-list-row.add-row {
   justify-content: center;
   color: #666;
@@ -526,27 +538,6 @@ body {
   color: #2B5D2C;
   font-size: 18px;
   font-weight: bold;
-}
-
-.stop-edit-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.stop-edit-inputs input {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 12px;
-  background-color: var(--input-bg);
-  color: var(--text-color);
-}
-
-.stop-edit-inputs input:focus {
-  outline: none;
-  border-color: #B2182B;
 }
 
 .stop-search-container {
@@ -1120,12 +1111,6 @@ body {
    gap: 6px;
  }
 
- .sched-itin-detail {
-   font-size: 11px;
-   color: #888;
-   margin-top: 2px;
- }
-
  .sched-itin-spans {
    font-size: 11px;
    color: #666;
@@ -1204,11 +1189,6 @@ body {
 
  .sched-span-row:hover {
    background-color: var(--hover-color);
- }
-
- .sched-span-row.sched-span-editing {
-   background-color: rgba(178, 24, 43, 0.1);
-   border-left: 3px solid #B2182B;
  }
 
  .sched-span-info {
