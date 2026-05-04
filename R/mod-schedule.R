@@ -122,6 +122,11 @@ scheduleServer <- function(id, ssfs, map_center) {
     sched_editing_route_id <- reactiveVal(NULL)
     sched_zoom <- reactiveVal(12)
 
+    sched_map_ready <- reactiveVal(FALSE)
+    sched_prev_routes_hash <- reactiveVal(NULL)
+    sched_prev_stops_hash <- reactiveVal(NULL)
+    sched_prev_highlight_hash <- reactiveVal(NULL)
+
     # itin_id selected for editing in the itinerary-level panel (right side)
     sched_editing_itin_id <- reactiveVal(NULL)
 
@@ -326,8 +331,28 @@ scheduleServer <- function(id, ssfs, map_center) {
           "
           function(el, x) {
             var ns = '%s';
-            this.on('zoomend', function(e) {
-              Shiny.setInputValue(ns + 'sched_map_zoom', this.getZoom());
+            var map = this;
+
+            function calcMarkerSize(zoom) {
+              var base = 2;
+              var adjusted = base * Math.pow(1.2, zoom - 10);
+              return Math.min(Math.max(adjusted, 1), 15);
+            }
+
+            function resizeStopMarkers() {
+              var zoom = map.getZoom();
+              var r = calcMarkerSize(zoom);
+              map.eachLayer(function(layer) {
+                if (layer.options && layer.options.group === 'sched_stops' &&
+                    typeof layer.setRadius === 'function') {
+                  layer.setRadius(r);
+                }
+              });
+            }
+
+            map.on('zoomend', function(e) {
+              Shiny.setInputValue(ns + 'sched_map_zoom', map.getZoom());
+              resizeStopMarkers();
             });
           }
           ",
@@ -340,35 +365,81 @@ scheduleServer <- function(id, ssfs, map_center) {
       sched_zoom(input$sched_map_zoom)
     })
 
-    # Observe: redraw shapes, stops and highlights on schedule map
-    observe({
-      current_data <- ssfs()
+    observeEvent(
+      map_center(),
+      {
+        sched_map_ready(FALSE)
+        sched_prev_routes_hash(NULL)
+        sched_prev_stops_hash(NULL)
+        sched_prev_highlight_hash(NULL)
+      },
+      priority = 10
+    )
 
-      proxy <- leaflet::leafletProxy("sched_map") |>
-        leaflet::clearGroup("sched_stops") |>
-        leaflet::clearGroup("sched_routes") |>
+    observeEvent(
+      input$sched_map_bounds,
+      {
+        sched_map_ready(TRUE)
+      },
+      once = FALSE
+    )
+
+    sched_draw_highlight_group <- function(proxy, current_data, hl_ids) {
+      proxy <- proxy |>
         leaflet::clearGroup("sched_highlight")
 
-      # Draw highlight underlay
-      hl_ids <- sched_highlighted_itin_ids()
-      if (length(hl_ids) > 0 && nrow(current_data$itin) > 0) {
-        hl_itins <- current_data$itin[
-          current_data$itin$itin_id %in% hl_ids,
-        ]
-        for (j in seq_len(nrow(hl_itins))) {
-          hl_coords <- st_coordinates(hl_itins$geometry[j])
-          proxy <- proxy |>
-            leaflet::addPolylines(
-              lng = hl_coords[, 1],
-              lat = hl_coords[, 2],
-              group = "sched_highlight",
-              color = "#FFE999",
-              weight = 10,
-              opacity = 0.4,
-              stroke = TRUE
-            )
-        }
+      if (
+        length(hl_ids) == 0 ||
+          is.null(current_data$itin) ||
+          nrow(current_data$itin) == 0
+      ) {
+        return(proxy)
       }
+
+      hl_itins <- current_data$itin[
+        current_data$itin$itin_id %in% hl_ids,
+      ]
+
+      for (j in seq_len(nrow(hl_itins))) {
+        hl_coords <- st_coordinates(hl_itins$geometry[j])
+        proxy <- proxy |>
+          leaflet::addPolylines(
+            lng = hl_coords[, 1],
+            lat = hl_coords[, 2],
+            group = "sched_highlight",
+            color = "#FFE999",
+            weight = 10,
+            opacity = 0.4,
+            stroke = TRUE
+          )
+      }
+
+      proxy
+    }
+
+    # Observe: redraw shapes, stops and highlights on schedule map when relevant data or highlights change,
+    # using hashing to skip if no relevant changes
+
+    # ---- Route shapes ----
+    observe({
+      req(sched_map_ready())
+      current_data <- ssfs()
+
+      routes_hash <- digest::digest(list(
+        itin = current_data$itin,
+        routes = current_data$routes[,
+          c("route_id", "route_short_name", "route_long_name", "route_color"),
+          drop = FALSE
+        ]
+      ))
+
+      if (identical(routes_hash, isolate(sched_prev_routes_hash()))) {
+        return()
+      }
+      sched_prev_routes_hash(routes_hash)
+
+      proxy <- leaflet::leafletProxy("sched_map") |>
+        leaflet::clearGroup("sched_routes")
 
       # Draw all itinerary shapes
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
@@ -444,8 +515,52 @@ scheduleServer <- function(id, ssfs, map_center) {
             )
         }
       }
+    })
 
-      # Draw stops
+    # ---- Highlight underlay ----
+    observe({
+      req(sched_map_ready())
+      current_data <- ssfs()
+      hl_ids <- sched_highlighted_itin_ids()
+
+      highlight_hash <- digest::digest(list(
+        itin = current_data$itin,
+        highlighted = hl_ids
+      ))
+
+      if (identical(highlight_hash, isolate(sched_prev_highlight_hash()))) {
+        return()
+      }
+      sched_prev_highlight_hash(highlight_hash)
+
+      sched_draw_highlight_group(
+        leaflet::leafletProxy("sched_map"),
+        current_data,
+        hl_ids
+      )
+    })
+
+    # ---- Stop markers ----
+    observe({
+      req(sched_map_ready())
+      current_data <- ssfs()
+
+      stops_hash <- digest::digest(list(
+        stops = current_data$stops,
+        stop_itins = current_data$stop_seq[,
+          c("stop_id", "itin_id"),
+          drop = FALSE
+        ]
+      ))
+
+      if (identical(stops_hash, isolate(sched_prev_stops_hash()))) {
+        return()
+      }
+      sched_prev_stops_hash(stops_hash)
+
+      proxy <- leaflet::leafletProxy("sched_map") |>
+        leaflet::clearGroup("sched_stops")
+
       if (!is.null(current_data$stops) && nrow(current_data$stops) > 0) {
         stop_itin_lookup <- current_data$stop_seq |>
           group_by(stop_id) |>
@@ -476,7 +591,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               "<span style='font-size:11px;'>",
               "<b>",
               htmltools::htmlEscape(sid),
-              "</b> \u2014 ",
+              "</b> — ",
               htmltools::htmlEscape(sname),
               "<br>Itineraries: ",
               htmltools::htmlEscape(itin_text),
@@ -494,7 +609,7 @@ scheduleServer <- function(id, ssfs, map_center) {
             stroke = TRUE,
             fillColor = "#7f7f7f",
             fillOpacity = 0.7,
-            radius = calculateMarkerSize(sched_zoom()),
+            radius = calculateMarkerSize(isolate(sched_zoom())),
             label = hover_labels,
             labelOptions = leaflet::labelOptions(
               style = list("font-size" = "11px", "padding" = "3px 6px"),
@@ -504,8 +619,6 @@ scheduleServer <- function(id, ssfs, map_center) {
             group = "sched_stops"
           )
       }
-
-      return(proxy)
     })
 
     # Helper: build the service-level popup HTML table
