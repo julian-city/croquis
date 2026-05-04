@@ -1124,6 +1124,7 @@ scheduleServer <- function(id, ssfs, map_center) {
     # Route-level schedule editing UI renderer
     output$sched_editing_ui <- renderUI({
       editing_route <- sched_editing_route_id()
+      ns <- session$ns
 
       if (is.null(editing_route)) {
         return(
@@ -1134,7 +1135,34 @@ scheduleServer <- function(id, ssfs, map_center) {
         )
       }
 
+      div(
+        div(
+          class = "sched-editing-container",
+
+          div(
+            class = "sched-route-panel",
+            uiOutput(ns("sched_route_panel_header_ui")),
+
+            h5("Itineraries"),
+            uiOutput(ns("sched_route_itin_rows_ui")),
+
+            uiOutput(ns("sched_route_batch_actions_ui"))
+          ),
+
+          div(
+            class = "sched-itin-panel",
+            uiOutput(ns("sched_itin_editing_ui"))
+          )
+        ),
+        uiOutput(ns("sched_speed_profile_ui"))
+      )
+    })
+
+    output$sched_route_panel_header_ui <- renderUI({
       current_data <- ssfs()
+      editing_route <- sched_editing_route_id()
+      req(editing_route)
+
       ns <- session$ns
 
       route_row <- current_data$routes[
@@ -1150,12 +1178,129 @@ scheduleServer <- function(id, ssfs, map_center) {
         editing_route
       }
 
-      # Get itineraries for this route
-      route_itins <- current_data$itin[
-        current_data$itin$route_id == editing_route,
-      ]
+      service_choices <- if (nrow(current_data$calendar) > 0) {
+        current_data$calendar$service_id
+      } else {
+        character(0)
+      }
 
-      # Service choices
+      current_edit_service <- sched_edit_service_id()
+      selected_service <- if (
+        !is.null(current_edit_service) &&
+          current_edit_service %in% service_choices
+      ) {
+        current_edit_service
+      } else if (length(service_choices) > 0) {
+        service_choices[1]
+      } else {
+        NULL
+      }
+
+      tagList(
+        h4(paste0("Schedule: ", route_display)),
+        selectInput(
+          ns("sched_edit_service_select"),
+          label = "Service",
+          choices = service_choices,
+          selected = selected_service,
+          width = "100%"
+        )
+      )
+    })
+
+    output$sched_route_batch_actions_ui <- renderUI({
+      ns <- session$ns
+      preset_choices <- sched_preset_choices()
+
+      div(
+        class = "sched-batch-section",
+
+        h5("Apply span to all route itineraries"),
+        div(
+          class = "sched-batch-row",
+          div(
+            tags$label("First departure"),
+            tags$input(
+              type = "text",
+              id = ns("sched_batch_first_dep"),
+              class = "sched-time-input",
+              value = "05:00:00",
+              placeholder = "HH:MM:SS"
+            )
+          ),
+          div(
+            tags$label("Last departure"),
+            tags$input(
+              type = "text",
+              id = ns("sched_batch_last_dep"),
+              class = "sched-time-input",
+              value = "23:00:00",
+              placeholder = "HH:MM:SS"
+            )
+          ),
+          tags$button(
+            class = "btn-save",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_batch_apply_span")
+            ),
+            "Apply"
+          )
+        ),
+
+        h5("Apply service level preset to all route itineraries"),
+        div(
+          class = "sched-batch-row",
+          div(
+            style = "flex: 1;",
+            selectInput(
+              ns("sched_batch_preset"),
+              label = NULL,
+              choices = preset_choices,
+              width = "100%"
+            )
+          ),
+          tags$button(
+            class = "btn-save",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_batch_apply_preset")
+            ),
+            "Apply"
+          )
+        ),
+
+        h5("Apply speed to all route itineraries"),
+        div(
+          class = "sched-batch-row",
+          div(
+            tags$label("Speed (km/h)"),
+            numericInput(
+              ns("sched_batch_speed"),
+              label = NULL,
+              value = 20,
+              min = 5,
+              max = 431,
+              width = "100px"
+            )
+          ),
+          tags$button(
+            class = "btn-save",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_batch_apply_speed")
+            ),
+            "Apply"
+          )
+        )
+      )
+    })
+
+    output$sched_route_itin_rows_ui <- renderUI({
+      current_data <- ssfs()
+      editing_route <- sched_editing_route_id()
+      req(editing_route)
+
       service_choices <- if (nrow(current_data$calendar) > 0) {
         current_data$calendar$service_id
       } else {
@@ -1176,10 +1321,10 @@ scheduleServer <- function(id, ssfs, map_center) {
 
       editing_itin <- sched_editing_itin_id()
 
-      # Service level preset choices
-      preset_choices <- sched_preset_choices()
+      route_itins <- current_data$itin[
+        current_data$itin$route_id == editing_route,
+      ]
 
-      # ── Build itinerary rows ──
       itin_rows <- list()
 
       if (nrow(route_itins) > 0) {
@@ -1188,7 +1333,6 @@ scheduleServer <- function(id, ssfs, map_center) {
           itin_id <- itin$itin_id
           itin_length <- round(as.numeric(st_length(itin$geometry)) / 1000, 1)
 
-          # Check spans for this itin + service
           itin_spans <- current_data$span[
             current_data$span$itin_id == itin_id &
               current_data$span$service_id == selected_service,
@@ -1196,7 +1340,6 @@ scheduleServer <- function(id, ssfs, map_center) {
 
           has_spans <- nrow(itin_spans) > 0
 
-          # Build span display text
           span_text <- if (has_spans) {
             paste(
               sapply(seq_len(nrow(itin_spans)), function(s) {
@@ -1208,16 +1351,15 @@ scheduleServer <- function(id, ssfs, map_center) {
             NULL
           }
 
-          # Length, average speed for itin + service
           itin_hsh <- current_data$hsh[
             current_data$hsh$itin_id == itin_id &
               current_data$hsh$service_id == selected_service,
           ]
+
           len_avg_speed <- if (
             nrow(itin_hsh) > 0 &&
               any(!is.na(itin_hsh$speed))
           ) {
-            # calculate length and average speed to display in itinerary row
             paste0(
               itin_length,
               " km | ",
@@ -1245,32 +1387,26 @@ scheduleServer <- function(id, ssfs, map_center) {
             class = row_class,
             onclick = sprintf("schedSelectItin('%s')", itin_id),
 
-            # Direction badge
             span(
               class = "itin-direction-badge",
               if (as.integer(itin$direction_id) == 0) "Out" else "In"
             ),
 
-            # Main info area
             div(
               class = "sched-itin-main",
-              # Header line: headsign + itin_id
               div(
                 class = "sched-itin-header",
                 span(class = "itin-headsign", itin$trip_headsign),
                 span(class = "itin-id-display", paste0("(", itin_id, ")"))
               ),
-              # Span info
               if (!is.null(span_text)) {
                 div(class = "sched-itin-spans", span_text)
               },
-              # Speed info
               if (!is.null(len_avg_speed)) {
                 div(class = "sched-itin-speed", len_avg_speed)
               }
             ),
 
-            # Pencil icon (far right)
             div(
               class = "route-actions",
               tags$button(
@@ -1292,203 +1428,91 @@ scheduleServer <- function(id, ssfs, map_center) {
         )
       }
 
-      # Speed profile UI render (NULL if no itinerary selected)
+      do.call(tagList, itin_rows)
+    })
 
-      sched_speed_profile_ui <- NULL
-      if (!is.null(sched_editing_itin_id())) {
-        #display info for div title
-        itin_trip_headsign <-
-          route_itins |>
-          filter(itin_id == editing_itin) |>
-          pull(trip_headsign)
-        itin_display <- paste0(
-          itin_trip_headsign,
-          " (",
-          editing_itin,
-          ")"
-        )
-        sched_speed_profile_ui <- div(
-          class = "sched-speed-profile-section",
+    output$sched_speed_profile_ui <- renderUI({
+      editing_itin <- sched_editing_itin_id()
 
-          div(
-            class = "sched-speed-profile-top",
-
-            # Left: controls
-            div(
-              class = "sched-speed-profile-controls",
-              h4(paste0("Speed profile: ", itin_display)),
-              tags$label("Hour"),
-              selectInput(
-                ns("sched_sp_hour"),
-                label = NULL,
-                choices = NULL,
-                width = "100%"
-              ),
-              div(
-                class = "info-text",
-                "Speed factors are defined once per itinerary ",
-                "and apply to all services and hours. Changing ",
-                "hour only changes the displayed speeds (km/h)"
-              )
-            ),
-
-            # Right: plotly graph
-            div(
-              class = "sched-speed-profile-graph",
-              plotly::plotlyOutput(
-                ns("sched_sp_plot"),
-                height = "300px"
-              )
-            )
-          ),
-
-          # Collapsible speed factors adjustment
-          div(
-            class = "sched-speed-factors-section",
-            div(
-              class = "sched-speed-factors-toggle",
-              onclick = "schedSpToggleFactors()",
-              span(
-                id = ns("sched_sf_arrow"),
-                class = paste0(
-                  "toggle-arrow",
-                  if (isolate(sched_sp_factors_visible())) " expanded" else ""
-                ),
-                htmltools::HTML("&#9654;")
-              ),
-              "Adjust speed factors"
-            ),
-            div(
-              id = ns("sched_sf_content"),
-              style = if (isolate(sched_sp_factors_visible())) {
-                "display: block;"
-              } else {
-                "display: none;"
-              },
-              uiOutput(ns("sched_sp_table_ui"))
-            )
-          )
-        )
+      if (is.null(editing_itin)) {
+        return(NULL)
       }
 
-      # ── Assemble layout ──
+      current_data <- ssfs()
+      ns <- session$ns
+
+      itin_row <- current_data$itin[
+        current_data$itin$itin_id == editing_itin,
+      ]
+      if (nrow(itin_row) == 0) {
+        return(NULL)
+      }
+
+      itin_display <- paste0(
+        itin_row$trip_headsign[1],
+        " (",
+        editing_itin,
+        ")"
+      )
+
       div(
+        class = "sched-speed-profile-section",
+
         div(
-          class = "sched-editing-container",
+          class = "sched-speed-profile-top",
 
-          # === LEFT SIDE: Route-level schedule panel ===
           div(
-            class = "sched-route-panel",
-            h4(paste0("Schedule: ", route_display)),
-
-            # Service selector
+            class = "sched-speed-profile-controls",
+            h4(paste0("Speed profile: ", itin_display)),
+            tags$label("Hour"),
             selectInput(
-              ns("sched_edit_service_select"),
-              label = "Service",
-              choices = service_choices,
-              selected = selected_service,
+              ns("sched_sp_hour"),
+              label = NULL,
+              choices = NULL,
               width = "100%"
             ),
-
-            # Itinerary rows
-            h5("Itineraries"),
-            do.call(tagList, itin_rows),
-
-            # ── Batch actions ──
             div(
-              class = "sched-batch-section",
-
-              # Apply span to all itineraries
-              h5("Apply span to all route itineraries"),
-              div(
-                class = "sched-batch-row",
-                div(
-                  tags$label("First departure"),
-                  tags$input(
-                    type = "text",
-                    id = ns("sched_batch_first_dep"),
-                    class = "sched-time-input",
-                    value = "05:00:00",
-                    placeholder = "HH:MM:SS"
-                  )
-                ),
-                div(
-                  tags$label("Last departure"),
-                  tags$input(
-                    type = "text",
-                    id = ns("sched_batch_last_dep"),
-                    class = "sched-time-input",
-                    value = "23:00:00",
-                    placeholder = "HH:MM:SS"
-                  )
-                ),
-                tags$button(
-                  class = "btn-save",
-                  onclick = sprintf(
-                    "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
-                    ns("sched_batch_apply_span")
-                  ),
-                  "Apply"
-                )
-              ),
-
-              # Apply service level preset to all itineraries
-              h5("Apply service level preset to all route itineraries"),
-              div(
-                class = "sched-batch-row",
-                div(
-                  style = "flex: 1;",
-                  selectInput(
-                    ns("sched_batch_preset"),
-                    label = NULL,
-                    choices = preset_choices,
-                    width = "100%"
-                  )
-                ),
-                tags$button(
-                  class = "btn-save",
-                  onclick = sprintf(
-                    "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
-                    ns("sched_batch_apply_preset")
-                  ),
-                  "Apply"
-                )
-              ),
-
-              # Apply speed to all itineraries
-              h5("Apply speed to all route itineraries"),
-              div(
-                class = "sched-batch-row",
-                div(
-                  tags$label("Speed (km/h)"),
-                  numericInput(
-                    ns("sched_batch_speed"),
-                    label = NULL,
-                    value = 20,
-                    min = 5,
-                    max = 431,
-                    width = "100px"
-                  )
-                ),
-                tags$button(
-                  class = "btn-save",
-                  onclick = sprintf(
-                    "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
-                    ns("sched_batch_apply_speed")
-                  ),
-                  "Apply"
-                )
-              )
+              class = "info-text",
+              "Speed factors are defined once per itinerary ",
+              "and apply to all services and hours. Changing ",
+              "hour only changes the displayed speeds (km/h)"
             )
           ),
 
-          # === RIGHT SIDE: Itinerary-level schedule panel ===
           div(
-            class = "sched-itin-panel",
-            uiOutput(ns("sched_itin_editing_ui"))
+            class = "sched-speed-profile-graph",
+            plotly::plotlyOutput(
+              ns("sched_sp_plot"),
+              height = "300px"
+            )
           )
         ),
-        sched_speed_profile_ui
+
+        div(
+          class = "sched-speed-factors-section",
+          div(
+            class = "sched-speed-factors-toggle",
+            onclick = "schedSpToggleFactors()",
+            span(
+              id = ns("sched_sf_arrow"),
+              class = paste0(
+                "toggle-arrow",
+                if (isolate(sched_sp_factors_visible())) " expanded" else ""
+              ),
+              htmltools::HTML("&#9654;")
+            ),
+            "Adjust speed factors"
+          ),
+          div(
+            id = ns("sched_sf_content"),
+            style = if (isolate(sched_sp_factors_visible())) {
+              "display: block;"
+            } else {
+              "display: none;"
+            },
+            uiOutput(ns("sched_sp_table_ui"))
+          )
+        )
       )
     })
 
