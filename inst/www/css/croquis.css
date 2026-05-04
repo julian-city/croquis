@@ -242,6 +242,169 @@ body {
   overflow: visible;
 }
 
+/* -- Agency list (HTML table replacement) -- */
+ .agency-list-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+  font-size: 12px;
+}
+
+.agency-list-row:hover {
+  background-color: var(--hover-color);
+}
+
+.agency-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.agency-id-label {
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.agency-name-label {
+  font-size: 14px;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.agency-detail-line {
+  font-size: 11px;
+  color: #888;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.agency-edit-form {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 4px 0;
+  background-color: var(--panel-bg);
+}
+ 
+.agency-edit-form label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  display: block;
+}
+ 
+.agency-edit-form input,
+.agency-edit-form select {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  margin-bottom: 6px;
+}
+ 
+.agency-edit-form input:focus {
+  outline: none;
+  border-color: #B2182B;
+}
+ 
+.agency-edit-form .btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+ 
+.agency-edit-form .btn-row button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+ 
+.agency-edit-form .btn-save {
+  background-color: #2B5D2C;
+  color: white;
+}
+ 
+.agency-edit-form .btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+ 
+.ag-city-suggestions {
+  position: absolute;
+  z-index: 1000;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  max-height: 150px;
+  overflow-y: auto;
+  width: 100%;
+  display: none;
+  font-size: 12px;
+}
+ 
+.ag-city-suggestions div {
+  padding: 4px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+ 
+.ag-city-suggestions div:hover {
+  background-color: var(--hover-color);
+}
+
+/* Other home module styles (e.g. Load network) */
+.collapsible-section {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+ 
+.collapsible-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+ 
+.collapsible-section.collapsed .collapsible-section-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+ 
+.collapsible-section-header h4 {
+  margin: 0;
+}
+ 
+.collapsible-section.collapsed .floating-panel-content {
+  display: none;
+}
+ 
+.collapsible-section .floating-panel-content {
+  padding-top: 10px;
+}
+ 
+.collapsible-section .well {
+  margin-bottom: 10px;
+}
+
 /* Stop List Panel Styles */
 .stop-list-container {
   max-height: calc(100vh - 350px);
@@ -894,3 +1057,844 @@ body {
 #sched-filter-panel .floating-panel-content {
   overflow: visible;
 }
+
+ .sched-editing-container {
+   display: flex;
+   gap: 15px;
+   min-height: 300px;
+ }
+
+ .sched-route-panel {
+   flex: 1;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+   overflow-y: auto;
+   max-height: 70vh;
+ }
+
+ .sched-itin-panel {
+   flex: 1;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+   overflow-y: auto;
+   max-height: 70vh;
+ }
+
+ /* Itinerary rows in the schedule route panel */
+ .sched-itin-row {
+   display: flex;
+   align-items: flex-start;
+   padding: 8px 10px;
+   border-bottom: 1px solid var(--border-color);
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-itin-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-itin-row.sched-itin-active {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-itin-row.sched-itin-inactive {
+   opacity: 0.5;
+   background-color: rgba(127, 127, 127, 0.05);
+ }
+
+ .sched-itin-main {
+   flex: 1;
+   min-width: 0;
+   overflow: hidden;
+ }
+
+ .sched-itin-header {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+ }
+
+ .sched-itin-detail {
+   font-size: 11px;
+   color: #888;
+   margin-top: 2px;
+ }
+
+ .sched-itin-spans {
+   font-size: 11px;
+   color: #666;
+   margin-top: 1px;
+ }
+
+ .sched-itin-speed {
+   font-size: 11px;
+   color: #666;
+   margin-top: 1px;
+   font-style: italic;
+ }
+
+ .sched-batch-section {
+   border-top: 1px solid var(--border-color);
+   margin-top: 12px;
+   padding-top: 12px;
+ }
+
+ .sched-batch-row {
+   display: flex;
+   align-items: flex-end;
+   gap: 8px;
+   margin-bottom: 10px;
+   flex-wrap: wrap;
+ }
+
+ .sched-batch-row label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-batch-row input,
+ .sched-batch-row select {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-batch-row .sched-time-input {
+   width: 100px;
+ }
+
+ .sched-batch-row button {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+   white-space: nowrap;
+  }
+
+  .sched-batch-row .form-group {
+  margin-bottom: 0;
+}
+
+.sched-batch-row .shiny-input-container {
+  margin-bottom: 0;
+}
+
+/* Span editing rows */
+
+ .sched-span-row {
+   display: flex;
+   align-items: center;
+   padding: 6px 10px;
+   border-bottom: 1px solid var(--border-color);
+   transition: background-color 0.15s ease;
+   font-size: 12px;
+ }
+
+ .sched-span-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-span-row.sched-span-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-span-info {
+   flex: 1;
+   min-width: 0;
+ }
+
+ .sched-span-label {
+   font-size: 10px;
+   color: #888;
+ }
+
+ .sched-span-times {
+   font-weight: 500;
+ }
+
+ .sched-span-actions {
+   display: flex;
+   gap: 4px;
+   margin-left: 8px;
+   flex-shrink: 0;
+ }
+
+ .sched-span-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 4px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-span-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-span-edit-form input {
+   width: 110px;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   margin-bottom: 6px;
+ }
+
+ .sched-span-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-span-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-span-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-span-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-span-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ .sched-span-add-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-span-add-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-itin-batch-row {
+   display: flex;
+   gap: 12px;
+   align-items: flex-end;
+   margin-bottom: 10px;
+ }
+
+ .sched-itin-batch-row .form-group,
+ .sched-itin-batch-row .shiny-input-container {
+   margin-bottom: 0;
+ }
+
+ .sched-itin-batch-row label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-itin-batch-row button {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+   white-space: nowrap;
+  }
+
+  /* - Headway and speed editing table -*/
+
+  .sched-hsh-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-hsh-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: left;
+   padding: 5px 8px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-hsh-table td {
+   padding: 4px 8px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-hsh-row {
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-hsh-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-hsh-row.sched-hsh-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-hsh-row td.hsh-cell-na {
+   color: #aaa;
+   font-style: italic;
+ }
+
+ .sched-hsh-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 2px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-hsh-edit-form .edit-fields {
+   display: flex;
+   gap: 8px;
+   align-items: flex-end;
+ }
+
+ .sched-hsh-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-hsh-edit-form input {
+   width: 80px;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-hsh-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-hsh-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-hsh-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-hsh-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-hsh-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ /* Calendar config */
+
+ .modal-content {
+  background-color: #F9F5ED;
+}
+
+ .sched-config-buttons {
+   display: flex;
+   gap: 15px;
+   margin-top: 15px;
+ }
+
+ .sched-config-btn {
+   flex: 1;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+   padding: 10px 16px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   background-color: var(--panel-bg);
+   color: var(--text-color);
+   font-size: 14px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-config-btn:hover {
+   background-color: var(--hover-color);
+ }
+
+ /* Calendar modal table */
+ .sched-cal-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-cal-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: center;
+   padding: 5px 6px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-cal-table th:first-child {
+   text-align: left;
+ }
+
+ .sched-cal-table td {
+   padding: 4px 6px;
+   border-bottom: 1px solid var(--border-color);
+   text-align: center;
+ }
+
+ .sched-cal-table td:first-child {
+   text-align: left;
+   font-weight: 500;
+ }
+
+ .sched-cal-row {
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-cal-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-cal-row.sched-cal-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-cal-day-active {
+   color: #2B5D2C;
+   font-weight: 600;
+ }
+
+ .sched-cal-day-inactive {
+   color: #ccc;
+ }
+
+ .sched-cal-edit-form {
+   padding: 10px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 4px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-cal-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-cal-edit-form input[type="text"],
+ .sched-cal-edit-form input[type="date"] {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-cal-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-cal-edit-form .day-checkboxes {
+   display: flex;
+   gap: 10px;
+   flex-wrap: wrap;
+   margin: 6px 0;
+ }
+
+ .sched-cal-edit-form .day-checkboxes label {
+   display: flex;
+   align-items: center;
+   gap: 4px;
+   font-size: 12px;
+   font-weight: 400;
+   cursor: pointer;
+ }
+
+ .sched-cal-edit-form .date-fields {
+   display: flex;
+   gap: 10px;
+   margin: 6px 0;
+ }
+
+ .sched-cal-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 8px;
+ }
+
+ .sched-cal-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-cal-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-cal-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ .sched-cal-add-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+   cursor: pointer;
+   transition: background-color 0.15s ease;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-cal-add-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ /* ── Service level presets modal ── */
+ 
+ .sched-preset-row {
+   display: flex;
+   align-items: center;
+   padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+   transition: background-color 0.15s ease;
+   cursor: pointer;
+ }
+
+ .sched-preset-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-preset-row.sched-preset-active {
+   background-color: rgba(178, 24, 43, 0.1);
+   border-left: 3px solid #B2182B;
+ }
+
+ .sched-preset-info {
+   flex: 1;
+   min-width: 0;
+ }
+
+ .sched-preset-id {
+   font-weight: 600;
+   font-size: 12px;
+ }
+
+ .sched-preset-name {
+   font-size: 12px;
+   color: #666;
+   margin-left: 6px;
+ }
+
+ .sched-preset-actions {
+   display: flex;
+   gap: 4px;
+   flex-shrink: 0;
+ }
+
+ .sched-preset-detail {
+   margin-top: 12px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-preset-name-input {
+   width: 100%;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   margin-bottom: 8px;
+ }
+
+ .sched-preset-name-input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-preset-hour-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+ }
+
+ .sched-preset-hour-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: left;
+   padding: 5px 8px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-preset-hour-table td {
+   padding: 4px 8px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-preset-hour-table .sched-preset-hour-row td:last-child {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--border-color);
+}
+
+ .sched-preset-hour-row {
+   transition: background-color 0.15s ease;
+ }
+
+ .sched-preset-hour-row:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-preset-hour-row.sched-preset-hour-editing {
+   background-color: rgba(178, 24, 43, 0.1);
+ }
+
+ .sched-preset-hour-edit-form {
+   padding: 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   margin: 2px 0;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-preset-hour-edit-form label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-preset-hour-edit-form input,
+ .sched-preset-hour-edit-form select {
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+ }
+
+ .sched-preset-hour-edit-form input:focus {
+   outline: none;
+   border-color: #B2182B;
+ }
+
+ .sched-preset-hour-edit-form .btn-row {
+   display: flex;
+   gap: 6px;
+   margin-top: 6px;
+ }
+
+ .sched-preset-hour-edit-form .btn-row button {
+   flex: 1;
+   padding: 4px 8px;
+   font-size: 11px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }
+
+ .sched-preset-hour-edit-form .btn-save {
+   background-color: #2B5D2C;
+   color: white;
+ }
+
+ .sched-preset-hour-edit-form .btn-cancel {
+   background-color: #6c757d;
+   color: white;
+ }
+
+ /* Speed profile view and editing */
+
+ .sched-speed-profile-section {
+   margin-top: 15px;
+   border: 1px solid var(--border-color);
+   border-radius: 6px;
+   padding: 12px;
+   background-color: var(--panel-bg);
+ }
+
+ .sched-speed-profile-top {
+   display: flex;
+   gap: 15px;
+   align-items: flex-start;
+ }
+
+ .sched-speed-profile-controls {
+   flex-shrink: 0;
+   width: 180px;
+ }
+
+ .sched-speed-profile-controls label {
+   font-size: 11px;
+   font-weight: 500;
+   margin-bottom: 2px;
+   display: block;
+ }
+
+ .sched-speed-profile-controls select {
+   width: 100%;
+   padding: 4px 8px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 12px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   margin-bottom: 8px;
+ }
+
+ .sched-speed-profile-controls .info-text {
+   font-size: 10px;
+   color: #888;
+   line-height: 1.3;
+   margin-top: 8px;
+ }
+
+ .sched-speed-profile-graph {
+   flex: 1;
+   min-width: 0;
+ }
+
+ .sched-speed-factors-section {
+   margin-top: 12px;
+ }
+
+ .sched-speed-factors-toggle {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   cursor: pointer;
+   padding: 6px 0;
+   font-size: 14px;
+   font-weight: 500;
+   color: var(--text-color);
+   user-select: none;
+ }
+
+ .sched-speed-factors-toggle:hover {
+   color: #B2182B;
+ }
+
+ .sched-speed-factors-toggle .toggle-arrow {
+   font-size: 10px;
+   transition: transform 0.2s ease;
+ }
+
+ .sched-speed-factors-toggle .toggle-arrow.expanded {
+   transform: rotate(90deg);
+ }
+
+ .sched-sf-table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 12px;
+   margin-top: 8px;
+ }
+
+ .sched-sf-table th {
+   background-color: rgba(0,0,0,0.05);
+   text-align: left;
+   padding: 5px 8px;
+   border-bottom: 2px solid var(--border-color);
+   font-weight: 600;
+   font-size: 11px;
+ }
+
+ .sched-sf-table td {
+   padding: 4px 8px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-sf-table .adjust-btns {
+   display: flex;
+   gap: 4px;
+ }
+
+ .sched-sf-table .adjust-btns button {
+   padding: 2px 10px;
+   font-size: 12px;
+   border: 1px solid var(--border-color);
+  border-radius: 3px;
+   cursor: pointer;
+   background-color: var(--panel-bg);
+   color: var(--text-color);
+ }
+
+ .sched-sf-table .adjust-btns button:hover {
+   background-color: var(--hover-color);
+ }
+
+ .sched-sf-actions {
+   display: flex;
+   gap: 8px;
+   margin-top: 8px;
+ }
+
+ .sched-sf-actions button {
+   padding: 5px 12px;
+   font-size: 12px;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+ }

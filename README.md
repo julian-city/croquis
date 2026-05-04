@@ -142,6 +142,4 @@ MIT License
 ## Disclaimers
 
 This package is in active development. Use with discretion and validate
-outputs for quality and accuracy. This package is an independent project
-not affiliated with MobilityData. Claude, a large language model, has
-been used in creating this codebase.
+outputs for quality and accuracy.
