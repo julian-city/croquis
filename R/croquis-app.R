@@ -218,14 +218,7 @@ croquis <- function(ssfs = NULL) {
                   ),
                   div(
                     id = "city_suggestions",
-                    style = paste0(
-                      "position: absolute; z-index: 1000; ",
-                      "background: var(--panel-bg); ",
-                      "border: 1px solid var(--border-color); ",
-                      "color: var(--text-color); ",
-                      "max-height: 200px; overflow-y: auto; ",
-                      "width: 100%; display: none;"
-                    )
+                    class = "suggestions-panel"
                   )
                 ),
                 actionButton(

@@ -52,7 +52,7 @@ stopsUI <- function(id) {
         # Import/Export floating panel (bottom-right)
         div(
           id = "stops-import-export-panel",
-          class = "floating-panel floating-panel-bottom-right",
+          class = "floating-panel floating-panel-bottom-right panel-import-export",
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('stops-import-export-panel')",
@@ -64,7 +64,6 @@ stopsUI <- function(id) {
           ),
           div(
             class = "floating-panel-content",
-            # Import section
             h5("Import Stops"),
             fileInput(
               ns("stops_import_file"),
@@ -78,7 +77,6 @@ stopsUI <- function(id) {
               class = "btn-success btn-sm"
             ),
             hr(),
-            # Export section
             h5("Export Stops"),
             selectInput(
               ns("stops_export_format"),
