@@ -8,7 +8,8 @@ gtfs_to_ssfs(
   gtfs,
   routes = NULL,
   max_date = NULL,
-  routing_server = c("Valhalla", "OSRM")
+  routing_server = c("Valhalla", "OSRM"),
+  workers = 1L
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ gtfs_to_ssfs(
 \item{max_date}{A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS}
 
 \item{routing_server}{Routing server used to draw shapes in the case where none are provided in the input GTFS}
+
+\item{workers}{Number of worker processes to use for itinerary-scoped shape and distance calculations. Values above 1 use parallel workers on Unix-like systems and fall back to serial execution on Windows.}
 }
 \value{
 A SSFS list

@@ -16,6 +16,13 @@
 #' croquis(stm_metro)
 #' }
 croquis <- function(ssfs = NULL) {
+  detected_cores <- parallel::detectCores(logical = FALSE)
+  default_gtfs_workers <- if (is.na(detected_cores) || detected_cores < 1) {
+    1L
+  } else {
+    as.integer(min(4L, detected_cores))
+  }
+
   # Validate input ssfs (and change name to avoid name collision in the server)
 
   input_ssfs <- NULL
@@ -499,6 +506,24 @@ croquis <- function(ssfs = NULL) {
               choices = c("OSRM", "Valhalla"),
               selected = "Valhalla"
             ),
+            numericInput(
+              "settings_gtfs_workers",
+              label = tagList(
+                "GTFS import workers",
+                info_popover(
+                  "Number of worker processes to use during GTFS to SSFS conversion. Values above 1 speed up imports on Linux servers; Windows falls back to a single worker."
+                )
+              ),
+              value = default_gtfs_workers,
+              min = 1,
+              max = if (is.na(detected_cores) || detected_cores < 1) {
+                32
+              } else {
+                detected_cores
+              },
+              step = 1,
+              width = "120px"
+            ),
           )
         )
       )
@@ -760,7 +785,8 @@ croquis <- function(ssfs = NULL) {
 
           loaded_ssfs <- croquis::gtfs_to_ssfs(
             loaded_gtfs,
-            routing_server = input$settings_routing_server
+            routing_server = input$settings_routing_server,
+            workers = input$settings_gtfs_workers
           )
 
           stop_id_to_stopname <-
