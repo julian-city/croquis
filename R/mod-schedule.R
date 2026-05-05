@@ -1204,14 +1204,24 @@ scheduleServer <- function(id, ssfs, map_center) {
             # Service selector
             selectInput(
               ns("sched_edit_service_select"),
-              label = "Service",
+              label = tagList(
+                "Service",
+                info_popover(
+                  "A service is a set of dates and days of the week during which different route schedules operate (e.g. weekday service vs. weekend), as configured in the Service Calendar (bottom left of this module)."
+                )
+              ),
               choices = service_choices,
               selected = selected_service,
               width = "100%"
             ),
 
             # Itinerary rows
-            h5("Itineraries"),
+            h5(tagList(
+              "Itineraries",
+              info_popover(
+                "Each itinerary consists of a unique stop pattern or variant for trips for this route"
+              )
+            )),
             do.call(tagList, itin_rows),
 
             # ── Batch actions ──
@@ -1253,7 +1263,12 @@ scheduleServer <- function(id, ssfs, map_center) {
               ),
 
               # Apply service level preset to all itineraries
-              h5("Apply service level preset to all route itineraries"),
+              h5(tagList(
+                "Apply service level preset to all route itineraries",
+                info_popover(
+                  "A service level preset defines a headway pattern by hour of day, reusable across itineraries. Applying one here will overwrite the hourly headways of all itineraries on this route for the selected service. The presets manager is at the bottom right of this module."
+                )
+              )),
               div(
                 class = "sched-batch-row",
                 div(
@@ -1671,8 +1686,13 @@ scheduleServer <- function(id, ssfs, map_center) {
       )
 
       tagList(
-        h4(paste0("Itinerary: ", itin_display)),
-        h5("Service windows"),
+        h4(paste0("Itinerary: ", itin_display, " - ", service_id)),
+        h5(tagList(
+          "Service windows",
+          info_popover(
+            "A service window defines a time span during which a given itinerary operates for a specific service, defined by a first departure time and a last departure time."
+          )
+        )),
         do.call(tagList, span_rows),
         hr(),
 
@@ -1683,7 +1703,12 @@ scheduleServer <- function(id, ssfs, map_center) {
           # Apply service level preset
           div(
             style = "flex: 1; min-width: 0;",
-            tags$label("Apply service level preset"),
+            tags$label(tagList(
+              "Apply service level preset",
+              info_popover(
+                "A service level preset defines a headway pattern by hour of day, reusable across itineraries. Applying one here will overwrite the hourly headways of this itinerary for the selected service. The presets manager is at the bottom right of this module."
+              )
+            )),
             div(
               style = "display: flex; gap: 6px; align-items: flex-end;",
               div(
@@ -1735,7 +1760,12 @@ scheduleServer <- function(id, ssfs, map_center) {
         ),
 
         hr(),
-        h5("Headways & speeds by hour"),
+        h5(tagList(
+          "Headways & speeds by hour",
+          info_popover(
+            "A headway is the interval or duration between trips. Headways and speeds specified here are used to create trips and scheduled stop times based on distances between stops along the routes defined in the previous module."
+          )
+        )),
         hsh_table_ui,
 
         div(
@@ -1743,7 +1773,12 @@ scheduleServer <- function(id, ssfs, map_center) {
           style = "margin-top: 10px;",
           div(
             style = "flex: 1; min-width: 0;",
-            tags$label("Save current headways as a new service level preset"),
+            tags$label(tagList(
+              "Save current headways as a new service level preset",
+              info_popover(
+                "Saves the hourly headways currently defined for this itinerary and service as a reusable preset that can be applied to other itineraries."
+              )
+            )),
             tags$input(
               type = "text",
               id = ns("sched_save_as_preset_name"),
