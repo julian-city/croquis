@@ -218,14 +218,7 @@ croquis <- function(ssfs = NULL) {
                   ),
                   div(
                     id = "city_suggestions",
-                    style = paste0(
-                      "position: absolute; z-index: 1000; ",
-                      "background: var(--panel-bg); ",
-                      "border: 1px solid var(--border-color); ",
-                      "color: var(--text-color); ",
-                      "max-height: 200px; overflow-y: auto; ",
-                      "width: 100%; display: none;"
-                    )
+                    class = "suggestions-panel"
                   )
                 ),
                 actionButton(
@@ -626,80 +619,7 @@ croquis <- function(ssfs = NULL) {
     #current zoom reactive value
     current_zoom <- reactiveVal(10)
 
-    # Function to update any map with current ssfs data
-    # TODO: Remove this?
-    updateMapWithSsfsData <- function(
-      map_id,
-      current_data,
-      highlight_ids = NULL,
-      show_stops = TRUE,
-      show_shapes = TRUE
-    ) {
-      proxy <- leaflet::leafletProxy(map_id)
-
-      # Clear all existing content
-      proxy |>
-        leaflet::clearGroup("shapes") |>
-        leaflet::clearGroup("stops") |>
-        leaflet::clearMarkers() # For backward compatibility
-
-      # Add shapes first (as bottom layer)
-      if (
-        show_shapes &&
-          !is.null(current_data$itin) &&
-          nrow(current_data$itin) > 0
-      ) {
-        for (i in seq_len(nrow(current_data$itin))) {
-          line_coords <- st_coordinates(current_data$itin$geometry[i])
-          proxy <- proxy |>
-            leaflet::addPolylines(
-              lng = line_coords[, 1],
-              lat = line_coords[, 2],
-              group = "shapes",
-              color = "#05AEEF",
-              weight = 2,
-              opacity = 0.6
-            )
-        }
-      }
-
-      # Add stops (on top of shapes)
-      if (
-        show_stops &&
-          !is.null(current_data$stops) &&
-          nrow(current_data$stops) > 0
-      ) {
-        # Calculate marker size based on current zoom
-        marker_size <- calculateMarkerSize(current_zoom())
-
-        # Determine colors based on highlight IDs if provided
-        fill_colors <- if (!is.null(highlight_ids)) {
-          ifelse(
-            current_data$stops$stop_id %in% highlight_ids,
-            "#B2182B",
-            "#7f7f7f"
-          )
-        } else {
-          "#7f7f7f"
-        }
-
-        proxy <- proxy |>
-          leaflet::addCircleMarkers(
-            data = current_data$stops,
-            radius = marker_size,
-            color = "white",
-            weight = 1,
-            stroke = TRUE,
-            fillColor = fill_colors,
-            fillOpacity = 0.7,
-            layerId = ~stop_id,
-            popup = ~ paste("ID:", stop_id, "<br>Name:", stop_name),
-            group = "stops"
-          )
-      }
-
-      proxy
-    }
+    # an update map draw function used to be here
 
     #an update agency form helper function used to be here
 

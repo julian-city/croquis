@@ -1228,6 +1228,11 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
         leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
         leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
+        leaflet::addMapPane("routes_pane", zIndex = 410) |>
+        leaflet::addMapPane("highlight_pane", zIndex = 420) |>
+        leaflet::addMapPane("stops_pane", zIndex = 430) |>
+        leaflet::addMapPane("route_nodes_pane", zIndex = 440) |>
+        leaflet::addMapPane("current_route_pane", zIndex = 450) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         leaflet::addLayersControl(
           baseGroups = c("Positron", "Satellite", "OSM"),
@@ -1311,19 +1316,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
         # Build draw order: High route_type first, low route_type last (drawn on stop)
         # We also order by route_short_name to have a consistent order for same-type routes (e.g. bus routes with same route_type)
-        route_type_lookup <- setNames(
-          current_data$routes$route_type,
-          current_data$routes$route_id
-        )
 
-        route_name_lookup <- setNames(
-          current_data$routes$route_short_name,
-          current_data$routes$route_id
-        )
-
-        itin_route_types <- route_type_lookup[current_data$itin$route_id]
-        itin_route_names <- route_name_lookup[current_data$itin$route_id]
-        draw_order <- order(-itin_route_types, itin_route_names)
+        draw_order <- itineraryDrawOrder(current_data$itin, current_data$routes)
 
         for (i in draw_order) {
           if (
@@ -1393,13 +1387,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           } else {
             NA
           }
-          line_weight <- switch(
-            as.character(route_type_i),
-            "1" = 5,
-            "2" = 4,
-            "0" = 3,
-            2
-          )
+          line_weight <- routeLineWeight(route_type_i)
 
           proxy <- proxy |>
             leaflet::addPolylines(
@@ -1410,6 +1398,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               weight = line_weight,
               opacity = 0.6,
               label = hover_label,
+              options = leaflet::pathOptions(pane = "routes_pane"),
               labelOptions = leaflet::labelOptions(
                 style = list("font-size" = "11px", "padding" = "3px 6px"),
                 direction = "top",
@@ -1443,6 +1432,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               lng = hl_coords[, 1],
               lat = hl_coords[, 2],
               group = "highlight",
+              options = leaflet::pathOptions(pane = "highlight_pane"),
               color = "#FFE999",
               weight = 10,
               opacity = 0.4,
@@ -1483,7 +1473,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             fillOpacity = 0.7,
             layerId = ~stop_id,
             popup = ~ paste("ID:", stop_id, "<br>Name:", stop_name),
-            group = "stops"
+            group = "stops",
+            options = leaflet::pathOptions(pane = "stops_pane")
           )
       }
     })
@@ -1506,6 +1497,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             lng = curr_points$lng,
             lat = curr_points$lat,
             group = "current_route",
+            options = leaflet::pathOptions(pane = "current_route_pane"),
             color = "#B2182B",
             weight = 4,
             opacity = 0.8
@@ -1522,6 +1514,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               lng = stop_nodes$lng,
               lat = stop_nodes$lat,
               group = "route_nodes",
+              options = leaflet::pathOptions(pane = "route_nodes_pane"),
               radius = 8,
               color = "#B2182B",
               fillColor = "#B2182B",
@@ -1542,6 +1535,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             lng = waypoint_nodes$lng,
             lat = waypoint_nodes$lat,
             group = "route_nodes",
+            options = leaflet::pathOptions(pane = "route_nodes_pane"),
             radius = 6,
             color = "orange",
             fillColor = "orange",
@@ -1563,6 +1557,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               lng = selected_node$lng,
               lat = selected_node$lat,
               group = "route_nodes",
+              options = leaflet::pathOptions(pane = "route_nodes_pane"),
+
               radius = 8,
               color = "#FFE999",
               fillColor = "#FFE999",

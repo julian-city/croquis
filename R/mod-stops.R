@@ -52,7 +52,7 @@ stopsUI <- function(id) {
         # Import/Export floating panel (bottom-right)
         div(
           id = "stops-import-export-panel",
-          class = "floating-panel floating-panel-bottom-right",
+          class = "floating-panel floating-panel-bottom-right panel-import-export",
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('stops-import-export-panel')",
@@ -64,7 +64,6 @@ stopsUI <- function(id) {
           ),
           div(
             class = "floating-panel-content",
-            # Import section
             h5("Import Stops"),
             fileInput(
               ns("stops_import_file"),
@@ -78,7 +77,6 @@ stopsUI <- function(id) {
               class = "btn-success btn-sm"
             ),
             hr(),
-            # Export section
             h5("Export Stops"),
             selectInput(
               ns("stops_export_format"),
@@ -143,6 +141,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
         addBaseMaps() |>
+        leaflet::addMapPane("stops_shapes_pane", zIndex = 410) |>
+        leaflet::addMapPane("stops_markers_pane", zIndex = 430) |>
+        leaflet::addMapPane("stops_temp_pane", zIndex = 450) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         htmlwidgets::onRender(sprintf(
           "
@@ -203,8 +204,14 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       req(stops_map_ready())
       current_data <- ssfs()
 
-      # Skip redraw if itin data hasn't changed
-      new_hash <- digest::digest(current_data$itin)
+      # Skip redraw if visible itinerary or route styling data hasn't changed
+      new_hash <- digest::digest(list(
+        itin = current_data$itin,
+        routes = current_data$routes[,
+          c("route_id", "route_short_name", "route_color", "route_type"),
+          drop = FALSE
+        ]
+      ))
       if (identical(new_hash, isolate(prev_itin_hash()))) {
         return()
       }
@@ -214,12 +221,20 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         leaflet::clearGroup("shapes")
 
       if (nrow(current_data$itin) > 0) {
-        for (i in seq_len(nrow(current_data$itin))) {
+        draw_order <- itineraryDrawOrder(
+          current_data$itin,
+          current_data$routes
+        )
+
+        for (i in draw_order) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
           route_id_i <- current_data$itin$route_id[i]
-          route_color_i <- current_data$routes$route_color[
-            current_data$routes$route_id == route_id_i
+
+          route_row <- current_data$routes[
+            current_data$routes$route_id == route_id_i,
           ]
+
+          route_color_i <- route_row$route_color
           line_color <- if (
             length(route_color_i) > 0 &&
               !is.na(route_color_i[1]) &&
@@ -227,16 +242,24 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
           ) {
             paste0("#", route_color_i[1])
           } else {
-            "#92C5DE"
+            "#05AEEF"
           }
+
+          route_type_i <- if (nrow(route_row) > 0) {
+            route_row$route_type[1]
+          } else {
+            NA
+          }
+          line_weight <- routeLineWeight(route_type_i)
 
           proxy <- proxy |>
             leaflet::addPolylines(
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "shapes",
+              options = leaflet::pathOptions(pane = "stops_shapes_pane"),
               color = line_color,
-              weight = 3,
+              weight = line_weight,
               opacity = 0.5
             )
         }
@@ -316,7 +339,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
                 direction = "top",
                 offset = c(0, -8)
               ),
-              group = "stops"
+              group = "stops",
+              options = leaflet::pathOptions(pane = "stops_markers_pane")
             )
         }
       }
@@ -347,7 +371,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
                 fillColor = "#7f7f7f",
                 fillOpacity = 0.7,
                 radius = calculateMarkerSize(isolate(current_zoom())),
-                group = "stops"
+                group = "stops",
+                options = leaflet::pathOptions(pane = "stops_markers_pane")
               )
           }
         }
@@ -405,8 +430,11 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
             lat = temp[2],
             layerId = "temp_drag",
             icon = red_circle_icon,
-            options = leaflet::markerOptions(draggable = TRUE),
-            group = "temp_marker"
+            options = leaflet::markerOptions(
+              draggable = TRUE,
+              pane = "stops_temp_pane"
+            ),
+            group = "temp_marker",
           )
       }
     })
