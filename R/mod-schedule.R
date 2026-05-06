@@ -321,6 +321,9 @@ scheduleServer <- function(id, ssfs, map_center) {
         leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
         leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
         leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
+        leaflet::addMapPane("sched_routes_pane", zIndex = 410) |>
+        leaflet::addMapPane("sched_highlight_pane", zIndex = 420) |>
+        leaflet::addMapPane("sched_stops_pane", zIndex = 430) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         leaflet::addLayersControl(
           baseGroups = c("Positron", "Satellite", "OSM"),
@@ -428,6 +431,7 @@ scheduleServer <- function(id, ssfs, map_center) {
             lng = hl_coords[, 1],
             lat = hl_coords[, 2],
             group = "sched_highlight",
+            options = leaflet::pathOptions(pane = "sched_highlight_pane"),
             color = "#FFE999",
             weight = 10,
             opacity = 0.4,
@@ -542,6 +546,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "sched_routes",
+              options = leaflet::pathOptions(pane = "sched_routes_pane"),
               color = line_color,
               weight = line_weight,
               opacity = 0.6,
@@ -655,7 +660,8 @@ scheduleServer <- function(id, ssfs, map_center) {
               direction = "top",
               offset = c(0, -8)
             ),
-            group = "sched_stops"
+            group = "sched_stops",
+            options = leaflet::pathOptions(pane = "sched_stops_pane")
           )
       }
     })

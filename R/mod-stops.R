@@ -141,6 +141,9 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
         addBaseMaps() |>
+        leaflet::addMapPane("stops_shapes_pane", zIndex = 410) |>
+        leaflet::addMapPane("stops_markers_pane", zIndex = 430) |>
+        leaflet::addMapPane("stops_temp_pane", zIndex = 450) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         htmlwidgets::onRender(sprintf(
           "
@@ -254,6 +257,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "shapes",
+              options = leaflet::pathOptions(pane = "stops_shapes_pane"),
               color = line_color,
               weight = line_weight,
               opacity = 0.5
@@ -335,7 +339,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
                 direction = "top",
                 offset = c(0, -8)
               ),
-              group = "stops"
+              group = "stops",
+              options = leaflet::pathOptions(pane = "stops_markers_pane")
             )
         }
       }
@@ -366,7 +371,8 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
                 fillColor = "#7f7f7f",
                 fillOpacity = 0.7,
                 radius = calculateMarkerSize(isolate(current_zoom())),
-                group = "stops"
+                group = "stops",
+                options = leaflet::pathOptions(pane = "stops_markers_pane")
               )
           }
         }
@@ -424,8 +430,11 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
             lat = temp[2],
             layerId = "temp_drag",
             icon = red_circle_icon,
-            options = leaflet::markerOptions(draggable = TRUE),
-            group = "temp_marker"
+            options = leaflet::markerOptions(
+              draggable = TRUE,
+              pane = "stops_temp_pane"
+            ),
+            group = "temp_marker",
           )
       }
     })
