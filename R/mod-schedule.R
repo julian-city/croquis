@@ -966,7 +966,7 @@ scheduleServer <- function(id, ssfs, map_center) {
 
         rows[[length(rows) + 1]] <- div(
           class = row_class,
-          onclick = sprintf("schedToggleRoute('%s')", route$route_id),
+          onclick = sprintf("schedEditRoute('%s')", route$route_id),
           div(
             class = "route-color-badge",
             style = paste0("background-color: ", rcol, ";")
@@ -978,18 +978,6 @@ scheduleServer <- function(id, ssfs, map_center) {
               span(class = "route-short-name", route$route_short_name),
               span(class = "route-long-name", route$route_long_name)
             )
-          ),
-          div(
-            class = "route-actions",
-            tags$button(
-              class = "route-action-btn edit-btn",
-              onclick = sprintf(
-                "event.stopPropagation(); schedEditRoute('%s')",
-                route$route_id
-              ),
-              title = "Edit schedule",
-              htmltools::HTML("&#9998;")
-            )
           )
         )
       }
@@ -997,37 +985,14 @@ scheduleServer <- function(id, ssfs, map_center) {
       do.call(tagList, rows)
     })
 
-    # Route click handler: highlight itineraries
-    observeEvent(input$sched_route_click, {
-      route_id <- input$sched_route_click$id
-      current_data <- ssfs()
-
-      if (
-        !is.null(sched_highlighted_route()) &&
-          sched_highlighted_route() == route_id
-      ) {
-        sched_highlighted_route(NULL)
-        sched_highlighted_itin_ids(character(0))
-      } else {
-        sched_highlighted_route(route_id)
-
-        route_itins <- current_data$itin[
-          current_data$itin$route_id == route_id,
-        ]
-        route_itin_ids <- route_itins$itin_id
-
-        sched_highlighted_itin_ids(route_itin_ids)
-
-        if (nrow(route_itins) > 0) {
-          sched_fit_bounds(route_itins$geometry)
-        }
-      }
-    })
-
-    # Pencil click handler: set editing route
+    # Route lick handler: set editing route
     observeEvent(input$sched_route_edit_click, {
       route_id <- input$sched_route_edit_click$id
       current_data <- ssfs()
+
+      route_itins <- current_data$itin[
+        current_data$itin$route_id == route_id,
+      ]
 
       route_itin_ids <- current_data$itin$itin_id[
         current_data$itin$route_id == route_id
@@ -1052,6 +1017,10 @@ scheduleServer <- function(id, ssfs, map_center) {
       sched_highlighted_route(route_id)
       sched_highlighted_itin_ids(route_itin_ids)
 
+      if (nrow(route_itins) > 0) {
+        sched_fit_bounds(route_itins$geometry)
+      }
+
       route_itin_ids_vec <- current_data$itin$itin_id[
         current_data$itin$route_id == route_id
       ]
@@ -1071,23 +1040,35 @@ scheduleServer <- function(id, ssfs, map_center) {
       itin_id <- input$sched_itin_select$id
       current_data <- ssfs()
 
-      # Toggle: if already selected, deselect
+      itin_row <- current_data$itin[
+        current_data$itin$itin_id == itin_id,
+      ]
+
       if (
         !is.null(sched_editing_itin_id()) &&
           sched_editing_itin_id() == itin_id
       ) {
         sched_editing_itin_id(NULL)
-        # Restore route-level highlight
+
         editing_route <- sched_editing_route_id()
         if (!is.null(editing_route)) {
-          route_itin_ids <- current_data$itin$itin_id[
-            current_data$itin$route_id == editing_route
+          route_itins <- current_data$itin[
+            current_data$itin$route_id == editing_route,
           ]
+          route_itin_ids <- route_itins$itin_id
           sched_highlighted_itin_ids(route_itin_ids)
+
+          if (nrow(route_itins) > 0) {
+            sched_fit_bounds(route_itins$geometry)
+          }
         }
       } else {
         sched_editing_itin_id(itin_id)
         sched_highlighted_itin_ids(itin_id)
+
+        if (nrow(itin_row) > 0) {
+          sched_fit_bounds(itin_row$geometry)
+        }
       }
     })
 
@@ -1130,7 +1111,7 @@ scheduleServer <- function(id, ssfs, map_center) {
         return(
           div(
             style = "color: grey; text-align: center; padding: 20px;",
-            tags$em("Click the pencil icon on a route to edit its schedule.")
+            tags$em("Click on a route to edit its schedule.")
           )
         )
       }
@@ -1422,19 +1403,6 @@ scheduleServer <- function(id, ssfs, map_center) {
                 div(class = "sched-itin-speed", len_avg_speed)
               }
             ),
-
-            div(
-              class = "route-actions",
-              tags$button(
-                class = "route-action-btn edit-btn",
-                onclick = sprintf(
-                  "event.stopPropagation(); schedEditItin('%s')",
-                  itin_id
-                ),
-                title = "Edit itinerary schedule",
-                htmltools::HTML("&#9998;")
-              )
-            )
           )
         }
       } else {
@@ -1545,7 +1513,7 @@ scheduleServer <- function(id, ssfs, map_center) {
           div(
             style = "color: grey; text-align: center; padding: 40px 20px;",
             tags$em(
-              "Click the pencil icon on an itinerary to edit its headways and speeds."
+              "Click on an itinerary to edit its headways and speeds."
             )
           )
         )
