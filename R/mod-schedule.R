@@ -449,7 +449,13 @@ scheduleServer <- function(id, ssfs, map_center) {
       routes_hash <- digest::digest(list(
         itin = current_data$itin,
         routes = current_data$routes[,
-          c("route_id", "route_short_name", "route_long_name", "route_color"),
+          c(
+            "route_id",
+            "route_short_name",
+            "route_long_name",
+            "route_color",
+            "route_type"
+          ),
           drop = FALSE
         ]
       ))
@@ -464,7 +470,12 @@ scheduleServer <- function(id, ssfs, map_center) {
 
       # Draw all itinerary shapes
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
-        for (i in seq_len(nrow(current_data$itin))) {
+        draw_order <- itineraryDrawOrder(
+          current_data$itin,
+          current_data$routes
+        )
+
+        for (i in draw_order) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
 
           route_id_i <- current_data$itin$route_id[i]
@@ -519,13 +530,20 @@ scheduleServer <- function(id, ssfs, map_center) {
             "#05AEEF"
           }
 
+          route_type_i <- if (nrow(route_row) > 0) {
+            route_row$route_type[1]
+          } else {
+            NA
+          }
+          line_weight <- routeLineWeight(route_type_i)
+
           proxy <- proxy |>
             leaflet::addPolylines(
               lng = line_coords[, 1],
               lat = line_coords[, 2],
               group = "sched_routes",
               color = line_color,
-              weight = 2,
+              weight = line_weight,
               opacity = 0.6,
               label = hover_label,
               labelOptions = leaflet::labelOptions(

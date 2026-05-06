@@ -201,8 +201,14 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       req(stops_map_ready())
       current_data <- ssfs()
 
-      # Skip redraw if itin data hasn't changed
-      new_hash <- digest::digest(current_data$itin)
+      # Skip redraw if visible itinerary or route styling data hasn't changed
+      new_hash <- digest::digest(list(
+        itin = current_data$itin,
+        routes = current_data$routes[,
+          c("route_id", "route_short_name", "route_color", "route_type"),
+          drop = FALSE
+        ]
+      ))
       if (identical(new_hash, isolate(prev_itin_hash()))) {
         return()
       }
@@ -212,12 +218,20 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
         leaflet::clearGroup("shapes")
 
       if (nrow(current_data$itin) > 0) {
-        for (i in seq_len(nrow(current_data$itin))) {
+        draw_order <- itineraryDrawOrder(
+          current_data$itin,
+          current_data$routes
+        )
+
+        for (i in draw_order) {
           line_coords <- st_coordinates(current_data$itin$geometry[i])
           route_id_i <- current_data$itin$route_id[i]
-          route_color_i <- current_data$routes$route_color[
-            current_data$routes$route_id == route_id_i
+
+          route_row <- current_data$routes[
+            current_data$routes$route_id == route_id_i,
           ]
+
+          route_color_i <- route_row$route_color
           line_color <- if (
             length(route_color_i) > 0 &&
               !is.na(route_color_i[1]) &&
@@ -225,8 +239,15 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
           ) {
             paste0("#", route_color_i[1])
           } else {
-            "#92C5DE"
+            "#05AEEF"
           }
+
+          route_type_i <- if (nrow(route_row) > 0) {
+            route_row$route_type[1]
+          } else {
+            NA
+          }
+          line_weight <- routeLineWeight(route_type_i)
 
           proxy <- proxy |>
             leaflet::addPolylines(
@@ -234,7 +255,7 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
               lat = line_coords[, 2],
               group = "shapes",
               color = line_color,
-              weight = 3,
+              weight = line_weight,
               opacity = 0.5
             )
         }

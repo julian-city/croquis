@@ -1311,19 +1311,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       if (!is.null(current_data$itin) && nrow(current_data$itin) > 0) {
         # Build draw order: High route_type first, low route_type last (drawn on stop)
         # We also order by route_short_name to have a consistent order for same-type routes (e.g. bus routes with same route_type)
-        route_type_lookup <- setNames(
-          current_data$routes$route_type,
-          current_data$routes$route_id
-        )
 
-        route_name_lookup <- setNames(
-          current_data$routes$route_short_name,
-          current_data$routes$route_id
-        )
-
-        itin_route_types <- route_type_lookup[current_data$itin$route_id]
-        itin_route_names <- route_name_lookup[current_data$itin$route_id]
-        draw_order <- order(-itin_route_types, itin_route_names)
+        draw_order <- itineraryDrawOrder(current_data$itin, current_data$routes)
 
         for (i in draw_order) {
           if (
@@ -1393,13 +1382,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           } else {
             NA
           }
-          line_weight <- switch(
-            as.character(route_type_i),
-            "1" = 5,
-            "2" = 4,
-            "0" = 3,
-            2
-          )
+          line_weight <- routeLineWeight(route_type_i)
 
           proxy <- proxy |>
             leaflet::addPolylines(

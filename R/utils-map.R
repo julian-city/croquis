@@ -25,3 +25,23 @@ calculateThreshold <- function(zoom) {
   adjusted_threshold <- base_threshold * (2^(10 - zoom))
   min(max(adjusted_threshold, 0.0001), 0.01)
 }
+
+routeLineWeight <- function(route_type) {
+  switch(
+    as.character(route_type),
+    "1" = 5,
+    "2" = 4,
+    "0" = 3,
+    2
+  )
+}
+
+itineraryDrawOrder <- function(itin, routes) {
+  route_type_lookup <- setNames(routes$route_type, routes$route_id)
+  route_name_lookup <- setNames(routes$route_short_name, routes$route_id)
+
+  itin_route_types <- route_type_lookup[itin$route_id]
+  itin_route_names <- route_name_lookup[itin$route_id]
+
+  order(-itin_route_types, itin_route_names)
+}
