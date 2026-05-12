@@ -439,7 +439,7 @@ trip_dep_generator <- function(
 
 #' Generate trips, distance and runtime by hour (TDRH)
 #'
-#' Internal function that generates a data frame that can be used to calculate service cost
+#' Function that generates a tibble that can be used to calculate service cost
 #' for specified routes or individual route itineraries in terms of service hours and
 #' service kilometers.
 #'
@@ -448,9 +448,11 @@ trip_dep_generator <- function(
 #' @param id A character vector of one or more route_ids or itin_ids
 #' @param service An individual string or vector representing one or several service_ids
 #'
-#' @returns A tibble
-#'
-#' @keywords internal
+#' @export
+#' @examples
+#' # Generate table for the 99 B line to view runtimes by hour for all itin ids
+#' b_line_route_id <- translink$routes |> filter(route_short_name=="099") |> pull(route_id)
+#' generate_tdrh(ssfs=translink, id_type="route_id", id = b_line_route_id, service="mon-fri")
 generate_tdrh <- function(
   ssfs,
   id_type = c("route_id", "itin_id"),
