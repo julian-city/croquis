@@ -1,4 +1,4 @@
-# --- /Helper functions for schedule module/----
+# --- Helper functions for schedule module ----
 
 sched_format_time <- function(time_str) {
   clean_str <- gsub("[^0-9:]", "", time_str)

@@ -297,3 +297,325 @@ ssfs_subset <- function(
 
   ssfs
 }
+
+#' Generate trip departure times for a time range
+#'
+#' Internal function that generates trip departure times for a specified range,
+#' based on a first departure and a last departure (for example the bounds of a service window)
+#' and based on the hsh values of the ssfs, for a specific itin_id and service_id.
+#' Used within ssfs_to_gtfs() as well as within the cost calculator function
+#'
+#' @param ssfs A list of class SSFS
+#' @param first_dep A string indicating first departure time in HH:MM:SS format
+#' @param last_dep A string indicating last departure time in HH:MM:SS format
+#' @param itin_id_i A string indicating a specific itin_id
+#' @param service_id_i A string indicating a specific service_id
+#'
+#' @returns A vector of strings of trip departure times in HH:MM:SS format
+#'
+#' @keywords internal
+trip_dep_generator <- function(
+  ssfs,
+  first_dep,
+  last_dep,
+  itin_id_i,
+  service_id_i
+) {
+  if (first_dep == last_dep) {
+    #if first dep and last dep are the same,
+    #then there is only one trip
+
+    trip_dep <- first_dep
+  } else {
+    headways <-
+      ssfs$hsh |>
+      filter(itin_id == itin_id_i, service_id == service_id_i) |>
+      select(hour_dep, headway)
+
+    #initialize the while loop to build out list of trips (departure times)
+    trip_dep <- first_dep
+    next_dep_duration <- as.duration(minutes(0)) #this refreshes the condition on the below loop
+
+    while (next_dep_duration < as.duration(hms(last_dep))) {
+      #takes the last / latest departure in the vector of departures trip_dep
+      prev_dep <- as.duration(hms(trip_dep[length(trip_dep)]))
+      #identify the hour of departure of this trip
+      hour_prev_dep <- sprintf(
+        "%02d:00:00",
+        as.numeric(floor(as.numeric(prev_dep) / 3600))
+      )
+      #identify based on the ssfs what the headway is at this hour
+      headway <- headways |>
+        filter(hour_dep == hour_prev_dep) |>
+        pull(headway)
+
+      #IF there is no headway value associated with the hour of the previous departure
+      #AND there is no hour specified in the headways table beyond the hour of the previous departure
+      #THEN end the loop
+      #ELSE IF no headway value associated with the hour of the previous departure
+      #AND there is an hour that is specified in the headways table beyond the hour of the previous departure
+      #THEN set the next_dep_duration to that hour
+      #ELSE calculate the next departure based on the headway and the previous hour
+
+      if (
+        is.na(headway) &&
+          all(
+            as.duration(hms(hour_prev_dep)) >=
+              as.duration(hms(headways$hour_dep))
+          )
+      ) {
+        break
+      } else if (is.na(headway)) {
+        length_hours_prior <- #index of the TRUE value furthest along the result of this logical statement
+          max(which(
+            as.duration(hms(hour_prev_dep)) >=
+              as.duration(hms(headways$hour_dep))
+          ))
+        next_dep_duration <- as.duration(hms(headways$hour_dep[
+          length_hours_prior + 1
+        ]))
+      } else {
+        #determine the time of the next departure, encoded as duration
+        next_dep_duration <- prev_dep + as.duration(seconds(headway * 60))
+        #the duration coding enables us to write departure times beyond 24:00:00 and to
+        #set the condition that ends this while loop
+        #identify what the hour of the subsequent departure would be
+        hour_next_dep <- sprintf(
+          "%02d:00:00",
+          as.numeric(floor(as.numeric(next_dep_duration) / 3600))
+        )
+
+        #If that hour is NOT within the list of hours specified in the headways table
+        #AND there is no hour beyond the that one listed
+        #THEN break the loop
+        #ELSE IF that hour is NOT within the list of hours specified in the headways table
+        #AND there is a subsequent hour listed in the headways table
+        #THEN overwrite next_dep_duration to that hour
+
+        if (
+          !hour_next_dep %in% headways$hour_dep &&
+            all(
+              as.duration(hms(hour_next_dep)) >
+                as.duration(hms(headways$hour_dep))
+            )
+        ) {
+          break
+        } else if (!hour_next_dep %in% headways$hour_dep) {
+          length_hours_prior <- #index of the TRUE value furthest along the result of this logical statement
+            max(which(
+              as.duration(hms(hour_next_dep)) >=
+                as.duration(hms(headways$hour_dep))
+            ))
+          next_dep_duration <- as.duration(hms(headways$hour_dep[
+            length_hours_prior + 1
+          ]))
+        }
+      }
+
+      #hours minutes days calculated separately to encode times up to 32:00:00
+      next_dep_h <- round(
+        as.numeric(floor(as.numeric(next_dep_duration) / 3600)),
+        0
+      ) #REMOVED the %% that was here previously
+      next_dep_m <- round(
+        as.numeric(floor(as.numeric(next_dep_duration) / 60)) %% 60,
+        0
+      )
+      next_dep_s <- round(as.numeric(next_dep_duration) %% 60, 0)
+
+      next_dep <- sprintf(
+        "%02d:%02d:%02d",
+        next_dep_h,
+        next_dep_m,
+        next_dep_s
+      )
+
+      trip_dep <- c(trip_dep, next_dep)
+    }
+  }
+
+  trip_dep
+}
+
+#' Generate trips, distance and runtime by hour (TDRH)
+#'
+#' Internal function that generates a data frame that can be used to calculate service cost
+#' for specified routes or individual route itineraries in terms of service hours and
+#' service kilometers.
+#'
+#' @param ssfs A list of class SSFS
+#' @param id_type Either "route_id" or "itin_id"
+#' @param id A character string representing itin_ids or route_ids
+#' @param service An individual string or vector representing one or several service_ids
+#'
+#' @returns A tibble
+#'
+#' @keywords internal
+generate_tdrh <- function(
+  ssfs,
+  id_type = c("route_id", "itin_id"),
+  id,
+  service
+) {
+  id_type <- match.arg(id_type)
+
+  if (id_type == "route_id") {
+    itin_filtid <-
+      ssfs$itin |>
+      filter(route_id %in% id)
+  } else if (id_type == "itin_id") {
+    itin_filtid <-
+      ssfs$itin |>
+      filter(itin_id %in% id)
+  } else {
+    message("Invalid id_type. Must be either route_id or itin_id")
+    return()
+  }
+
+  itin_len <-
+    itin_filtid |>
+    mutate(len_m = round(as.numeric(st_length(geometry)))) |>
+    as_tibble() |>
+    select(itin_id, len_m)
+
+  # generate service cost
+
+  #first, calculate trips by itin_id and service_id using hsh
+
+  itin_ids <- itin_len$itin_id |> unique()
+
+  trips_ph <-
+    data.frame(
+      itin_id = character(),
+      service_id = character(),
+      hour_dep = character(),
+      n_trips = integer()
+    )
+
+  spans <-
+    ssfs$span |>
+    filter(itin_id %in% itin_ids, service_id %in% service)
+
+  for (i in seq_len(nrow(spans))) {
+    itin_id_i <- spans[i, ]$itin_id
+
+    service_id_i <- spans[i, ]$service_id
+
+    service_window_i <- spans[i, ]$service_window
+
+    #initialize cli progress bar
+    #cli::cli_progress_update()
+
+    first_dep <- spans[i, ]$first_dep
+
+    last_dep <- spans[i, ]$last_dep
+
+    trip_dep_i <-
+      trip_dep_generator(
+        ssfs = ssfs,
+        first_dep = first_dep,
+        last_dep = last_dep,
+        itin_id_i = itin_id_i,
+        service_id_i = service_id_i
+      )
+
+    trips_ph_i <-
+      data.frame(
+        itin_id = itin_id_i,
+        service_id = service_id_i,
+        trip_dep = trip_dep_i
+      )
+
+    trips_ph_i <-
+      trips_ph_i |>
+      mutate(
+        hour_dep = paste0(
+          stringr::str_sub(trip_dep_i, 1, 2),
+          ":00:00"
+        )
+      ) |>
+      group_by(itin_id, service_id, hour_dep) |>
+      summarise(n_trips = n()) |>
+      ungroup()
+
+    trips_ph <- rbind(trips_ph, trips_ph_i)
+  }
+
+  # combine with speed from hsh
+
+  trips_ph_hsh <-
+    trips_ph |>
+    left_join(ssfs$hsh, by = c("itin_id", "service_id", "hour_dep")) |>
+    select(-headway)
+
+  # combine with itin_len to generate runtimes
+
+  tdrh <-
+    trips_ph_hsh |>
+    left_join(itin_len, by = "itin_id") |>
+    mutate(runtime = round(((len_m / 1000) / speed) * 60, 1)) |>
+    select(-speed)
+
+  tdrh
+}
+
+#' Generate total daily costs in service hours and service kilometers
+#'
+#' Outputs a small tibble of costs for the specified service(s) and itin_id(s) or route_id(s)
+#'
+#' @param ssfs A list of class SSFS
+#' @param id_type Either "route_id" or "itin_id"
+#' @param id A character string representing itin_ids or route_ids
+#' @param service An individual string or vector representing one or several service_ids
+#'
+#' @returns A tibble
+#'
+#' @export
+#' @examples
+#' # Calculate weekday daily service kilometers and service hours of the 99 B-Line in Vancouver
+#' b_line_route_id <- translink$routes |> filter(route_short_name=="099") |> pull(route_id)
+#' generate_service_cost(ssfs=translink,id_type="route_id",id=b_line_route_id,service="mon-fri")
+generate_service_cost <- function(
+  ssfs,
+  id_type = c("route_id", "itin_id"),
+  id,
+  service
+) {
+  id_type <- match.arg(id_type)
+
+  tdrh <- generate_tdrh(
+    ssfs = ssfs,
+    id_type = id_type,
+    id = id,
+    service = service
+  )
+
+  itin_ids <- tdrh$itin_id |> unique()
+
+  itin_id_to_route_id <-
+    ssfs$itin |>
+    as_tibble() |>
+    filter(itin_id %in% itin_ids) |>
+    select(itin_id, route_id)
+
+  route_ids <- itin_id_to_route_id$route_id |> unique()
+
+  route_id_to_agency_id <-
+    ssfs$routes |>
+    filter(route_id %in% route_ids) |>
+    select(route_id, agency_id)
+
+  itin_id_to_agency_id <-
+    itin_id_to_route_id |>
+    left_join(route_id_to_agency_id, by = "route_id") |>
+    select(-route_id)
+
+  # output : tibble of total daily cost in service km and service hours by agency id
+  tdrh |>
+    left_join(itin_id_to_agency_id, by = "itin_id") |>
+    group_by(agency_id) |>
+    summarise(
+      total_km = round(sum(len_m * n_trips) / 1000, 1),
+      total_h = round(sum(runtime * n_trips) / 60, 1)
+    )
+}
