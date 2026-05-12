@@ -11,7 +11,7 @@ generate_service_cost(ssfs, id_type = c("route_id", "itin_id"), id, service)
 
 \item{id_type}{Either "route_id" or "itin_id"}
 
-\item{id}{A character string representing itin_ids or route_ids}
+\item{id}{A character vector of one or more route_ids or itin_ids}
 
 \item{service}{An individual string or vector representing one or several service_ids}
 }

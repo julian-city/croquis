@@ -445,7 +445,7 @@ trip_dep_generator <- function(
 #'
 #' @param ssfs A list of class SSFS
 #' @param id_type Either "route_id" or "itin_id"
-#' @param id A character string representing itin_ids or route_ids
+#' @param id A character vector of one or more route_ids or itin_ids
 #' @param service An individual string or vector representing one or several service_ids
 #'
 #' @returns A tibble
@@ -467,9 +467,6 @@ generate_tdrh <- function(
     itin_filtid <-
       ssfs$itin |>
       filter(itin_id %in% id)
-  } else {
-    message("Invalid id_type. Must be either route_id or itin_id")
-    return()
   }
 
   itin_len <-
@@ -565,7 +562,7 @@ generate_tdrh <- function(
 #'
 #' @param ssfs A list of class SSFS
 #' @param id_type Either "route_id" or "itin_id"
-#' @param id A character string representing itin_ids or route_ids
+#' @param id A character vector of one or more route_ids or itin_ids
 #' @param service An individual string or vector representing one or several service_ids
 #'
 #' @returns A tibble
@@ -614,8 +611,10 @@ generate_service_cost <- function(
   tdrh |>
     left_join(itin_id_to_agency_id, by = "itin_id") |>
     group_by(agency_id) |>
+    #na.rm = TRUE added in summarise in case tdrh returns NA runtimes due to missing speeds in hsh
+    #(this risk has not totally been evaluated)
     summarise(
-      total_km = round(sum(len_m * n_trips) / 1000, 1),
-      total_h = round(sum(runtime * n_trips) / 60, 1)
+      total_km = round(sum(len_m * n_trips, na.rm = TRUE) / 1000, 1),
+      total_h = round(sum(runtime * n_trips, na.rm = TRUE) / 60, 1)
     )
 }
