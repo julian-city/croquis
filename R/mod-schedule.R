@@ -1607,6 +1607,8 @@ scheduleServer <- function(id, ssfs, map_center) {
         return(NULL)
       }
 
+      itin_len_km <- round(as.numeric(st_length(itin_row$geometry)) / 1000, 1)
+
       itin_display <- paste0(
         itin_row$trip_headsign[1],
         " (",
@@ -1800,6 +1802,11 @@ scheduleServer <- function(id, ssfs, map_center) {
           hour_val <- itin_hsh$hour_dep[h]
           hdwy_val <- itin_hsh$headway[h]
           speed_val <- itin_hsh$speed[h]
+          runtime_val <- if (!is.na(speed_val) && speed_val > 0) {
+            round((itin_len_km / speed_val) * 60, 1)
+          } else {
+            NA
+          }
           is_editing_this <- !is.null(hsh_editing_hour) &&
             hsh_editing_hour == hour_val
 
@@ -1807,7 +1814,7 @@ scheduleServer <- function(id, ssfs, map_center) {
             hsh_rows[[length(hsh_rows) + 1]] <- tags$tr(
               class = "sched-hsh-row sched-hsh-editing",
               tags$td(
-                colspan = "4",
+                colspan = "5",
                 div(
                   class = "sched-hsh-edit-form",
                   div(
@@ -1861,17 +1868,23 @@ scheduleServer <- function(id, ssfs, map_center) {
             )
           } else {
             hdwy_display <- if (is.na(hdwy_val)) {
-              "\u2014"
+              " - "
             } else {
               as.character(hdwy_val)
             }
             speed_display <- if (is.na(speed_val)) {
-              "\u2014"
+              " - "
             } else {
               as.character(speed_val)
             }
             hdwy_class <- if (is.na(hdwy_val)) "hsh-cell-na" else ""
             speed_class <- if (is.na(speed_val)) "hsh-cell-na" else ""
+            runtime_display <- if (is.na(runtime_val)) {
+              " - "
+            } else {
+              as.character(runtime_val)
+            }
+            runtime_class <- if (is.na(runtime_val)) "hsh-cell-na" else ""
 
             hsh_rows[[length(hsh_rows) + 1]] <- tags$tr(
               class = "sched-hsh-row",
@@ -1879,6 +1892,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               tags$td(hour_val),
               tags$td(class = hdwy_class, hdwy_display),
               tags$td(class = speed_class, speed_display),
+              tags$td(class = runtime_class, runtime_display),
               tags$td(
                 style = "text-align: right;",
                 tags$button(
@@ -1902,6 +1916,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               tags$th("Hour"),
               tags$th("Headway (min)"),
               tags$th("Speed (km/h)"),
+              tags$th("Runtime (mins)"),
               tags$th(style = "width: 40px;", "")
             )
           ),
