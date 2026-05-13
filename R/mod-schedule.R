@@ -1163,7 +1163,8 @@ scheduleServer <- function(id, ssfs, map_center) {
 
           div(
             class = "sched-itin-panel",
-            uiOutput(ns("sched_itin_editing_ui"))
+            uiOutput(ns("sched_itin_editing_ui")),
+            uiOutput(ns("sched_itin_cost_ui"))
           )
         ),
         uiOutput(ns("sched_speed_profile_ui"))
@@ -2063,6 +2064,54 @@ scheduleServer <- function(id, ssfs, map_center) {
             "Save as preset"
           )
         ),
+      )
+    })
+
+    output$sched_itin_cost_ui <- renderUI({
+      current_data <- ssfs()
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      req(editing_itin, service_id)
+
+      cost <- tryCatch(
+        generate_service_cost(
+          ssfs = current_data,
+          id_type = "itin_id",
+          id = editing_itin,
+          service = service_id
+        ),
+        error = function(e) NULL
+      )
+
+      total_h <- if (
+        !is.null(cost) &&
+          nrow(cost) > 0 &&
+          is.numeric(cost$total_h) &&
+          !all(is.na(cost$total_h))
+      ) {
+        sum(cost$total_h, na.rm = TRUE)
+      } else {
+        NULL
+      }
+
+      total_km <- if (
+        !is.null(cost) &&
+          nrow(cost) > 0 &&
+          is.numeric(cost$total_km) &&
+          !all(is.na(cost$total_km))
+      ) {
+        sum(cost$total_km, na.rm = TRUE)
+      } else {
+        NULL
+      }
+
+      display_h <- if (!is.null(total_h)) total_h else "-"
+      display_km <- if (!is.null(total_km)) total_km else "-"
+
+      div(
+        style = "border-top: 1px solid var(--border-color); margin-top: 12px; padding-top: 10px; font-size: 14px; color: var(--text-color);",
+        div(paste0("Daily vehicle-hours (in service): ", display_h)),
+        div(paste0("Daily vehicle-km (in service): ", display_km))
       )
     })
 
