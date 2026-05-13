@@ -275,6 +275,7 @@ scheduleServer <- function(id, ssfs, map_center) {
     #calendar editing
     sched_cal_editing_id <- reactiveVal(NULL) # service_id being edited
     sched_cal_adding <- reactiveVal(FALSE) # TRUE when add form is open
+    sched_cal_cost_result <- reactiveVal(NULL) # result of service cost calculation
 
     #Service level preset editing
     sched_preset_editing_id <- reactiveVal(NULL) # pattern_id being viewed/edited
@@ -2984,6 +2985,7 @@ scheduleServer <- function(id, ssfs, map_center) {
     observeEvent(input$sched_open_calendar, {
       sched_cal_editing_id(NULL)
       sched_cal_adding(FALSE)
+      sched_cal_cost_result(NULL)
       showModal(modalDialog(
         title = "Service Calendar",
         size = "l",
@@ -3240,6 +3242,13 @@ scheduleServer <- function(id, ssfs, map_center) {
         cal_rows[[length(cal_rows) + 1]] <- add_form
       }
 
+      # Build service choices for cost calculator
+      cost_service_choices <- if (nrow(cal) > 0) {
+        cal$service_id
+      } else {
+        character(0)
+      }
+
       # Build the table
       tagList(
         tags$table(
@@ -3275,7 +3284,44 @@ scheduleServer <- function(id, ssfs, map_center) {
             ),
             span(style = "margin-left: 8px;", "Add new service")
           )
-        }
+        },
+
+        # Total daily service cost calculator
+        hr(),
+        h5("Total daily service cost"),
+        tags$small(
+          style = "color: #888; display: block; margin-bottom: 10px;",
+          "Calculate total daily vehicle-km and vehicle-hours for all routes and itineraries on a selected service. This may take several minutes for larger networks."
+        ),
+        if (length(cost_service_choices) > 0) {
+          div(
+            style = "display: flex; gap: 8px; align-items: flex-end;",
+            div(
+              style = "flex: 1; max-width: 250px;",
+              selectInput(
+                ns("sched_cal_cost_service"),
+                label = NULL,
+                choices = cost_service_choices,
+                width = "100%"
+              )
+            ),
+            tags$button(
+              class = "btn-save",
+              style = "margin-bottom: 15px;",
+              onclick = sprintf(
+                "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+                ns("sched_cal_calculate_cost")
+              ),
+              "Calculate"
+            )
+          )
+        } else {
+          tags$em(
+            style = "color: grey;",
+            "Add a service above to calculate costs."
+          )
+        },
+        uiOutput(ns("sched_cal_cost_result_ui"))
       )
     })
 
@@ -3432,6 +3478,115 @@ scheduleServer <- function(id, ssfs, map_center) {
           "' deleted with associated spans and headway entries."
         ),
         type = "message"
+      )
+    })
+
+    # Calculate total daily service cost for selected service
+    observeEvent(input$sched_cal_calculate_cost, {
+      service_id <- input$sched_cal_cost_service
+      req(service_id)
+
+      current_data <- ssfs()
+
+      all_route_ids <- current_data$routes$route_id
+
+      if (length(all_route_ids) == 0) {
+        sched_cal_cost_result(NULL)
+        showNotification("No routes defined.", type = "warning")
+        return()
+      }
+
+      # Check that at least some spans exist for this service
+      service_spans <- current_data$span[
+        current_data$span$service_id == service_id,
+      ]
+      if (nrow(service_spans) == 0) {
+        sched_cal_cost_result(NULL)
+        showNotification(
+          paste0("No service windows defined for '", service_id, "'."),
+          type = "warning"
+        )
+        return()
+      }
+
+      progress_id <- showNotification(
+        "Calculating service cost...",
+        duration = NULL,
+        type = "message"
+      )
+
+      result <- tryCatch(
+        generate_service_cost(
+          ssfs = current_data,
+          id_type = "route_id",
+          id = all_route_ids,
+          service = service_id
+        ),
+        error = function(e) {
+          showNotification(
+            paste0("Error: ", e$message),
+            type = "error"
+          )
+          NULL
+        }
+      )
+
+      removeNotification(progress_id)
+      sched_cal_cost_result(result)
+
+      if (!is.null(result) && nrow(result) > 0) {
+        showNotification("Service cost calculated.", type = "message")
+      }
+    })
+
+    # Display service cost result
+    output$sched_cal_cost_result_ui <- renderUI({
+      result <- sched_cal_cost_result()
+
+      if (is.null(result) || nrow(result) == 0) {
+        return(NULL)
+      }
+
+      result_rows <- list()
+      for (r in seq_len(nrow(result))) {
+        result_rows[[r]] <- tags$tr(
+          tags$td(result$agency_id[r]),
+          tags$td(style = "text-align: right;", result$total_km[r]),
+          tags$td(style = "text-align: right;", result$total_h[r])
+        )
+      }
+
+      if (nrow(result) > 1) {
+        result_rows[[length(result_rows) + 1]] <- tags$tr(
+          style = "font-weight: bold; border-top: 2px solid var(--border-color);",
+          tags$td("Total"),
+          tags$td(
+            style = "text-align: right;",
+            round(sum(result$total_km, na.rm = TRUE), 1)
+          ),
+          tags$td(
+            style = "text-align: right;",
+            round(sum(result$total_h, na.rm = TRUE), 1)
+          )
+        )
+      }
+
+      div(
+        style = "margin-top: 10px;",
+        tags$table(
+          class = "sched-cal-table",
+          style = "width: auto;",
+          tags$thead(
+            tags$tr(
+              tags$th(style = "text-align: left;", "Agency"),
+              tags$th(style = "text-align: right;", "Vehicle-km"),
+              tags$th(style = "text-align: right;", "Vehicle-hours")
+            )
+          ),
+          tags$tbody(
+            do.call(tagList, result_rows)
+          )
+        )
       )
     })
 
