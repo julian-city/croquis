@@ -9,8 +9,9 @@
 #' @param routes A character vector of the route id(s) you wish to convert to ssfs. Leave as NULL to convert all routes to SSFS
 #' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the SSFS. Leave as NULL to use the last 7 days specified in gtfs$calendar to build the SSFS
 #' @param routing_server Routing server used to draw shapes in the case where none are provided in the input GTFS
+#' @param workers Number of worker processes to use for itinerary-scoped shape and distance calculations. Values above 1 use parallel workers on Unix-like systems and fall back to serial execution on Windows.
 #'
-#' @returns A SSFS list
+#' @returns An SSFS list
 #'
 #' @export
 #' @examples
@@ -28,7 +29,8 @@ gtfs_to_ssfs <- function(
   gtfs,
   routes = NULL,
   max_date = NULL,
-  routing_server = c("Valhalla", "OSRM")
+  routing_server = c("Valhalla", "OSRM"),
+  workers = 1L
 ) {
   #THREE parameters
   #gtfs must be a gtfs imported by gtfstools : an object with class "dt_gtfs","gtfs","list"
@@ -64,6 +66,10 @@ gtfs_to_ssfs <- function(
   }
 
   routing_server <- match.arg(routing_server)
+  workers <- gtfs_parallel_workers(
+    workers,
+    max(1, length(unique(gtfs$trips$route_id)))
+  )
 
   #1. VALIDATIONS and initial transformations---------------------
 
@@ -715,82 +721,22 @@ gtfs_to_ssfs <- function(
     unique_itin_ids <-
       stop_seq_proto |> pull(itin_id) |> unique()
 
-    #CREATE EMPTY SHAPES
-    shapes <- data.table(
-      shape_id = character(),
-      shape_pt_lat = numeric(),
-      shape_pt_lon = numeric(),
-      shape_pt_sequence = integer()
+    shape_parts <- croquis_parallel_lapply(
+      unique_itin_ids,
+      function(itin_id_i) {
+        build_shape_points_for_itin(
+          itin_id = itin_id_i,
+          stop_seq_proto = stop_seq_proto,
+          stops = stops,
+          itin_to_stop_seq = itin_to_stop_seq,
+          route_info = route_info,
+          routing_server = routing_server
+        )
+      },
+      workers = workers
     )
 
-    #
-    for (itin_id_i in unique_itin_ids) {
-      stops_itin_i <-
-        stop_seq_proto |>
-        filter(itin_id == itin_id_i) |>
-        arrange(stop_sequence) |>
-        select(stop_id) |>
-        left_join(stops |> as_tibble(), by = "stop_id") |>
-        st_as_sf()
-
-      #return route type of itin_id_i
-
-      route_id_i <-
-        itin_to_stop_seq |>
-        filter(itin_id == itin_id_i) |>
-        pull(route_id) |>
-        unique()
-
-      route_type_i <-
-        route_info |>
-        filter(route_id == route_id_i) |>
-        pull(route_type) |>
-        unique()
-
-      if (route_type_i %in% c(3, 5, 11)) {
-        if (routing_server == "OSRM") {
-          shape_i <-
-            osrm::osrmRoute(loc = stops_itin_i, overview = "full")
-        } else {
-          # Valhalla routing instead of OSRM
-          shape_i <-
-            valh::vl_route(loc = stops_itin_i)
-        }
-
-        shapes_i <-
-          shape_i |>
-          select(geometry) |>
-          st_cast("POINT") |>
-          mutate(coords = st_coordinates(geometry)) |>
-          mutate(
-            shape_pt_lon = coords[, "X"],
-            shape_pt_lat = coords[, "Y"],
-            shape_pt_sequence = row_number(),
-            shape_id = itin_id_i
-          ) |>
-          as.data.table() |>
-          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
-      } else {
-        #else (for example, if metro or ferry or light rail),
-        #shapes is only made up of points that are also stops
-
-        shapes_i <-
-          stops_itin_i |>
-          select(geometry) |>
-          mutate(coords = st_coordinates(geometry)) |>
-          mutate(
-            shape_pt_lon = coords[, "X"],
-            shape_pt_lat = coords[, "Y"],
-            shape_pt_sequence = row_number(),
-            shape_id = itin_id_i
-          ) |>
-          as.data.table() |>
-          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
-      }
-
-      shapes <-
-        rbind(shapes, shapes_i)
-    }
+    shapes <- bind_rows(shape_parts) |> as.data.table()
 
     #create shapes within the gtfs
 
@@ -891,82 +837,22 @@ gtfs_to_ssfs <- function(
   if (length(itin_ids_noshape) > 0) {
     #there are itin ids without shapes, create them
 
-    #CREATE EMPTY SHAPES
-    shapes_new <- data.table(
-      shape_id = character(),
-      shape_pt_lat = numeric(),
-      shape_pt_lon = numeric(),
-      shape_pt_sequence = integer()
-    )
-
-    #
-    for (itin_id_i in itin_ids_noshape) {
-      stops_itin_i <-
-        stop_seq_proto |>
-        filter(itin_id == itin_id_i) |>
-        arrange(stop_sequence) |>
-        select(stop_id) |>
-        left_join(stops |> as_tibble(), by = "stop_id") |>
-        st_as_sf()
-
-      #return route type of itin_id_i
-
-      route_id_i <-
-        itin_to_stop_seq |>
-        filter(itin_id == itin_id_i) |>
-        pull(route_id) |>
-        unique()
-
-      route_type_i <-
-        route_info |>
-        filter(route_id == route_id_i) |>
-        pull(route_type) |>
-        unique()
-
-      if (route_type_i %in% c(3, 5, 11)) {
-        if (routing_server == "OSRM") {
-          shape_i <-
-            osrm::osrmRoute(loc = stops_itin_i, overview = "full")
-        } else {
-          # Valhalla routing instead of OSRM
-          shape_i <-
-            valh::vl_route(loc = stops_itin_i)
-        }
-
-        shapes_i <-
-          shape_i |>
-          select(geometry) |>
-          st_cast("POINT") |>
-          mutate(coords = st_coordinates(geometry)) |>
-          mutate(
-            shape_pt_lon = coords[, "X"],
-            shape_pt_lat = coords[, "Y"],
-            shape_pt_sequence = row_number(),
-            shape_id = itin_id_i
-          ) |>
-          as.data.table() |>
-          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
-      } else {
-        #else (for example, if metro or ferry or light rail),
-        #shapes is only made up of points that are also stops
-
-        shapes_i <-
-          stops_itin_i |>
-          select(geometry) |>
-          mutate(coords = st_coordinates(geometry)) |>
-          mutate(
-            shape_pt_lon = coords[, "X"],
-            shape_pt_lat = coords[, "Y"],
-            shape_pt_sequence = row_number(),
-            shape_id = itin_id_i
-          ) |>
-          as.data.table() |>
-          select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence)
-      }
-
-      shapes_new <-
-        rbind(shapes_new, shapes_i)
-    }
+    shapes_new <- croquis_parallel_lapply(
+      itin_ids_noshape,
+      function(itin_id_i) {
+        build_shape_points_for_itin(
+          itin_id = itin_id_i,
+          stop_seq_proto = stop_seq_proto,
+          stops = stops,
+          itin_to_stop_seq = itin_to_stop_seq,
+          route_info = route_info,
+          routing_server = routing_server
+        )
+      },
+      workers = workers
+    ) |>
+      bind_rows() |>
+      as.data.table()
 
     # add shapes_new to existing gtfs$shapes
 
@@ -1128,93 +1014,28 @@ gtfs_to_ssfs <- function(
 
   #initialize
 
-  stop_seq_proto$interstop_dist <- NA
+  stop_seq_proto$interstop_dist <- NA_real_
 
-  #initialize cli
-  # Before the loop:
-  cli::cli_progress_bar(
-    "Calculating interstop distance",
-    total = length(stop_seq_proto$stop_seq_id) - 1
-  )
+  message("Calculating interstop distance")
 
-  for (i in c(1:(length(stop_seq_proto$stop_seq_id) - 1))) {
-    #Cat message must eventually be converted to cli_progress_bar or similar!
+  interstop_distances <- croquis_parallel_lapply(
+    unique(stop_seq_proto$itin_id),
+    function(itin_id_i) {
+      compute_interstop_distances_for_itin(
+        itin_id = itin_id_i,
+        stop_seq_proto = stop_seq_proto,
+        shapes_points = shapes_points,
+        stops = stops
+      )
+    },
+    workers = workers
+  ) |>
+    bind_rows()
 
-    #old cat() call for progress
-    #cat(
-    #  "\rCalculating interstop distance",
-    #  i,
-    #  "of",
-    #  length(stop_seq_proto$stop_seq_id) - 1
-    #)
-
-    #replaced with new cli functions
-    cli::cli_progress_update()
-
-    #CONDITIONS
-    #next stop needs to be part of the same sequence AND
-    #part of the same rvar_id (just another way of verifying the same stop sequence)
-    #ELSE the NA assignment remains
-
-    if (
-      (stop_seq_proto$stop_sequence[i] + 1 ==
-        stop_seq_proto$stop_sequence[i + 1]) &&
-        (stop_seq_proto$itin_id[i] == stop_seq_proto$itin_id[i + 1])
-    ) {
-      itin_id_i <- stop_seq_proto$itin_id[i]
-
-      #shape_id_i <-
-      #  itin |>
-      #  filter(itin_id==itin_id_i) |>
-      #  pull(shape_id)
-
-      #shapes points for only the shape_id associated with the rvar_id associated with stop i
-      shapes_points_i <-
-        shapes_points |>
-        filter(itin_id == itin_id_i)
-
-      current_stop_id <- stop_seq_proto$stop_id[i]
-      next_stop_id <- stop_seq_proto$stop_id[i + 1]
-
-      current_stop <-
-        stops |>
-        filter(stop_id == current_stop_id)
-
-      next_stop <-
-        stops |>
-        filter(stop_id == next_stop_id)
-
-      #nearest points along shapes_points to current and next stops
-
-      interstop_segment_points <-
-        shapes_points_i[
-          st_nearest_feature(current_stop, shapes_points_i):st_nearest_feature(
-            next_stop,
-            shapes_points_i
-          ),
-        ]
-
-      if (nrow(interstop_segment_points) == 1) {
-        cli::cli_warn(
-          "Calculated interstop distance {current_stop_id} -> {next_stop_id} (itin {itin_id_i}) directly between both stops."
-        )
-        interstop_dist_i <-
-          as.numeric(st_distance(current_stop, next_stop))
-      } else {
-        # calculate distance normally
-        interstop_dist_i <-
-          as.numeric(
-            interstop_segment_points |>
-              summarise(do_union = FALSE) |> #do_union retains the order of the points
-              st_cast("LINESTRING") |>
-              st_length()
-          )
-      }
-      stop_seq_proto$interstop_dist[i] <- interstop_dist_i
-    } else {
-      stop_seq_proto$interstop_dist[i] <- NA
-    }
-  }
+  stop_seq_proto <-
+    stop_seq_proto |>
+    select(-interstop_dist) |>
+    left_join(interstop_distances, by = "stop_seq_id")
 
   #REWRITE STOP TIMES to handle sequential stops with the same stop time
 
