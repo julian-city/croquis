@@ -115,196 +115,65 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
 
   #calculate interstop distances
 
-  #with dist traveled, calculating interstop distances takes 5 times longer
-
-  stop_seq <-
-    ssfs$stop_seq #|>
-  #  left_join(ssfs$rvar |> select(rvar_id,shape_id),
-  #            by="rvar_id")
-  #vestigal from V1
-
-  #initialize
-
-  stop_seq$interstop_dist <- NA_real_
-
-  #convert itin into points
-
   shapes_points <-
     ssfs$itin |>
     select(itin_id, geometry) |>
     st_cast("POINT") |>
     distinct() |>
-    #could add a distinct here to remove the duplicates. But perhaps it should come earlier in the process ?
     group_by(itin_id) |>
     mutate(shape_pt_sequence = row_number(), .before = geometry) |>
     ungroup()
 
-  #if dist_traveled is TRUE, then we need to create shape_dist_traveled attribute in shapes_points
-  #In this case, we use this to calculate interstop_dist
+  stop_seq <-
+    ssfs$stop_seq |>
+    mutate(
+      stop_seq_id = str_c(
+        itin_id,
+        "_",
+        as.character(stop_id),
+        "_",
+        as.character(stop_sequence)
+      )
+    )
+
+  interstop_distances <- lapply(
+    unique(stop_seq$itin_id),
+    function(itin_id_i) {
+      compute_interstop_distances_for_itin(
+        itin_id = itin_id_i,
+        stop_seq_proto = stop_seq,
+        shapes_points = shapes_points,
+        stops = ssfs$stops
+      )
+    }
+  ) |>
+    bind_rows()
+
+  stop_seq <-
+    stop_seq |>
+    left_join(interstop_distances, by = "stop_seq_id") |>
+    mutate(interstop_dist = round(interstop_dist, 2))
 
   if (dist_traveled) {
-    shapes_points$shape_dist_traveled <- NA_real_
-
-    #first one is always 0
-    shapes_points$shape_dist_traveled[1] <- 0
-
-    cli::cli_progress_bar(
-      "Calculating shape_dist_traveled.",
-      total = nrow(shapes_points)
-    )
-
-    for (i in 2:(nrow(shapes_points))) {
-      cli::cli_progress_update()
-
-      if (
-        (shapes_points$shape_pt_sequence[i] - 1 ==
-          shapes_points$shape_pt_sequence[i - 1]) &&
-          (shapes_points$itin_id[i] == shapes_points$itin_id[i - 1])
-      ) {
-        point_before <-
-          shapes_points[i - 1, ]
-
-        point <-
-          shapes_points[i, ]
-
-        shape_dist_traveled_before <- point_before$shape_dist_traveled
-
-        shapes_points$shape_dist_traveled[i] <-
-          round(
-            as.numeric(st_distance(point_before, point)) +
-              shape_dist_traveled_before,
-            2
-          )
-      } else {
-        shapes_points$shape_dist_traveled[i] <- 0
-      }
-    }
-
-    cli::cli_progress_bar(
-      "Calculating interstop distance.",
-      total = nrow(stop_seq) - 1
-    )
-
-    for (i in 1:(nrow(stop_seq) - 1)) {
-      cli::cli_progress_update()
-
-      #CONDITIONS
-      #next stop needs to be part of the same sequence AND
-      #part of the same rvar_id (just another way of verifying the same stop sequence)
-      #ELSE the NA assignment remains
-
-      if (
-        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &&
-          (stop_seq$itin_id[i] == stop_seq$itin_id[i + 1])
-      ) {
-        itin_id_i <- stop_seq$itin_id[i]
-
-        #shapes points for only the shape_id associated with the rvar_id associated with stop i
-        shapes_points_i <-
-          shapes_points |>
-          filter(itin_id == itin_id_i)
-
-        current_stop_id <- stop_seq$stop_id[i]
-        next_stop_id <- stop_seq$stop_id[i + 1]
-
-        current_stop <-
-          ssfs$stops |>
-          filter(stop_id == current_stop_id)
-
-        next_stop <-
-          ssfs$stops |>
-          filter(stop_id == next_stop_id)
-
-        #nearest points along shapes_points to current and next stops
-
-        shape_dist_traveled_current <-
-          shapes_points_i[
-            st_nearest_feature(current_stop, shapes_points_i),
-          ]$shape_dist_traveled
-
-        shape_dist_traveled_next <-
-          shapes_points_i[
-            st_nearest_feature(next_stop, shapes_points_i),
-          ]$shape_dist_traveled
-
-        interstop_dist_i <-
-          shape_dist_traveled_next - shape_dist_traveled_current
-
-        stop_seq$interstop_dist[i] <- interstop_dist_i
-      } else {
-        stop_seq$interstop_dist[i] <- NA_real_
-      }
-    }
-  } else {
-    #else no shape_dist_traveled, calculate interstop distance directly from
-    #shapes and stop seq
-
-    cli::cli_progress_bar(
-      "Calculating interstop distance.",
-      total = nrow(stop_seq) - 1
-    )
-
-    for (i in 1:(nrow(stop_seq) - 1)) {
-      cli::cli_progress_update()
-      #CONDITIONS
-      #next stop needs to be part of the same sequence AND
-      #part of the same rvar_id (just another way of verifying the same stop sequence)
-      #ELSE the NA assignment remains
-
-      if (
-        (stop_seq$stop_sequence[i] + 1 == stop_seq$stop_sequence[i + 1]) &&
-          (stop_seq$itin_id[i] == stop_seq$itin_id[i + 1])
-      ) {
-        itin_id_i <- stop_seq$itin_id[i]
-
-        #shapes points for only the shape_id associated with the rvar_id associated with stop i
-        shapes_points_i <-
-          shapes_points |>
-          filter(itin_id == itin_id_i)
-
-        current_stop_id <- stop_seq$stop_id[i]
-        next_stop_id <- stop_seq$stop_id[i + 1]
-
-        current_stop <-
-          ssfs$stops |>
-          filter(stop_id == current_stop_id)
-
-        next_stop <-
-          ssfs$stops |>
-          filter(stop_id == next_stop_id)
-
-        #nearest points along shapes_points to current and next stops
-
-        interstop_segment_points <-
-          shapes_points_i[
-            st_nearest_feature(
-              current_stop,
-              shapes_points_i
-            ):st_nearest_feature(next_stop, shapes_points_i),
-          ]
-
-        if (nrow(interstop_segment_points) == 1) {
-          cli::cli_warn(
-            "Calculated interstop distance {current_stop_id} -> {next_stop_id} (itin {itin_id_i}) directly between both stops."
-          )
-          interstop_dist_i <-
-            as.numeric(st_distance(current_stop, next_stop))
-        } else {
-          # calculate distance normally
-          interstop_dist_i <-
-            as.numeric(
-              interstop_segment_points |>
-                summarise(do_union = FALSE) |> #do_union retains the order of the points
-                st_cast("LINESTRING") |>
-                st_length()
-            )
+    shapes_points <- shapes_points |>
+      arrange(itin_id, shape_pt_sequence) |>
+      group_by(itin_id) |>
+      mutate(
+        shape_dist_traveled = {
+          n_pts <- n()
+          if (n_pts <= 1) {
+            0
+          } else {
+            seg <- as.numeric(st_distance(
+              geometry[-n_pts],
+              geometry[-1],
+              by_element = TRUE
+            ))
+            round(c(0, cumsum(seg)), 2)
+          }
         }
-
-        stop_seq$interstop_dist[i] <- interstop_dist_i
-      } else {
-        stop_seq$interstop_dist[i] <- NA_real_
-      }
-    }
+      ) |>
+      ungroup()
   }
 
   #write stop times
@@ -328,6 +197,8 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       select(-cumsum_interdist) |>
       ungroup()
   }
+
+  shapes_points$shape_dist_traveled
 
   #initialize stop times (with shape dist traveled if the business is TRUE)
 
