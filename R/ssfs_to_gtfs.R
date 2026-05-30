@@ -198,8 +198,6 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       ungroup()
   }
 
-  shapes_points$shape_dist_traveled
-
   #initialize stop times (with shape dist traveled if the business is TRUE)
 
   if (dist_traveled) {

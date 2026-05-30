@@ -2378,7 +2378,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               "; font-size:14px;'>\u25CF</span> ",
               "<b>",
               short_name,
-              " \u2014 ",
+              " - ",
               long_name,
               "</b>",
               "<br><span style='font-size:10px; color:grey;'>",

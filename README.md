@@ -29,7 +29,7 @@ validator test without errors.
 
 Croquis introduces a new data structure that faciliates GTFS creation
 and editing, called SSFS (Simple Speed and Frequency Structure).
-Functions in this library help convert between GTFS and SSFS formats.
+Functions in this package help convert between GTFS and SSFS formats.
 
 Croquis also includes a calibration engine,
 `apply_gtfs_speeds_to_ssfs()`, which allows you to adjust speeds by hour
