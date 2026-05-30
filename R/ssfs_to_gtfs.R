@@ -174,29 +174,24 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
         }
       ) |>
       ungroup()
-  }
 
-  #write stop times
+    # calculate shape_dist_traveled for stop_seq using shapes_points (instead of interstop_dist)
 
-  #add shape_dist_traveled to stop_seq if shape dist traveled is TRUE
-
-  if (dist_traveled) {
     stop_seq <-
       stop_seq |>
       group_by(itin_id) |>
-      mutate(cumsum_interdist = cumsum(interstop_dist)) |>
       mutate(
-        interstop_dist = replace_na(interstop_dist, 0),
-        cumsum_interdist = if_else(
-          is.na(cumsum_interdist),
-          lag(cumsum_interdist),
-          cumsum_interdist
-        )
+        shape_dist_traveled = {
+          sp_itin <- shapes_points[shapes_points$itin_id == itin_id[1], ]
+          stop_pts <- ssfs$stops[match(stop_id, ssfs$stops$stop_id), ]
+          nearest_idx <- st_nearest_feature(stop_pts, sp_itin)
+          sp_itin$shape_dist_traveled[nearest_idx]
+        }
       ) |>
-      mutate(shape_dist_traveled = cumsum_interdist - interstop_dist) |>
-      select(-cumsum_interdist) |>
       ungroup()
   }
+
+  #write stop times
 
   #initialize stop times (with shape dist traveled if the business is TRUE)
 
