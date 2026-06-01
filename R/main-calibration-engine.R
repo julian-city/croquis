@@ -5,11 +5,12 @@
 #'
 #' @param gtfs An object of class 'gtfs'
 #' @param ssfs A ssfs list
-#' @param max_date A date representing the maximum date range of services retained from the reference GTFS
+#' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the reference speed matrix from the reference GTFS. Leave as NULL to use the last 7 days of the reference GTFS
 #' @param buffer_dist A distance in meters used to define the radius of interstop speed matrix points. Defaults to 10.
 #' @param dist_factor A value between 0.1 and 0.9 used to ensure that interstops are only applied speeds from reference interstops of a similar length. Defaults to 0.5, which means that for a given interstop being calibrated, reference interstops with a distance of 50% to 150% can be used to calibrate.
 #' @param stop_time An integer in seconds, representing the amount of time added per stop made for runtimes calculated using OSRM
 #' @param osrm_speed_adj_factor A coefficient used to adjust output OSRM runtimes to make them more representative of bus runtimes.
+#' @param accepted_route_types Route types that can be used to build the reference speed matrix. By default, 0 (tramways) and 3 (buses).
 #'
 #' @returns A ssfs list
 #'
@@ -38,30 +39,155 @@
 apply_gtfs_speeds_to_ssfs <- function(
   gtfs,
   ssfs,
-  max_date,
+  max_date = NULL,
   buffer_dist = 10,
   dist_factor = 0.5,
   stop_time = 10,
-  osrm_speed_adj_factor = 0.72
+  osrm_speed_adj_factor = 0.72,
+  accepted_route_types = c(0, 3)
 ) {
-  #identify relevant service_ids in the date range
+  #check tables in the GTFS
+  gtfs_table_names <- names(gtfs)
 
-  #min date one week before the max date specified in the function arguments
-  min_date <- max_date - days(7)
+  #identify routes with the right route type
 
-  service_ids <-
-    gtfs$calendar |>
-    filter(
-      start_date <= min_date &
-        end_date >= max_date
-    ) |>
+  route_ids <-
+    gtfs$routes |>
+    filter(route_type %in% accepted_route_types) |>
+    pull(route_id) |>
+    unique()
+
+  #identify the service ids associated with these acceptable routes
+
+  route_service_ids <-
+    gtfs$trips |>
+    filter(route_id %in% route_ids) |>
     pull(service_id) |>
     unique()
 
-  #identify routes with the right route type (buses only, route type 3)
+  #identify relevant service_ids in the date range
 
-  route_ids <-
-    gtfs$routes |> filter(route_type == 3) |> pull(route_id) |> unique()
+  #min date one week before the max date specified in the function arguments
+
+  if (!is.null(max_date)) {
+    min_date <- max_date - days(7)
+  } else {
+    #max date is null, use either max of calendar_dates or calendar as max date
+    if (!"calendar" %in% gtfs_table_names) {
+      #use max of calendar dates
+      max_date <-
+        gtfs$calendar_dates |>
+        filter(exception_type == 1, service_id %in% route_service_ids) |>
+        summarise(max_date = max(date)) |>
+        pull(max_date)
+    } else {
+      #gtfs uses calendar table, determine max date normally
+      max_date <-
+        gtfs$calendar |>
+        filter(service_id %in% route_service_ids) |>
+        summarise(max_date = max(end_date)) |>
+        pull(max_date)
+    }
+    min_date <- max_date - days(7)
+  }
+
+  day <- c(
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday"
+  )
+
+  #create route_calendar (standard whether input GTFS has calendar or calendar_dates)
+  if (!"calendar" %in% gtfs_table_names) {
+    #calendar is not in gtfs table names, create route calendar using calendar_dates
+    route_calendar <-
+      gtfs$calendar_dates |>
+      filter(service_id %in% route_service_ids) |>
+      filter(
+        date >= min_date &
+          date <= max_date
+      ) |>
+      filter(exception_type == 1) |>
+      #day of week of each date
+      mutate(
+        day = tolower(lubridate::wday(
+          date,
+          label = TRUE,
+          abbr = FALSE,
+          week_start = 1
+        ))
+      ) |>
+      select(service_id, day) |>
+      distinct() |>
+      mutate(
+        monday = if_else(day == "monday", 1, 0),
+        tuesday = if_else(day == "tuesday", 1, 0),
+        wednesday = if_else(day == "wednesday", 1, 0),
+        thursday = if_else(day == "thursday", 1, 0),
+        friday = if_else(day == "friday", 1, 0),
+        saturday = if_else(day == "saturday", 1, 0),
+        sunday = if_else(day == "sunday", 1, 0)
+      ) |>
+      group_by(service_id) |>
+      summarise(
+        monday = sum(monday),
+        tuesday = sum(tuesday),
+        wednesday = sum(wednesday),
+        thursday = sum(thursday),
+        friday = sum(friday),
+        saturday = sum(saturday),
+        sunday = sum(sunday)
+      )
+
+    #initialize start and end date
+
+    route_calendar$start_date <- as.Date(NA)
+    route_calendar$end_date <- as.Date(NA)
+
+    #lookup start and end date for each service
+
+    for (i in seq_len(nrow(route_calendar))) {
+      service_id_i <- route_calendar$service_id[i]
+
+      calendar_dates_i <-
+        gtfs$calendar_dates |>
+        filter(service_id == service_id_i)
+
+      start_date_i <- min(calendar_dates_i$date)
+      end_date_i <- max(calendar_dates_i$date)
+      route_calendar$start_date[i] <- start_date_i
+      route_calendar$end_date[i] <- end_date_i
+    }
+  } else {
+    #gtfs has calendar table, create route calendar normally
+    route_calendar <-
+      gtfs$calendar |>
+      #only include service ids associated with the route(s) of interest
+      filter(service_id %in% route_service_ids) |>
+      filter(
+        start_date < max_date &
+          end_date > min_date
+      ) |>
+      #filter out any services that are totally inactive
+      filter(
+        monday == 1 |
+          tuesday == 1 |
+          wednesday == 1 |
+          thursday == 1 |
+          friday == 1 |
+          saturday == 1 |
+          sunday == 1
+      )
+  }
+
+  service_ids <-
+    route_calendar |>
+    pull(service_id) |>
+    unique()
 
   #for every service_id in ssfs$calendar,
   #write interstops and interstop_speeds and embed into a nested table
@@ -101,13 +227,12 @@ apply_gtfs_speeds_to_ssfs <- function(
     #for which the ssfs$calendar service_id being processed does NOT run service
     #from chatgpt
     service_ids_i <-
-      gtfs$calendar |>
+      route_calendar |>
       filter(service_id %in% service_ids) |>
-      filter(
-        apply(select(., all_of(days_of_week)), 1, function(row) {
-          any(row == 1 & ssfs_calendar_days_i == 1)
-        })
-      ) |>
+      filter(if_any(
+        all_of(days_of_week[ssfs_calendar_days_i == 1]),
+        ~ . == 1
+      )) |>
       pull(service_id) |>
       unique()
 
@@ -437,7 +562,7 @@ apply_gtfs_speeds_to_ssfs <- function(
 
   cli::cli_progress_bar(
     "Writing ssfs interstops",
-    total = nrow(ssfs$span)
+    total = nrow(ssfs_interstops)
   )
 
   for (i in seq_len(nrow(ssfs_interstops))) {

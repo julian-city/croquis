@@ -29,7 +29,7 @@ gtfs_to_ssfs <- function(
   gtfs,
   routes = NULL,
   max_date = NULL,
-  routing_server = c("Valhalla", "OSRM"),
+  routing_server = c("OSRM", "Valhalla"),
   workers = 1L
 ) {
   #THREE parameters
@@ -127,192 +127,109 @@ gtfs_to_ssfs <- function(
     "sunday"
   )
 
+  #determine max date and min date
   if (!is.null(max_date)) {
     min_date <- max_date - days(7)
-
-    if (!"calendar" %in% gtfs_table_names) {
-      #calendar is not in gtfs table names, create route calendar using calendar_dates
-      route_calendar <-
-        gtfs$calendar_dates |>
-        filter(service_id %in% route_service_ids) |>
-        filter(
-          date >= min_date &
-            date <= max_date
-        ) |>
-        filter(exception_type == 1) |>
-        #day of week of each date
-        mutate(
-          day = tolower(lubridate::wday(
-            date,
-            label = TRUE,
-            abbr = FALSE,
-            week_start = 1
-          ))
-        ) |>
-        select(service_id, day) |>
-        distinct() |>
-        mutate(
-          monday = if_else(day == "monday", 1, 0),
-          tuesday = if_else(day == "tuesday", 1, 0),
-          wednesday = if_else(day == "wednesday", 1, 0),
-          thursday = if_else(day == "thursday", 1, 0),
-          friday = if_else(day == "friday", 1, 0),
-          saturday = if_else(day == "saturday", 1, 0),
-          sunday = if_else(day == "sunday", 1, 0)
-        ) |>
-        group_by(service_id) |>
-        summarise(
-          monday = sum(monday),
-          tuesday = sum(tuesday),
-          wednesday = sum(wednesday),
-          thursday = sum(thursday),
-          friday = sum(friday),
-          saturday = sum(saturday),
-          sunday = sum(sunday)
-        )
-
-      #initialize start and end date
-
-      route_calendar$start_date <- as.Date(NA)
-      route_calendar$end_date <- as.Date(NA)
-
-      #lookup start and end date for each service
-
-      for (i in seq_len(nrow(route_calendar))) {
-        service_id_i <- route_calendar$service_id[i]
-
-        calendar_dates_i <-
-          gtfs$calendar_dates |>
-          filter(service_id == service_id_i)
-
-        start_date_i <- min(calendar_dates_i$date)
-        end_date_i <- max(calendar_dates_i$date)
-        route_calendar$start_date[i] <- start_date_i
-        route_calendar$end_date[i] <- end_date_i
-      }
-    } else {
-      #gtfs has calendar table, create route calendar normally
-      route_calendar <-
-        gtfs$calendar |>
-        #only include service ids associated with the route(s) of interest
-        filter(service_id %in% route_service_ids) |>
-        filter(
-          start_date < max_date &
-            end_date > min_date
-        ) |>
-        #filter out any services that are totally inactive
-        filter(
-          monday == 1 |
-            tuesday == 1 |
-            wednesday == 1 |
-            thursday == 1 |
-            friday == 1 |
-            saturday == 1 |
-            sunday == 1
-        )
-    }
   } else {
-    # max_date is NULL, so we assign the last day of service described in the gtfs
-    #as the max date
-
+    #max date is null, use either max of calendar_dates or calendar as max date
     if (!"calendar" %in% gtfs_table_names) {
-      #calendar is not in gtfs table names, create route calendar using calendar_dates
-
-      #first, determine max_date based on max service date
+      #use max of calendar dates
       max_date <-
         gtfs$calendar_dates |>
+        filter(exception_type == 1) |>
         summarise(max_date = max(date)) |>
         pull(max_date)
-
-      min_date <- max_date - days(7)
-
-      route_calendar <-
-        gtfs$calendar_dates |>
-        filter(service_id %in% route_service_ids) |>
-        filter(
-          date >= min_date &
-            date <= max_date
-        ) |>
-        filter(exception_type == 1) |>
-        #day of week of each date
-        mutate(
-          day = tolower(lubridate::wday(
-            date,
-            label = TRUE,
-            abbr = FALSE,
-            week_start = 1
-          ))
-        ) |>
-        select(service_id, day) |>
-        distinct() |>
-        mutate(
-          monday = if_else(day == "monday", 1, 0),
-          tuesday = if_else(day == "tuesday", 1, 0),
-          wednesday = if_else(day == "wednesday", 1, 0),
-          thursday = if_else(day == "thursday", 1, 0),
-          friday = if_else(day == "friday", 1, 0),
-          saturday = if_else(day == "saturday", 1, 0),
-          sunday = if_else(day == "sunday", 1, 0)
-        ) |>
-        group_by(service_id) |>
-        summarise(
-          monday = sum(monday),
-          tuesday = sum(tuesday),
-          wednesday = sum(wednesday),
-          thursday = sum(thursday),
-          friday = sum(friday),
-          saturday = sum(saturday),
-          sunday = sum(sunday)
-        )
-
-      #initialize start and end date
-
-      route_calendar$start_date <- as.Date(NA)
-      route_calendar$end_date <- as.Date(NA)
-
-      #lookup start and end date for each service
-
-      for (i in seq_len(nrow(route_calendar))) {
-        service_id_i <- route_calendar$service_id[i]
-
-        calendar_dates_i <-
-          gtfs$calendar_dates |>
-          filter(service_id == service_id_i)
-
-        start_date_i <- min(calendar_dates_i$date)
-        end_date_i <- max(calendar_dates_i$date)
-        route_calendar$start_date[i] <- start_date_i
-        route_calendar$end_date[i] <- end_date_i
-      }
     } else {
-      # gtfs has calendar table, determine max_date and route calendar normally
-
+      #gtfs uses calendar table, determine max date normally
       max_date <-
         gtfs$calendar |>
         summarise(max_date = max(end_date)) |>
         pull(max_date)
-
-      min_date <- max_date - days(7)
-
-      route_calendar <-
-        gtfs$calendar |>
-        #only include service ids associated with the route(s) of interest
-        filter(service_id %in% route_service_ids) |>
-        filter(
-          start_date < max_date &
-            end_date > min_date
-        ) |>
-        #filter out any services that are totally inactive
-        filter(
-          monday == 1 |
-            tuesday == 1 |
-            wednesday == 1 |
-            thursday == 1 |
-            friday == 1 |
-            saturday == 1 |
-            sunday == 1
-        )
     }
+    min_date <- max_date - days(7)
+  }
+
+  #create route_calendar (standard whether input GTFS has calendar or calendar_dates)
+  if (!"calendar" %in% gtfs_table_names) {
+    #calendar is not in gtfs table names, create route calendar using calendar_dates
+    route_calendar <-
+      gtfs$calendar_dates |>
+      filter(service_id %in% route_service_ids) |>
+      filter(
+        date >= min_date &
+          date <= max_date
+      ) |>
+      filter(exception_type == 1) |>
+      #day of week of each date
+      mutate(
+        day = tolower(lubridate::wday(
+          date,
+          label = TRUE,
+          abbr = FALSE,
+          week_start = 1
+        ))
+      ) |>
+      select(service_id, day) |>
+      distinct() |>
+      mutate(
+        monday = if_else(day == "monday", 1, 0),
+        tuesday = if_else(day == "tuesday", 1, 0),
+        wednesday = if_else(day == "wednesday", 1, 0),
+        thursday = if_else(day == "thursday", 1, 0),
+        friday = if_else(day == "friday", 1, 0),
+        saturday = if_else(day == "saturday", 1, 0),
+        sunday = if_else(day == "sunday", 1, 0)
+      ) |>
+      group_by(service_id) |>
+      summarise(
+        monday = sum(monday),
+        tuesday = sum(tuesday),
+        wednesday = sum(wednesday),
+        thursday = sum(thursday),
+        friday = sum(friday),
+        saturday = sum(saturday),
+        sunday = sum(sunday)
+      )
+
+    #initialize start and end date
+
+    route_calendar$start_date <- as.Date(NA)
+    route_calendar$end_date <- as.Date(NA)
+
+    #lookup start and end date for each service
+
+    for (i in seq_len(nrow(route_calendar))) {
+      service_id_i <- route_calendar$service_id[i]
+
+      calendar_dates_i <-
+        gtfs$calendar_dates |>
+        filter(service_id == service_id_i)
+
+      start_date_i <- min(calendar_dates_i$date)
+      end_date_i <- max(calendar_dates_i$date)
+      route_calendar$start_date[i] <- start_date_i
+      route_calendar$end_date[i] <- end_date_i
+    }
+  } else {
+    #gtfs has calendar table, create route calendar normally
+    route_calendar <-
+      gtfs$calendar |>
+      #only include service ids associated with the route(s) of interest
+      filter(service_id %in% route_service_ids) |>
+      filter(
+        start_date < max_date &
+          end_date > min_date
+      ) |>
+      #filter out any services that are totally inactive
+      filter(
+        monday == 1 |
+          tuesday == 1 |
+          wednesday == 1 |
+          thursday == 1 |
+          friday == 1 |
+          saturday == 1 |
+          sunday == 1
+      )
   }
 
   #we want to create a table specifying, for each day of the week, what service ids
