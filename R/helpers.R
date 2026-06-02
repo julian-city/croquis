@@ -276,6 +276,29 @@ compute_interstop_distances_for_itin <- function(
       shapes_points_itin
     )
 
+    # Fix nearest_shape_indexes to ensure strictly ascending order (identical values in nearest_shape_indexes OK)
+    for (i in 2:length(nearest_shape_indexes)) {
+      if (nearest_shape_indexes[i] < nearest_shape_indexes[i - 1]) {
+        lower_bound <- nearest_shape_indexes[i - 1]
+
+        # Upper bound: find next element that's already valid, or use end of shape
+        upper_bound <- nrow(shapes_points_itin)
+        if (i < length(nearest_shape_indexes)) {
+          remaining <- nearest_shape_indexes[
+            (i + 1):length(nearest_shape_indexes)
+          ]
+          valid <- remaining[remaining >= lower_bound]
+          if (length(valid) > 0) upper_bound <- valid[1]
+        }
+
+        # Re-find nearest shape point within the constrained window
+        candidate_shapes <- shapes_points_itin[lower_bound:upper_bound, ]
+        distances <- st_distance(stop_points_itin[i, ], candidate_shapes)
+        nearest_in_window <- which.min(distances[1, ])
+        nearest_shape_indexes[i] <- lower_bound + nearest_in_window - 1
+      }
+    }
+
     if (nrow(shapes_points_itin) > 1) {
       segment_lengths <- as.numeric(
         st_distance(
