@@ -276,7 +276,10 @@ compute_interstop_distances_for_itin <- function(
       shapes_points_itin
     )
 
-    # Fix nearest_shape_indexes to ensure strictly ascending order (identical values in nearest_shape_indexes OK)
+    # Fix nearest_shape_indexes to enforce ascending order (identical values in nearest_shape_indexes OK)
+    # This prevents indexing wrong shapes_point, especially for routes associated with looped or intersecting shapes
+    # Particularly problematic in the middle and at the end of routes
+    # ERRORS COULD STILL EMINATE from mismatched 1st or 2nd indexes...
     for (i in 2:length(nearest_shape_indexes)) {
       if (nearest_shape_indexes[i] < nearest_shape_indexes[i - 1]) {
         lower_bound <- nearest_shape_indexes[i - 1]
@@ -340,4 +343,109 @@ compute_interstop_distances_for_itin <- function(
     stop_seq_id = itin_stop_seq$stop_seq_id,
     interstop_dist = interstop_distances
   )
+}
+
+#REVISE STOP TIMES
+#to handle sequential stops with the same stop time
+#fixes instances of stop times with the same stop time as the previous (e.g. when rounded to the minute)
+
+revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
+  stop_times_revised <-
+    stop_times |>
+    left_join(
+      trips |> select(trip_id, itin_id, service_id),
+      by = "trip_id"
+    ) |>
+    select(
+      itin_id,
+      service_id,
+      trip_id,
+      departure_time,
+      stop_id,
+      stop_sequence
+    ) |>
+    left_join(
+      stop_seq_proto |>
+        select(itin_id, stop_id, stop_sequence, interstop_dist),
+      by = c("itin_id", "stop_id", "stop_sequence")
+    ) |>
+    mutate(
+      departure_time = as.numeric(as.duration(hms(departure_time))),
+      lag_interstop_dist = lag(interstop_dist)
+    ) |> #necessary input for adjustment of last stop times
+    #if the last stop times of a trip are identical and need to be adjusted backward
+    #as opposed to forward
+    #identify groups of stops within the same trip that are made at the same time
+    #in the GTFS that need to be adjusted based on distance covered within that same minute
+
+    #WINDSOR TESTS
+    #filter(trip_id=="1261767") |>
+    #filter(trip_id%in%c("1261875","1261876","1261877")) |>
+
+    group_by(trip_id, service_id) |>
+    mutate(trip_max_stop_seq = max(stop_sequence)) |>
+    group_by(itin_id, trip_id, service_id, departure_time) |>
+    mutate(
+      ord = row_number(),
+      group_n = n(),
+      group_dist = sum(interstop_dist, na.rm = TRUE),
+      group_dist_back = sum(lag_interstop_dist, na.rm = TRUE),
+      group_dist_cov = lag(cumsum(interstop_dist), default = 0),
+      group_dist_cov_back = cumsum(lag_interstop_dist),
+      group_max_stop_seq = max(stop_sequence)
+    ) |>
+    ungroup() |>
+    mutate(
+      next_departure_time = case_when(
+        #in reality, the next departure time or the last one of the trip
+        stop_sequence == trip_max_stop_seq ~ departure_time + 60,
+        #^ Adding 60 seconds to final departure time. This will only be used for
+        #rewriting departure times in the case that there is two stops that occur at the same time
+        #and they are both at the end. Justification : if for example the second last stop is at 7:45 and
+        #the last stop is at 7:45 in the stop times, it makes sense to delay the last stop in the schedule as the
+        #one before it is already made at 7:45 (so the one after will logically be made afterwards...).
+        #Adding this buffer avoids a potential non chronological
+        #sequence of revised departure times if the the last stop shares the same departure time
+        #as one or more before it which are revised backward and before that is another set of stops
+        #that share the same departure time that need to be adjusted forward.
+        #Now we no longer need to revise times backwards at all.
+        ord == group_n ~ lead(departure_time),
+        TRUE ~ NA_real_
+      )
+    ) |>
+    fill(next_departure_time, .direction = "up") |>
+    mutate(
+      departure_time = case_when(
+        #Backward cases : several stops with same time at end of trip
+        #if it's the very last stop, then apply next departure time (add 60 seconds)
+        #otherwise calculate departure time forward but use alternate group_dist (_back) variables
+        (group_max_stop_seq == trip_max_stop_seq) &
+          (group_n > 1) &
+          (ord == group_n) ~ next_departure_time,
+        (group_max_stop_seq == trip_max_stop_seq) &
+          (group_n > 1) &
+          (ord < group_n) ~
+          round(
+            departure_time +
+              ((next_departure_time - departure_time) *
+                (group_dist_cov_back / group_dist_back)),
+            0
+          ),
+        #normal case : if in a group with several identical stop times, and ord > 1,
+        #then adjust departure time based on A*B, where A is the difference between next_departure_time
+        #and current departure_time and B is the proportion of distance covered in the group
+        #relative to total distance
+        (group_n > 1) & (ord > 1) ~
+          round(
+            departure_time +
+              ((next_departure_time - departure_time) *
+                (group_dist_cov / group_dist)),
+            0
+          ),
+        TRUE ~ departure_time #otherwise, departure_time unchanged.
+      )
+    ) |>
+    select(itin_id, trip_id, service_id, stop_id, stop_sequence, departure_time)
+
+  stop_times_revised
 }

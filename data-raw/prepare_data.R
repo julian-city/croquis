@@ -55,3 +55,20 @@ base_url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main"
 cities_db <- download_rds(paste0(base_url, "/cities_db.rds"))
 
 usethis::use_data(cities_db, internal = TRUE, overwrite = TRUE)
+
+# Railway City Transit GTFS (St. Thomas, Ontario)
+
+gtfs_rct <- gtfstools::read_gtfs(
+  "https://files.mobilitydatabase.org/tld-4746/tld-4746-202605300110/tld-4746-202605300110.zip"
+)
+# retrieved 2 June 2026
+
+# Railway City Transit Scenario SSFS
+
+# Created in Croquis using :
+# ssfs_rct <- gtfs_to_ssfs(gtfs_rct,max_date=as.Date("2026-06-08"))
+# croquis(ssfs_rct)
+# Export stops
+# croquis() then import stops
+# manually draw routes
+#import ssfs_rct2

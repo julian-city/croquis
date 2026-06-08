@@ -3,7 +3,7 @@
 #' Reads a reference GTFS and a target SSFS and returns that SSFS with speeds adjusted
 #' to those documented in the GTFS based on shapes and stop_times data.
 #'
-#' @param gtfs An object of class 'gtfs'
+#' @param gtfs An object of class 'gtfs'. Must include a shapes table.
 #' @param ssfs A ssfs list
 #' @param max_date A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the reference speed matrix from the reference GTFS. Leave as NULL to use the last 7 days of the reference GTFS
 #' @param buffer_dist A distance in meters used to define the radius of interstop speed matrix points. Defaults to 10.
@@ -212,20 +212,20 @@ apply_gtfs_speeds_to_ssfs <- function(
       interstop_speeds = as.list(NULL)
     )
 
+  message("calculating interstop distances for GTFS")
+
   for (i in seq_len(nrow(ssfs$calendar))) {
     service_id_i <- ssfs$calendar[i, ]$service_id
 
     #FILTER TRIPS BASED ON RELEVANT DAYS OF THE WEEK
     #identify the relevant reference gtfs service_ids for the speed matrix
 
-    #from chatgpt
     ssfs_calendar_days_i <- ssfs$calendar[i, ] |>
       select(all_of(days_of_week)) |>
       unlist()
 
     #filtered service ids from gtfs : excluding those that ONLY have service on days of the week
     #for which the ssfs$calendar service_id being processed does NOT run service
-    #from chatgpt
     service_ids_i <-
       route_calendar |>
       filter(service_id %in% service_ids) |>
@@ -250,28 +250,13 @@ apply_gtfs_speeds_to_ssfs <- function(
     interstop_times <- #calculating this first as we need it for the next step
       gtfs$stop_times |>
       filter(trip_id %in% trip_ids_i) |>
-      left_join(gtfs$trips |> select(trip_id, shape_id), by = "trip_id") |>
-      mutate(
-        lead_stop_seq = lead(stop_sequence),
-        lead_stop_id = lead(stop_id),
-        lead_arrival_time = lead(arrival_time)
-      ) |>
-      filter(lead_stop_seq == stop_sequence + 1)
+      left_join(gtfs$trips |> select(trip_id, shape_id), by = "trip_id")
 
     interstops <-
       interstop_times |>
-      select(stop_id, lead_stop_id, shape_id) |>
+      select(stop_id, stop_sequence, shape_id) |>
       distinct() |>
-      mutate(
-        interstop_id = str_c(
-          stop_id,
-          "-",
-          lead_stop_id,
-          "-",
-          shape_id
-        ),
-        .before = stop_id
-      )
+      arrange(shape_id, stop_sequence)
 
     shapes_points <-
       gtfs$shapes |>
@@ -279,7 +264,7 @@ apply_gtfs_speeds_to_ssfs <- function(
       as_tibble() |>
       st_as_sf(
         coords = c("shape_pt_lon", "shape_pt_lat"),
-        crs = 4269
+        crs = 4326
       ) |>
       arrange(shape_id, shape_pt_sequence)
 
@@ -289,92 +274,155 @@ apply_gtfs_speeds_to_ssfs <- function(
       select(stop_id, stop_lat, stop_lon) |>
       st_as_sf(
         coords = c("stop_lon", "stop_lat"),
-        crs = 4269
+        crs = 4326
       )
 
     #FOR ALL INTERSTOPS, CALCULATE CENTER POINT AND DISTANCE
 
-    #initialize
+    #initialize interstops with center points
 
-    interstops$dist <- NA
-    interstops$cntr_pt_lat <- NA
-    interstops$cntr_pt_lon <- NA
+    interstops_detailed <-
+      data.frame(
+        stop_id = character(),
+        stop_sequence = integer(),
+        shape_id = character(),
+        nearest_shp_pt = numeric(), # could probably be changed to integer, if data type downstream is forced
+        dist = numeric(),
+        lead_stop_id = character(),
+        lead_nearest_shp_pt = numeric(),
+        cntr_shp_pt = numeric(),
+        cntr_pt_lat = numeric(),
+        cntr_pt_lon = numeric()
+      )
 
-    cli::cli_progress_bar(
-      total = nrow(interstops),
-      format = "Producing interstop matrix points for {service_id_i} {cli::pb_bar} {cli::pb_percent} | ETA: {cli::pb_eta}",
-      clear = FALSE
-    )
+    unique_shape_ids <-
+      interstops |> pull(shape_id) |> unique()
 
-    for (i in seq_len(nrow(interstops))) {
-      cli::cli_progress_update()
+    for (shape_id_i in unique_shape_ids) {
+      interstops_i <- interstops |>
+        filter(shape_id == shape_id_i) |>
+        arrange(stop_sequence)
 
-      shape_id_i <- interstops$shape_id[i]
+      shapes_points_i <- shapes_points |>
+        filter(shape_id == shape_id_i) |>
+        arrange(shape_pt_sequence)
 
-      stop_id_a <- interstops$stop_id[i]
-      stop_id_b <- interstops$lead_stop_id[i]
+      unique_stops_i <-
+        unique(c(interstops_i$stop_id, interstops_i$lead_stop_id))
 
-      shapes_points_i <-
-        shapes_points |>
-        filter(shape_id == shape_id_i)
+      stops_i <- stops |>
+        filter(stop_id %in% unique_stops_i) |>
+        left_join(
+          interstops_i |> select(stop_id, stop_sequence),
+          by = "stop_id"
+        ) |>
+        arrange(stop_sequence)
 
-      stop_a <-
-        stops |>
-        filter(stop_id == stop_id_a)
+      #create indexes for nearest shape point to each stop
 
-      stop_b <-
-        stops |>
-        filter(stop_id == stop_id_b)
+      nearest_shape_indexes <- st_nearest_feature(
+        stops_i,
+        shapes_points_i
+      )
 
-      interstop_segment_points <-
-        shapes_points_i[
-          st_nearest_feature(stop_a, shapes_points_i):st_nearest_feature(
-            stop_b,
-            shapes_points_i
-          ),
-        ]
+      # Fix nearest_shape_indexes to enforce ascending order (identical values in nearest_shape_indexes OK)
+      # Same method used in compute_interstop_distances_for_itin()
+      for (i in 2:length(nearest_shape_indexes)) {
+        if (nearest_shape_indexes[i] < nearest_shape_indexes[i - 1]) {
+          lower_bound <- nearest_shape_indexes[i - 1]
 
-      #calculate distance (to the closest meter)
+          # Upper bound: find next element that's already valid, or use end of shape
+          upper_bound <- nrow(shapes_points_i)
+          if (i < length(nearest_shape_indexes)) {
+            remaining <- nearest_shape_indexes[
+              (i + 1):length(nearest_shape_indexes)
+            ]
+            valid <- remaining[remaining >= lower_bound]
+            if (length(valid) > 0) upper_bound <- valid[1]
+          }
 
-      if (nrow(interstop_segment_points) == 1) {
-        #calculate distance from stop a to stop b if both have the same nearest shape point
-        distance <-
-          as.numeric(sf::st_distance(stop_a, stop_b)) |> round()
-      } else {
-        # Calculate interstop distance normally along itin shape
-        distance <-
-          interstop_segment_points |>
-          summarise(do_union = FALSE) |>
-          st_cast("LINESTRING") |>
-          st_length() |>
-          as.numeric() |>
-          round()
+          # Re-find nearest shape point within the constrained window
+          candidate_shapes <- shapes_points_i[lower_bound:upper_bound, ]
+          distances <- st_distance(stops_i[i, ], candidate_shapes)
+          nearest_in_window <- which.min(distances[1, ])
+          nearest_shape_indexes[i] <- lower_bound + nearest_in_window - 1
+        }
       }
 
-      interstops$dist[i] <- distance
+      #calculate interstop dist, interstop cntr lat and interstop cntr lon for each
 
-      #it is necessary to take the middle point along the interstop_segment_points
-      #taking st_centroid does not work for example
+      interstop_distances <- rep(NA_real_, nrow(interstops_i))
 
-      cntr_point_coords <-
-        interstop_segment_points[
-          ceiling(nrow(interstop_segment_points) / 2),
-        ] |>
-        #ceiling is the best possible function : returns something useful and representative
-        #in every case : if nrow = 1, then it returns 1. For nrow = 5, it will return 3,
-        #which would indicate the exact middle of the route segment
-        #as opposed to round() which would return 2 for 5 due to the parameters of the
-        #round function in base R.
+      if (nrow(shapes_points_i) > 1) {
+        segment_lengths <- as.numeric(
+          st_distance(
+            shapes_points_i[-nrow(shapes_points_i), , drop = FALSE],
+            shapes_points_i[-1, , drop = FALSE],
+            by_element = TRUE
+          )
+        )
+        cumulative_lengths <- c(0, cumsum(segment_lengths))
+      } else {
+        cumulative_lengths <- 0
+      }
+
+      for (index in seq_len(nrow(interstops_i) - 1)) {
+        current_index <- nearest_shape_indexes[index]
+        next_index <- nearest_shape_indexes[index + 1]
+
+        if (current_index == next_index) {
+          cli::cli_warn(
+            "Calculated interstop distance {itin_stop_seq$stop_id[index]} -> {itin_stop_seq$stop_id[index + 1]} (itin {itin_id}) directly between both stops."
+          )
+          interstop_distances[index] <- as.numeric(
+            st_distance(
+              stops_i[index, , drop = FALSE],
+              stops_i[index + 1, , drop = FALSE]
+            )
+          )
+        } else {
+          interstop_distances[index] <- cumulative_lengths[max(
+            current_index,
+            next_index
+          )] -
+            cumulative_lengths[min(current_index, next_index)]
+        }
+      }
+
+      interstops_i$nearest_shp_pt <- nearest_shape_indexes
+
+      interstops_i$dist <- interstop_distances
+
+      interstops_i <-
+        interstops_i |>
         mutate(
+          lead_stop_id = lead(stop_id),
+          lead_nearest_shp_pt = lead(nearest_shp_pt)
+        )
+
+      interstops_i <-
+        interstops_i[1:(nrow(interstops_i) - 1), ]
+
+      shapes_points_idx <-
+        shapes_points_i |>
+        mutate(
+          cntr_shp_pt = row_number(),
           cntr_pt_lat = st_coordinates(geometry)[, 2],
           cntr_pt_lon = st_coordinates(geometry)[, 1]
         ) |>
-        as_tibble() |>
-        select(cntr_pt_lat, cntr_pt_lon)
+        as.data.frame() |>
+        select(cntr_shp_pt, cntr_pt_lat, cntr_pt_lon)
 
-      interstops$cntr_pt_lat[i] <- cntr_point_coords$cntr_pt_lat[1]
+      interstops_i <-
+        interstops_i |>
+        mutate(
+          cntr_shp_pt = nearest_shp_pt +
+            ceiling((lead_nearest_shp_pt - nearest_shp_pt) / 2)
+        ) |>
+        left_join(shapes_points_idx, by = "cntr_shp_pt")
 
-      interstops$cntr_pt_lon[i] <- cntr_point_coords$cntr_pt_lon[1]
+      interstops_detailed <-
+        rbind(interstops_detailed, interstops_i)
     }
 
     #SIMPLIFY OUTPUTS AND INTERSTOP_ID
@@ -387,8 +435,21 @@ apply_gtfs_speeds_to_ssfs <- function(
 
     #identify the interstops with variances of distance or centrepoint
 
+    interstops_detailed <-
+      interstops_detailed |>
+      mutate(
+        interstop_id = str_c(
+          stop_id,
+          "-",
+          lead_stop_id,
+          "-",
+          shape_id
+        ),
+        .before = stop_id
+      )
+
     varied_interstops <-
-      interstops |>
+      interstops_detailed |>
       select(stop_id, lead_stop_id, dist, cntr_pt_lat, cntr_pt_lon) |>
       distinct() |>
       group_by(stop_id, lead_stop_id) |>
@@ -408,6 +469,15 @@ apply_gtfs_speeds_to_ssfs <- function(
     #the shape_id distinction is not meaningful
 
     #CALCULATE SPEED FOR EVERY INTERSTOP FOR EVERY TRIP
+
+    interstop_times <-
+      interstop_times |>
+      mutate(
+        lead_stop_seq = lead(stop_sequence),
+        lead_stop_id = lead(stop_id),
+        lead_arrival_time = lead(arrival_time)
+      ) |>
+      filter(lead_stop_seq == stop_sequence + 1)
 
     interstop_speeds <-
       interstop_times |>
@@ -429,7 +499,7 @@ apply_gtfs_speeds_to_ssfs <- function(
         .before = departure_time
       ) |>
       left_join(
-        interstops |> select(interstop_id, dist),
+        interstops_detailed |> select(interstop_id, dist),
         by = "interstop_id"
       ) |>
       mutate(speed = (dist / duration_s) * 3.6) |>
@@ -451,13 +521,13 @@ apply_gtfs_speeds_to_ssfs <- function(
 
     #if the interstop_id is within those that have been identified as having varying distances,
     #or centre points based on shape_id, then retain interstop_id with the shape_id code,
-    #and if not the apply the simplified code containing info on only origin and dest
+    #and if not then apply the simplified code containing info on only origin and dest
     #stop_code
 
     #SIMPLIFY INTERSTOPS FOR ONLY UNIQUE ONES
 
     interstops <-
-      interstops |>
+      interstops_detailed |>
       as_tibble() |>
       mutate(
         interstop_id_simpl = str_c(
@@ -473,7 +543,15 @@ apply_gtfs_speeds_to_ssfs <- function(
           interstop_id_simpl
         )
       ) |>
-      select(-c(shape_id, interstop_id_simpl)) |>
+      select(
+        interstop_id,
+        stop_id,
+        lead_stop_id,
+        shape_id,
+        dist,
+        cntr_pt_lat,
+        cntr_pt_lon
+      ) |>
       distinct()
 
     #APPEND INTERSTOP DATA TO NESTED TABLE
@@ -497,13 +575,13 @@ apply_gtfs_speeds_to_ssfs <- function(
   interstop_points <-
     tibble(
       interstop_id = as.character(),
-      geometry = st_sfc(NA, crs = 4269)
+      geometry = st_sfc(NA, crs = 4326)
     )
 
   for (i in seq_len(nrow(interstop_matrices_by_service))) {
     interstop_points_i <-
       interstop_matrices_by_service$interstops[[i]] |>
-      st_as_sf(coords = c("cntr_pt_lon", "cntr_pt_lat"), crs = 4269) |>
+      st_as_sf(coords = c("cntr_pt_lon", "cntr_pt_lat"), crs = 4326) |>
       select(interstop_id, geometry) |>
       as_tibble()
 
@@ -551,69 +629,189 @@ apply_gtfs_speeds_to_ssfs <- function(
     filter(!is.na(lead_stop_id)) |>
     distinct()
 
-  #initialize vectors to fill
+  # SSFS INTERSTOP DISTANCES
+  # reuse compute_interstop_distances_for_itin() — same helper used in
+  # gtfs_to_ssfs() and ssfs_to_gtfs()
 
-  ssfs_interstops$dist <- NA_real_
-
-  ssfs_interstops$geometry <- st_sfc(NA)
-
+  # prepare shapes_points in the format expected by the helper
   shapes_points <-
-    ssfs$itin |> select(itin_id, geometry) |> st_cast("POINT")
+    ssfs$itin |>
+    select(itin_id, geometry) |>
+    st_cast("POINT") |>
+    distinct() |>
+    group_by(itin_id) |>
+    mutate(shape_pt_sequence = row_number(), .before = geometry) |>
+    ungroup()
 
-  cli::cli_progress_bar(
-    "Writing ssfs interstops",
-    total = nrow(ssfs_interstops)
-  )
-
-  for (i in seq_len(nrow(ssfs_interstops))) {
-    cli::cli_progress_update()
-
-    stop_id_a <-
-      ssfs_interstops$stop_id[i]
-
-    stop_id_b <-
-      ssfs_interstops$lead_stop_id[i]
-
-    stop_a <-
-      ssfs$stops |>
-      filter(stop_id == stop_id_a)
-
-    stop_b <-
-      ssfs$stops |>
-      filter(stop_id == stop_id_b)
-
-    shape_id_i <-
-      ssfs_interstops$itin_id[i]
-
-    shapes_points_i <-
-      shapes_points |>
-      filter(itin_id == shape_id_i)
-
-    interstop_segment_points <-
-      shapes_points_i[
-        st_nearest_feature(stop_a, shapes_points_i):st_nearest_feature(
-          stop_b,
-          shapes_points_i
-        ),
-      ]
-
-    path_i <-
-      interstop_segment_points |>
-      group_by(itin_id) |>
-      summarise(do_union = FALSE) |>
-      st_cast("LINESTRING") |>
-      as_tibble()
-
-    ssfs_interstops$dist[i] <- round(
-      as.numeric(st_length(path_i$geometry[1])),
-      0
+  # prepare stop_seq_proto with stop_seq_id (mirroring ssfs_to_gtfs pattern)
+  ssfs_stop_seq <-
+    ssfs$stop_seq |>
+    mutate(
+      stop_seq_id = str_c(
+        itin_id,
+        "_",
+        as.character(stop_id),
+        "_",
+        as.character(stop_sequence)
+      )
     )
 
-    ssfs_interstops$geometry[i] <- path_i$geometry[1]
-  }
+  cli::cli_alert_info(
+    "Computing SSFS interstop distances ({nrow(ssfs_interstops)} interstops across {length(unique(ssfs_interstops$itin_id))} itineraries)"
+  )
 
+  ssfs_interstop_distances <- lapply(
+    unique(ssfs_stop_seq$itin_id),
+    function(itin_id_i) {
+      compute_interstop_distances_for_itin(
+        itin_id = itin_id_i,
+        stop_seq_proto = ssfs_stop_seq,
+        shapes_points = shapes_points,
+        stops = ssfs$stops
+      )
+    }
+  ) |>
+    bind_rows()
+
+  # join distances to ssfs_interstops via stop_seq_id
   ssfs_interstops <-
-    st_as_sf(ssfs_interstops, crs = 4269)
+    ssfs_interstops |>
+    mutate(
+      stop_seq_id = str_c(
+        itin_id,
+        "_",
+        as.character(stop_id),
+        "_",
+        as.character(stop_sequence)
+      )
+    ) |>
+    left_join(ssfs_interstop_distances, by = "stop_seq_id") |>
+    mutate(dist = round(interstop_dist, 0)) |>
+    select(-interstop_dist, -stop_seq_id)
+
+  # SSFS INTERSTOP GEOMETRIES
+  # build LINESTRING paths per itin_id for downstream st_join with GTFS buffers
+  # nearest-feature indexes are computed once per itin (not per row)
+
+  cli::cli_alert_info("Building SSFS interstop path geometries")
+
+  ssfs_interstop_geom_list <- lapply(
+    unique(ssfs_interstops$itin_id),
+    function(itin_id_i) {
+      interstops_i <- ssfs_interstops[
+        ssfs_interstops$itin_id == itin_id_i,
+        ,
+        drop = FALSE
+      ]
+      shapes_pts_i <- shapes_points[
+        shapes_points$itin_id == itin_id_i,
+        ,
+        drop = FALSE
+      ]
+
+      n_shape_pts <- nrow(shapes_pts_i)
+
+      if (n_shape_pts == 0) {
+        return(tibble(
+          stop_id = interstops_i$stop_id,
+          lead_stop_id = interstops_i$lead_stop_id,
+          stop_sequence = interstops_i$stop_sequence,
+          itin_id = itin_id_i,
+          geometry = st_sfc(
+            rep(list(st_linestring()), nrow(interstops_i)),
+            crs = 4326
+          )
+        ))
+      }
+
+      # reconstruct traversal order of unique stops from interstop pairs
+      all_pair_stops <- c(rbind(
+        interstops_i$stop_id,
+        interstops_i$lead_stop_id
+      ))
+      ordered_unique_stops <- unique(all_pair_stops)
+
+      stops_ordered <- ssfs$stops[
+        match(ordered_unique_stops, ssfs$stops$stop_id),
+        ,
+        drop = FALSE
+      ]
+
+      # one st_nearest_feature call for all stops on this itin
+      nearest_shape_indexes <- st_nearest_feature(stops_ordered, shapes_pts_i)
+
+      # fix nearest_shape_indexes to ensure strictly ascending order
+      # (identical values OK)
+      if (length(nearest_shape_indexes) > 1) {
+        for (k in 2:length(nearest_shape_indexes)) {
+          if (nearest_shape_indexes[k] < nearest_shape_indexes[k - 1]) {
+            lower_bound <- nearest_shape_indexes[k - 1]
+
+            upper_bound <- n_shape_pts
+            if (k < length(nearest_shape_indexes)) {
+              remaining <- nearest_shape_indexes[
+                (k + 1):length(nearest_shape_indexes)
+              ]
+              valid <- remaining[remaining >= lower_bound]
+              if (length(valid) > 0) upper_bound <- valid[1]
+            }
+
+            candidate_shapes <- shapes_pts_i[lower_bound:upper_bound, ]
+            distances <- st_distance(stops_ordered[k, ], candidate_shapes)
+            nearest_in_window <- which.min(distances[1, ])
+            nearest_shape_indexes[k] <- lower_bound + nearest_in_window - 1
+          }
+        }
+      }
+
+      nearest_idx <- setNames(nearest_shape_indexes, ordered_unique_stops)
+
+      # pre-extract coordinates for LINESTRING construction
+      shape_coords <- st_coordinates(shapes_pts_i)
+
+      # build a LINESTRING for each interstop pair
+      geom_list <- vector("list", nrow(interstops_i))
+
+      for (j in seq_len(nrow(interstops_i))) {
+        idx_a <- nearest_idx[interstops_i$stop_id[j]]
+        idx_b <- nearest_idx[interstops_i$lead_stop_id[j]]
+
+        lo <- min(idx_a, idx_b)
+        hi <- max(idx_a, idx_b)
+
+        if (lo == hi) {
+          # both stops snap to the same shape point — build a line from
+          # that point to the next (or previous) to create a valid LINESTRING
+          if (lo < n_shape_pts) {
+            geom_list[[j]] <- st_linestring(shape_coords[lo:(lo + 1), 1:2])
+          } else {
+            geom_list[[j]] <- st_linestring(shape_coords[(lo - 1):lo, 1:2])
+          }
+        } else {
+          geom_list[[j]] <- st_linestring(shape_coords[lo:hi, 1:2])
+        }
+      }
+
+      tibble(
+        stop_id = interstops_i$stop_id,
+        lead_stop_id = interstops_i$lead_stop_id,
+        stop_sequence = interstops_i$stop_sequence,
+        itin_id = itin_id_i,
+        geometry = st_sfc(geom_list, crs = 4326)
+      )
+    }
+  ) |>
+    bind_rows()
+
+  # join geometries back to ssfs_interstops
+  ssfs_interstops <-
+    ssfs_interstops |>
+    left_join(
+      ssfs_interstop_geom_list |>
+        select(stop_id, lead_stop_id, stop_sequence, itin_id, geometry),
+      by = c("stop_id", "lead_stop_id", "stop_sequence", "itin_id")
+    ) |>
+    st_as_sf(crs = 4326)
 
   #     #     #
   #

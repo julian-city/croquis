@@ -1837,7 +1837,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                         id = ns("sched_hsh_edit_headway"),
                         value = if (!is.na(hdwy_val)) hdwy_val else "",
                         min = "1",
-                        max = "60",
+                        max = "119",
                         placeholder = "e.g. 10"
                       )
                     ),
@@ -2848,9 +2848,9 @@ scheduleServer <- function(id, ssfs, map_center) {
       # Parse headway
       new_headway <- suppressWarnings(as.numeric(data$headway))
       if (!is.na(new_headway)) {
-        if (new_headway < 1 || new_headway > 60) {
+        if (new_headway < 1 || new_headway > 119) {
           showNotification(
-            "Headway must be between 1 and 60 minutes.",
+            "Headway must be between 1 and 119 minutes.",
             type = "error"
           )
           return()
@@ -3705,7 +3705,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                   id = ns("sched_preset_hour_edit_headway"),
                   value = "10",
                   min = "1",
-                  max = "60",
+                  max = "119",
                   style = "width: 80px;"
                 )
               )
@@ -3813,7 +3813,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                           id = ns("sched_preset_hour_edit_headway"),
                           value = if (!is.na(hdwy_val)) hdwy_val else "",
                           min = "1",
-                          max = "60",
+                          max = "119",
                           style = "width: 80px;"
                         )
                       )
@@ -3933,7 +3933,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                         id = ns("sched_preset_hour_edit_headway"),
                         value = "10",
                         min = "1",
-                        max = "60",
+                        max = "119",
                         style = "width: 80px;"
                       )
                     )
@@ -3981,7 +3981,7 @@ scheduleServer <- function(id, ssfs, map_center) {
                         id = ns("sched_preset_hour_edit_headway"),
                         value = "10",
                         min = "1",
-                        max = "60",
+                        max = "119",
                         style = "width: 80px;"
                       )
                     )
@@ -4224,9 +4224,9 @@ scheduleServer <- function(id, ssfs, map_center) {
       # Allow blank/NA headway
       if (nchar(trimws(data$headway)) == 0) {
         new_headway <- NA_integer_
-      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 60) {
+      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 119) {
         showNotification(
-          "Headway must be between 1 and 60, or left blank.",
+          "Headway must be between 1 and 119, or left blank.",
           type = "error"
         )
         return()
@@ -4274,9 +4274,9 @@ scheduleServer <- function(id, ssfs, map_center) {
       new_headway <- suppressWarnings(as.numeric(data$headway))
       if (nchar(trimws(data$headway)) == 0) {
         new_headway <- NA_integer_
-      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 60) {
+      } else if (is.na(new_headway) || new_headway < 1 || new_headway > 119) {
         showNotification(
-          "Headway must be between 1 and 60, or left blank.",
+          "Headway must be between 1 and 119, or left blank.",
           type = "error"
         )
         return()
