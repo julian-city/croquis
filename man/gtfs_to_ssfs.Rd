@@ -8,7 +8,7 @@ gtfs_to_ssfs(
   gtfs,
   routes = NULL,
   max_date = NULL,
-  routing_server = c("Valhalla", "OSRM"),
+  routing_server = c("OSRM", "Valhalla"),
   workers = 1L
 )
 }

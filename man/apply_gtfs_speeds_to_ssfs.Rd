@@ -7,19 +7,20 @@
 apply_gtfs_speeds_to_ssfs(
   gtfs,
   ssfs,
-  max_date,
+  max_date = NULL,
   buffer_dist = 10,
   dist_factor = 0.5,
   stop_time = 10,
-  osrm_speed_adj_factor = 0.72
+  osrm_speed_adj_factor = 0.72,
+  accepted_route_types = c(0, 3)
 )
 }
 \arguments{
-\item{gtfs}{An object of class 'gtfs'}
+\item{gtfs}{An object of class 'gtfs'. Must include a shapes table.}
 
 \item{ssfs}{A ssfs list}
 
-\item{max_date}{A date representing the maximum date range of services retained from the reference GTFS}
+\item{max_date}{A date within the range of gtfs$calendar$end_date representing the maximum of a 7 day range used to build the reference speed matrix from the reference GTFS. Leave as NULL to use the last 7 days of the reference GTFS}
 
 \item{buffer_dist}{A distance in meters used to define the radius of interstop speed matrix points. Defaults to 10.}
 
@@ -28,6 +29,8 @@ apply_gtfs_speeds_to_ssfs(
 \item{stop_time}{An integer in seconds, representing the amount of time added per stop made for runtimes calculated using OSRM}
 
 \item{osrm_speed_adj_factor}{A coefficient used to adjust output OSRM runtimes to make them more representative of bus runtimes.}
+
+\item{accepted_route_types}{Route types that can be used to build the reference speed matrix. By default, 0 (tramways) and 3 (buses).}
 }
 \value{
 A ssfs list

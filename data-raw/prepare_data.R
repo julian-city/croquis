@@ -63,7 +63,7 @@ gtfs_rct <- gtfstools::read_gtfs(
 )
 # retrieved 2 June 2026
 
-# Railway City Transit Scenario SSFS
+# ssfs_rct2: Railway City Transit Scenario SSFS
 
 # Created in Croquis using :
 # ssfs_rct <- gtfs_to_ssfs(gtfs_rct,max_date=as.Date("2026-06-08"))
@@ -72,3 +72,4 @@ gtfs_rct <- gtfstools::read_gtfs(
 # croquis() then import stops
 # manually draw routes
 #import ssfs_rct2
+#e.g. ssfs_rct2 <- readRDS("~/Downloads/ssfs_rct2.rds")

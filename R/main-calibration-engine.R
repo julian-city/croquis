@@ -247,13 +247,13 @@ apply_gtfs_speeds_to_ssfs <- function(
     #IDENTIFY ALL UNIQUE INTERSTOPS
     #based on origin stop, dest stop, shape_id
 
-    interstop_times <- #calculating this first as we need it for the next step
+    stop_times <- #calculating this first as we need it for the next step
       gtfs$stop_times |>
       filter(trip_id %in% trip_ids_i) |>
       left_join(gtfs$trips |> select(trip_id, shape_id), by = "trip_id")
 
     interstops <-
-      interstop_times |>
+      stop_times |>
       select(stop_id, stop_sequence, shape_id) |>
       distinct() |>
       arrange(shape_id, stop_sequence)
@@ -470,12 +470,35 @@ apply_gtfs_speeds_to_ssfs <- function(
 
     #CALCULATE SPEED FOR EVERY INTERSTOP FOR EVERY TRIP
 
+    #use the revise_stop_times() function used for gtfs_to_ssfs(),
+    #which typically required itin_id but we will sub in shape_id to play the same role (maybe risky)
+
+    #make a proxy stop_seq_proto from stop_times and interstops_detailed
+    stop_seq_proto_proxy <-
+      stop_times |>
+      select(shape_id, stop_id, stop_sequence) |>
+      distinct() |>
+      arrange(shape_id, stop_sequence) |>
+      left_join(
+        interstops_detailed |> select(shape_id, stop_id, stop_sequence, dist),
+        by = c("shape_id", "stop_id", "stop_sequence")
+      ) |>
+      rename(itin_id = shape_id, interstop_dist = dist)
+
+    stop_times_revised <-
+      revise_stop_times(
+        stop_times = stop_times,
+        trips = gtfs$trips |> mutate(itin_id = shape_id), #use shape_id to fill itin_id need
+        stop_seq_proto = stop_seq_proto_proxy
+      )
+
     interstop_times <-
-      interstop_times |>
+      stop_times_revised |>
+      rename(shape_id = itin_id) |>
       mutate(
         lead_stop_seq = lead(stop_sequence),
         lead_stop_id = lead(stop_id),
-        lead_arrival_time = lead(arrival_time)
+        lead_departure_time = lead(departure_time)
       ) |>
       filter(lead_stop_seq == stop_sequence + 1)
 
@@ -483,10 +506,7 @@ apply_gtfs_speeds_to_ssfs <- function(
       interstop_times |>
       as_tibble() |>
       mutate(
-        duration_s = as.numeric(
-          as.duration(hms(lead_arrival_time)) -
-            as.duration(hms(departure_time))
-        )
+        duration_s = lead_departure_time - departure_time
       ) |>
       mutate(
         interstop_id = str_c(
@@ -956,9 +976,7 @@ apply_gtfs_speeds_to_ssfs <- function(
       interstop_speeds_i_h <-
         interstop_speeds_i |>
         filter(interstop_id %in% interstop_ids_i) |>
-        mutate(
-          departure_time_s = as.numeric(as.duration(hms(departure_time)))
-        ) |> #converts departure time to duration in seconds
+        rename(departure_time_s = departure_time) |>
         mutate(
           hour_dep = sprintf(
             "%02d:00:00",
@@ -1007,9 +1025,7 @@ apply_gtfs_speeds_to_ssfs <- function(
             interstop_speeds_i_h_d <-
               interstop_speeds_i |>
               filter(interstop_id %in% interstop_ids_b) |>
-              mutate(
-                departure_time_s = as.numeric(as.duration(hms(departure_time)))
-              ) |> #converts departure time to duration in seconds
+              rename(departure_time_s = departure_time) |>
               mutate(
                 hour_dep = sprintf(
                   "%02d:00:00",
