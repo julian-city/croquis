@@ -38,25 +38,38 @@ usethis::use_data(
   overwrite = TRUE
 )
 
-# Cities database (internal)
-# Original code for this database required
+# Cities database (internal)--------------
+library(maps)
+library(lutz)
 
-# Helper to download an rds from GitHub
-download_rds <- function(url) {
-  temp <- tempfile(fileext = ".rds")
-  download.file(url, temp, mode = "wb")
-  obj <- readRDS(temp)
-  unlink(temp)
-  obj
-}
+cities <-
+  world.cities %>%
+  group_by(name, country.etc) %>%
+  mutate(max_pop = max(pop)) %>%
+  ungroup() %>%
+  filter(pop == max_pop) %>%
+  group_by(name) %>%
+  mutate(max_pop = max(pop)) %>%
+  mutate(name_repeat_n = n()) %>%
+  arrange(-pop) %>%
+  mutate(city_rown = row_number()) %>%
+  mutate(
+    name = if_else(pop == max_pop, name, str_c(name, " (", country.etc, ")"))
+  ) %>%
+  ungroup()
 
-base_url <- "https://github.com/julian-city/gtfsforge/raw/refs/heads/main"
+cities <-
+  cities %>%
+  filter(pop > 25000) |>
+  select(name, lat, long)
 
-cities_db <- download_rds(paste0(base_url, "/cities_db.rds"))
+cities_db <-
+  cities %>%
+  mutate(tz = tz_lookup_coords(lat, long, method = "accurate"))
 
 usethis::use_data(cities_db, internal = TRUE, overwrite = TRUE)
 
-# Railway City Transit GTFS (St. Thomas, Ontario)
+# Railway City Transit GTFS (St. Thomas, Ontario)-----------------
 
 gtfs_rct <- gtfstools::read_gtfs(
   "https://files.mobilitydatabase.org/tld-4746/tld-4746-202605300110/tld-4746-202605300110.zip"

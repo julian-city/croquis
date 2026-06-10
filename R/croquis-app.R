@@ -211,31 +211,66 @@ croquis <- function(ssfs = NULL) {
             column(
               4,
               wellPanel(
-                style = paste0(
-                  "height: 30vh; min-height: 200px; ",
-                  "overflow-y: auto; margin-bottom: 15px;"
-                ),
+                #style = paste0(
+                #  "height: 30vh; min-height: 200px; ",
+                #  "overflow-y: auto; margin-bottom: 15px;"
+                #),
                 h4("Project Location"),
-                p("Set the map center and timezone:"),
                 div(
-                  style = "position: relative;",
-                  textInput(
-                    "city_search",
-                    "Search for a city",
-                    placeholder = "Type city name..."
+                  style = "display: flex; align-items: flex-end; gap: 8px;",
+                  div(
+                    style = "position: relative; flex: 1;",
+                    textInput(
+                      "city_search",
+                      tags$label(
+                        "Search for a city",
+                        info_popover(
+                          "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you made need to set coordinates manually below.",
+                        )
+                      ),
+                      placeholder = "Type city name...",
+                      width = "100%"
+                    ),
+                    div(
+                      id = "city_suggestions",
+                      class = "suggestions-panel"
+                    )
                   ),
                   div(
-                    id = "city_suggestions",
-                    class = "suggestions-panel"
+                    style = "margin-bottom: 15px;",
+                    actionButton(
+                      "select_city",
+                      "Select City",
+                      class = "btn-info"
+                    )
                   )
                 ),
-                actionButton(
-                  "select_city",
-                  "Select City",
-                  class = "btn-info"
-                ),
-                tags$br(),
-                tags$small("Updates the map center and fetches timezone")
+                tags$small("Updates the map center and fetches timezone"),
+                h5("...Or set project coordinates manually"),
+                fluidRow(
+                  column(
+                    6,
+                    numericInput(
+                      "manual_lat",
+                      "Latitude",
+                      value = NA,
+                      min = -90,
+                      max = 90,
+                      step = 0.00001
+                    )
+                  ),
+                  column(
+                    6,
+                    numericInput(
+                      "manual_lng",
+                      "Longitude",
+                      value = NA,
+                      min = -180,
+                      max = 180,
+                      step = 0.00001
+                    )
+                  )
+                )
               )
             ),
             # Right column: Map
@@ -639,6 +674,13 @@ croquis <- function(ssfs = NULL) {
       }
     )
 
+    # TRUE when the loaded network has at least one stop with geometry
+    network_has_stops <- reactive({
+      current_data <- ssfs()
+      nrow(current_data$stops) > 0 &&
+        !all(sf::st_is_empty(current_data$stops$geometry))
+    })
+
     # Filtered cities for autocomplete
     filtered_cities <- reactiveVal(data.frame())
 
@@ -972,6 +1014,10 @@ croquis <- function(ssfs = NULL) {
 
     # City search autocomplete
     observeEvent(input$city_search, {
+      if (network_has_stops()) {
+        return()
+      }
+
       search_term <- input$city_search
 
       if (nchar(search_term) >= 2) {
@@ -1024,6 +1070,17 @@ croquis <- function(ssfs = NULL) {
 
     # Handle select city button
     observeEvent(input$select_city, {
+      if (network_has_stops()) {
+        showNotification(
+          paste(
+            "The map center is set from the loaded network's stops.",
+            "Remove all stops to set a city manually."
+          ),
+          type = "warning"
+        )
+        return()
+      }
+
       search_term <- input$city_search
 
       if (is.null(search_term) || search_term == "") {
@@ -1070,6 +1127,91 @@ croquis <- function(ssfs = NULL) {
         )
       }
     })
+
+    # Sync manual coordinate inputs with the current map center
+    observe({
+      center <- map_center()
+      updateNumericInput(session, "manual_lat", value = round(center$lat, 5))
+      updateNumericInput(session, "manual_lng", value = round(center$lng, 5))
+    })
+
+    # Lock manual coordinates once stops exist; reflect the network center
+    observe({
+      current_data <- ssfs()
+
+      has_stops <- network_has_stops()
+
+      if (has_stops) {
+        shinyjs::disable("manual_lat")
+        shinyjs::disable("manual_lng")
+
+        bbox <- st_bbox(current_data$stops)
+        updateNumericInput(
+          session,
+          "manual_lat",
+          value = round((bbox[["ymin"]] + bbox[["ymax"]]) / 2, 5)
+        )
+        updateNumericInput(
+          session,
+          "manual_lng",
+          value = round((bbox[["xmin"]] + bbox[["xmax"]]) / 2, 5)
+        )
+
+        shinyjs::disable("city_search")
+        shinyjs::disable("select_city")
+        session$sendCustomMessage("hideSuggestions", "")
+      } else {
+        shinyjs::enable("manual_lat")
+        shinyjs::enable("manual_lng")
+        shinyjs::enable("city_search")
+        shinyjs::enable("select_city")
+      }
+    })
+
+    # Apply manually entered coordinates to the map center (scratch projects only)
+    manual_coords <- reactive({
+      list(lat = input$manual_lat, lng = input$manual_lng)
+    }) |>
+      debounce(800)
+
+    observeEvent(
+      manual_coords(),
+      {
+        coords <- manual_coords()
+        req(coords$lat, coords$lng)
+
+        current_data <- isolate(ssfs())
+        if (nrow(current_data$stops) > 0) {
+          return()
+        }
+
+        if (
+          !is.finite(coords$lat) ||
+            !is.finite(coords$lng) ||
+            coords$lat < -90 ||
+            coords$lat > 90 ||
+            coords$lng < -180 ||
+            coords$lng > 180
+        ) {
+          showNotification(
+            "Latitude must be between -90 and 90, longitude between -180 and 180",
+            type = "warning"
+          )
+          return()
+        }
+
+        center <- isolate(map_center())
+        if (
+          isTRUE(all.equal(center$lat, coords$lat, tolerance = 1e-6)) &&
+            isTRUE(all.equal(center$lng, coords$lng, tolerance = 1e-6))
+        ) {
+          return()
+        }
+
+        map_center(list(lng = coords$lng, lat = coords$lat))
+      },
+      ignoreInit = TRUE
+    )
 
     #   #   #
     #
