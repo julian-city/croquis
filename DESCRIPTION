@@ -22,6 +22,7 @@ Imports:
     leaflet,
     lubridate,
     osrm,
+    osmextract,
     plotly,
     purrr,
     rlang,

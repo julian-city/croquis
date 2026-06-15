@@ -56,7 +56,7 @@ stopsUI <- function(id) {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('stops-import-export-panel')",
-            h4("Import / Export"),
+            h4("Import / Export / Generate"),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -92,7 +92,20 @@ stopsUI <- function(id) {
               ns("stops_export_download"),
               "Download",
               class = "btn-primary btn-sm"
-            )
+            ),
+            hr(),
+            h5(tagList(
+              "Auto-generate stops",
+              info_popover(
+                paste(
+                  "Automatically generate stops at road intersections",
+                  "within a drawn zone using OpenStreetMap data.",
+                  "Stops are placed at intersections based on minimum",
+                  "stop spacing set in Settings."
+                )
+              )
+            )),
+            uiOutput(ns("stops_generate_ui"))
           )
         )
       )
@@ -101,7 +114,14 @@ stopsUI <- function(id) {
 }
 
 # Server
-stopsServer <- function(id, ssfs, map_center, current_zoom) {
+stopsServer <- function(
+  id,
+  ssfs,
+  map_center,
+  current_zoom,
+  min_stop_dist,
+  osm_provider
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -126,6 +146,12 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
 
     # Check previous itin
     prev_itin_hash <- reactiveVal(NULL)
+
+    # Stop generation reactive values
+    stops_generate_mode <- reactiveVal(FALSE)
+    stops_generate_polygon <- reactiveVal(NULL)
+    stops_draw_vertices <- reactiveVal(list())
+    autostop_batch_id <- reactiveVal(1L)
 
     # Handle stop search input
     observeEvent(
@@ -603,6 +629,14 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
     observeEvent(input$stops_map_click, {
       click <- input$stops_map_click
 
+      # Polygon drawing mode: capture vertex instead of placing a stop
+      if (stops_generate_mode()) {
+        verts <- stops_draw_vertices()
+        verts[[length(verts) + 1]] <- c(click$lng, click$lat)
+        stops_draw_vertices(verts)
+        return()
+      }
+
       if (!is.null(stops_editing_id()) || stops_adding_new()) {
         stops_temp_point(c(click$lng, click$lat))
       }
@@ -783,6 +817,259 @@ stopsServer <- function(id, ssfs, map_center, current_zoom) {
       }
 
       showNotification("Stop deleted successfully", type = "message")
+    })
+
+    ### STOPS GENERATION FUNCTIONALITY ----
+
+    # Render the generate panel UI (state-dependent)
+    output$stops_generate_ui <- renderUI({
+      drawing <- stops_generate_mode()
+      polygon <- stops_generate_polygon()
+      verts <- stops_draw_vertices()
+
+      if (drawing) {
+        tagList(
+          div(
+            class = "editing-instruction",
+            paste0(
+              "Click on the map to draw the zone (",
+              length(verts),
+              if (length(verts) == 1) " vertex)" else " vertices)"
+            )
+          ),
+          div(
+            style = "display: flex; gap: 5px; margin-top: 8px;",
+            actionButton(
+              ns("stops_generate_complete"),
+              "Complete",
+              class = "btn-success btn-sm"
+            ),
+            actionButton(
+              ns("stops_generate_cancel"),
+              "Cancel",
+              class = "btn-outline-secondary btn-sm"
+            )
+          )
+        )
+      } else if (!is.null(polygon)) {
+        tagList(
+          div(
+            class = "editing-instruction",
+            style = "background-color: #D1E5F0; border-color: #2166AC; color: #2166AC",
+            icon("check-circle", style = "color: #2166AC;"),
+            " Zone drawn. Click Generate below to confirm"
+          ),
+          div(
+            style = "display: flex; gap: 5px; margin-top: 8px;",
+            actionButton(
+              ns("stops_generate_run"),
+              "Generate",
+              class = "btn-success btn-sm"
+            ),
+            actionButton(
+              ns("stops_generate_clear"),
+              "Clear zone",
+              class = "btn-outline-secondary btn-sm"
+            )
+          )
+        )
+      } else {
+        actionButton(
+          ns("stops_generate_draw"),
+          "Draw zone on map",
+          class = "btn-info btn-sm"
+        )
+      }
+    })
+
+    # Enter draw mode
+    observeEvent(input$stops_generate_draw, {
+      # Exit any stop editing mode
+      stops_editing_id(NULL)
+      stops_adding_new(FALSE)
+      stops_temp_point(NULL)
+
+      stops_generate_mode(TRUE)
+      stops_draw_vertices(list())
+      stops_generate_polygon(NULL)
+
+      leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("draw_zone")
+    })
+
+    # Redraw in-progress polygon as vertices are added
+    observe({
+      verts <- stops_draw_vertices()
+
+      if (!stops_generate_mode()) {
+        return()
+      }
+
+      proxy <- leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("draw_zone")
+
+      if (length(verts) == 0) {
+        return()
+      }
+
+      lngs <- vapply(verts, `[`, numeric(1), 1)
+      lats <- vapply(verts, `[`, numeric(1), 2)
+
+      proxy <- proxy |>
+        leaflet::addCircleMarkers(
+          lng = lngs,
+          lat = lats,
+          radius = 5,
+          color = "#2166AC",
+          fillColor = "#2166AC",
+          fillOpacity = 0.5,
+          weight = 1,
+          stroke = TRUE,
+          group = "draw_zone",
+          options = leaflet::pathOptions(pane = "stops_temp_pane")
+        )
+
+      if (length(verts) >= 2) {
+        proxy |>
+          leaflet::addPolylines(
+            lng = lngs,
+            lat = lats,
+            color = "#3388ff",
+            weight = 2,
+            dashArray = "5,5",
+            group = "draw_zone",
+            options = leaflet::pathOptions(pane = "stops_temp_pane")
+          )
+      }
+    })
+
+    # Complete the polygon
+    observeEvent(input$stops_generate_complete, {
+      verts <- stops_draw_vertices()
+
+      if (length(verts) < 3) {
+        showNotification(
+          "Draw at least 3 points to define a zone.",
+          type = "warning"
+        )
+        return()
+      }
+
+      # Build closed ring: append first vertex to close
+      coords <- do.call(rbind, lapply(verts, function(v) c(v[1], v[2])))
+      coords <- rbind(coords, coords[1, ])
+
+      polygon_sf <- sf::st_sf(
+        geometry = sf::st_sfc(
+          sf::st_polygon(list(coords)),
+          crs = 4326
+        )
+      )
+
+      stops_generate_polygon(polygon_sf)
+      stops_generate_mode(FALSE)
+      stops_draw_vertices(list())
+
+      # Redraw as filled polygon
+      leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("draw_zone") |>
+        leaflet::addPolygons(
+          lng = coords[, 1],
+          lat = coords[, 2],
+          color = "#92C5DE",
+          weight = 2,
+          fillColor = "#92C5DE",
+          fillOpacity = 0.2,
+          group = "draw_zone",
+          options = leaflet::pathOptions(pane = "stops_temp_pane")
+        )
+    })
+
+    # Cancel drawing
+    observeEvent(input$stops_generate_cancel, {
+      stops_generate_mode(FALSE)
+      stops_draw_vertices(list())
+      leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("draw_zone")
+    })
+
+    # Clear a completed polygon
+    observeEvent(input$stops_generate_clear, {
+      stops_generate_polygon(NULL)
+      stops_draw_vertices(list())
+      leaflet::leafletProxy("stops_map") |>
+        leaflet::clearGroup("draw_zone")
+    })
+
+    # Run stop generation
+    observeEvent(input$stops_generate_run, {
+      polygon <- stops_generate_polygon()
+
+      if (is.null(polygon)) {
+        showNotification(
+          "Draw a zone on the map first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data <- ssfs()
+      dist_val <- min_stop_dist()
+      provider_val <- osm_provider()
+
+      showNotification(
+        "Downloading OSM data and generating stops. This may take a while depending on region and OSM provider (manage in Settings).",
+        id = "gen_progress",
+        duration = NULL,
+        type = "message"
+      )
+
+      tryCatch(
+        {
+          result <- generate_stops_from_osm(
+            polygon_sf = polygon,
+            current_stops = current_data$stops,
+            min_stop_dist = dist_val,
+            batch_id = autostop_batch_id(),
+            provider = provider_val
+          )
+
+          removeNotification("gen_progress")
+
+          if (is.null(result) || nrow(result$new_stops) == 0) {
+            showNotification(
+              "No eligible stop locations found in this zone.",
+              type = "warning"
+            )
+            return()
+          }
+
+          current_data$stops <- rbind(current_data$stops, result$new_stops)
+          ssfs(current_data)
+          autostop_batch_id(result$next_batch_id)
+
+          # Clear drawn polygon from map
+          leaflet::leafletProxy("stops_map") |>
+            leaflet::clearGroup("draw_zone")
+          stops_generate_polygon(NULL)
+
+          showNotification(
+            paste(nrow(result$new_stops), "stops generated and added."),
+            type = "message"
+          )
+        },
+        error = function(e) {
+          removeNotification("gen_progress")
+          showNotification(
+            paste(
+              "Stop generation failed,",
+              e$message,
+              "...Try changing OSM Provider in Settings."
+            ),
+            type = "error"
+          )
+        }
+      )
     })
 
     ### STOPS IMPORT/EXPORT FUNCTIONALITY ----

@@ -565,6 +565,32 @@ croquis <- function(ssfs = NULL) {
               step = 1,
               width = "240px"
             ),
+            numericInput(
+              "settings_min_stop_dist",
+              label = tagList(
+                "Minimum stop spacing (m)",
+                info_popover(
+                  "Minimum distance in metres between auto-generated stops. Also used as the buffer distance around existing stops when determining eligible locations for new stops."
+                )
+              ),
+              value = 200,
+              min = 50,
+              max = 1000,
+              step = 50
+            ),
+            selectInput(
+              "settings_osm_provider",
+              label = tagList(
+                "OSM extract provider",
+                info_popover(
+                  "OpenStreetMap data provider used when generating stops from road network data. Different providers have different regional coverage."
+                )
+              ),
+              choices = suppressMessages(
+                osmextract::oe_providers()$available_providers
+              ),
+              selected = "openstreetmap_fr"
+            )
           )
         )
       )
@@ -1172,7 +1198,7 @@ croquis <- function(ssfs = NULL) {
     manual_coords <- reactive({
       list(lat = input$manual_lat, lng = input$manual_lng)
     }) |>
-      debounce(800)
+      shiny::debounce(800)
 
     observeEvent(
       manual_coords(),
@@ -1611,7 +1637,14 @@ croquis <- function(ssfs = NULL) {
     #
     #   #   #
 
-    stopsServer("stops", ssfs, map_center, current_zoom)
+    stopsServer(
+      "stops",
+      ssfs,
+      map_center,
+      current_zoom,
+      reactive(input$settings_min_stop_dist),
+      reactive(input$settings_osm_provider)
+    )
 
     #   #   #
     #
