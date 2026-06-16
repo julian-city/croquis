@@ -675,9 +675,46 @@ gtfs_to_ssfs <- function(
   } else {
     #else shapes exist, we just need to ensure that they are properly ordered
 
+    #Coerce gtfs$shapes columns to correct types, then arrange
+    shapes_validated_result <- tryCatch(
+      {
+        shapes_validated <- gtfs$shapes
+
+        shapes_validated$shape_id <- as.character(shapes_validated$shape_id)
+        shapes_validated$shape_pt_lat <- as.numeric(
+          shapes_validated$shape_pt_lat
+        )
+        shapes_validated$shape_pt_lon <- as.numeric(
+          shapes_validated$shape_pt_lon
+        )
+        shapes_validated$shape_pt_sequence <- as.integer(
+          shapes_validated$shape_pt_sequence
+        )
+
+        if ("shape_dist_traveled" %in% colnames(shapes_validated)) {
+          shapes_validated$shape_dist_traveled <- as.numeric(
+            shapes_validated$shape_dist_traveled
+          )
+        }
+
+        shapes_validated
+      },
+      error = function(e) {
+        cli::cli_abort(
+          c(
+            "Failed to coerce {.field gtfs$shapes} columns to the required data types of the shapes table.",
+            "x" = "{e$message}",
+            "i" = "Expected: {.field shape_id} (character), {.field shape_pt_lat} (numeric),
+                 {.field shape_pt_lon} (numeric), {.field shape_pt_sequence} (integer),
+                 and optionally {.field shape_dist_traveled} (numeric)."
+          )
+        )
+      }
+    )
+
     #Necessary to get get_trip_speed to work properly
     gtfs$shapes <-
-      gtfs$shapes |>
+      shapes_validated_result |>
       arrange(shape_id, shape_pt_sequence)
     # Later verification of missing shapes for specific trips
   }
