@@ -101,7 +101,9 @@ stopsUI <- function(id) {
                   "Automatically generate stops at road intersections",
                   "within a drawn zone using OpenStreetMap data.",
                   "Stops are placed at intersections based on minimum",
-                  "stop spacing set in Settings."
+                  "stop spacing set in",
+                  icon("gear"),
+                  "Settings."
                 )
               )
             )),

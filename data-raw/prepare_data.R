@@ -10,14 +10,14 @@ translink <- gtfs_to_ssfs(translink_gtfs)
 
 #STM GTFS (mile end, STM metro and ligne jaune): May-June 2025 schedule (before bus network redesign)
 
-stm_filepath <- "https://files.mobilitydatabase.org/mdb-2126/mdb-2126-202504170018/mdb-2126-202504170018.zip"
+stm_filepath <- "https://www.stm.info/sites/default/files/gtfs/gtfs_stm.zip"
 #filepath retrieved on Monday May 4th 2026
 
 stm_gtfs <- gtfstools::read_gtfs(stm_filepath)
 
 mileend <- gtfs_to_ssfs(
   stm_gtfs,
-  routes = c("30", "31", "46", "51", "55", "80", "160", "161", "480")
+  routes = c("119", "31", "51", "55", "80", "160", "161", "480")
 )
 stm_metro <- gtfs_to_ssfs(stm_gtfs, routes = c("1", "2", "4", "5"))
 ligne_jaune <- gtfs_to_ssfs(stm_gtfs, routes = "4")

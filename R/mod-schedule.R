@@ -1295,9 +1295,28 @@ scheduleServer <- function(id, ssfs, map_center) {
           )
         ),
 
-        h5("Apply speed to all route itineraries"),
+        h5("Apply headway and speed to all route itineraries"),
         div(
           class = "sched-batch-row",
+          div(
+            tags$label("Headway (min)"),
+            numericInput(
+              ns("sched_batch_headway"),
+              label = NULL,
+              value = 10,
+              min = 1,
+              max = 120,
+              width = "100px"
+            )
+          ),
+          tags$button(
+            class = "btn-save",
+            onclick = sprintf(
+              "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+              ns("sched_batch_apply_headway")
+            ),
+            "Apply"
+          ),
           div(
             tags$label("Speed (km/h)"),
             numericInput(
@@ -1964,11 +1983,9 @@ scheduleServer <- function(id, ssfs, map_center) {
         do.call(tagList, span_rows),
         hr(),
 
-        # Itinerary-level batch: preset + speed side by side
+        # Apply service level preset
         div(
           class = "sched-itin-batch-row",
-
-          # Apply service level preset
           div(
             style = "flex: 1; min-width: 0;",
             tags$label(tagList(
@@ -1994,6 +2011,37 @@ scheduleServer <- function(id, ssfs, map_center) {
                 onclick = sprintf(
                   "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
                   ns("sched_itin_apply_preset")
+                ),
+                "Apply"
+              )
+            )
+          )
+        ),
+
+        # Apply headway and speed to all hours
+        div(
+          class = "sched-itin-batch-row",
+
+          # Apply headway
+          div(
+            style = "flex-shrink: 0;",
+            tags$label("Apply headway to all hours (min)"),
+            div(
+              style = "display: flex; gap: 6px; align-items: flex-end;",
+              numericInput(
+                ns("sched_itin_headway"),
+                label = NULL,
+                value = 10,
+                min = 1,
+                max = 120,
+                width = "80px"
+              ),
+              tags$button(
+                class = "btn-save",
+                style = "margin-bottom: 0;",
+                onclick = sprintf(
+                  "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
+                  ns("sched_itin_apply_headway")
                 ),
                 "Apply"
               )
@@ -2350,6 +2398,55 @@ scheduleServer <- function(id, ssfs, map_center) {
           "Speed set to ",
           speed_value,
           " km/h for ",
+          length(match_idx),
+          " entries across ",
+          length(route_itin_ids),
+          " itinerary(ies)."
+        ),
+        type = "message"
+      )
+    })
+
+    # --- Apply headway to all route itineraries ---
+
+    observeEvent(input$sched_batch_apply_headway, {
+      editing_route <- sched_editing_route_id()
+      req(editing_route)
+
+      service_id <- sched_edit_service_id()
+      req(service_id)
+
+      headway_value <- input$sched_batch_headway
+      req(headway_value)
+
+      current_data <- ssfs()
+
+      route_itin_ids <- current_data$itin$itin_id[
+        current_data$itin$route_id == editing_route
+      ]
+
+      match_idx <- which(
+        current_data$hsh$itin_id %in%
+          route_itin_ids &
+          current_data$hsh$service_id == service_id
+      )
+
+      if (length(match_idx) == 0) {
+        showNotification(
+          "No headway entries found. Define spans first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data$hsh$headway[match_idx] <- headway_value
+      ssfs(current_data)
+
+      showNotification(
+        paste0(
+          "Headway set to ",
+          headway_value,
+          " min for ",
           length(match_idx),
           " entries across ",
           length(route_itin_ids),
@@ -2817,6 +2914,46 @@ scheduleServer <- function(id, ssfs, map_center) {
           "Speed set to ",
           speed_value,
           " km/h for ",
+          length(match_idx),
+          " entries on ",
+          editing_itin,
+          "."
+        ),
+        type = "message"
+      )
+    })
+
+    # Apply headway to single itinerary
+
+    observeEvent(input$sched_itin_apply_headway, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      headway_value <- input$sched_itin_headway
+      req(editing_itin, service_id, headway_value)
+
+      current_data <- ssfs()
+
+      match_idx <- which(
+        current_data$hsh$itin_id == editing_itin &
+          current_data$hsh$service_id == service_id
+      )
+
+      if (length(match_idx) == 0) {
+        showNotification(
+          "No headway entries found. Define spans first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      current_data$hsh$headway[match_idx] <- headway_value
+      ssfs(current_data)
+
+      showNotification(
+        paste0(
+          "Headway set to ",
+          headway_value,
+          " min for ",
           length(match_idx),
           " entries on ",
           editing_itin,

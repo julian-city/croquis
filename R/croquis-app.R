@@ -103,6 +103,27 @@ croquis <- function(ssfs = NULL) {
         fluidPage(
           titlePanel("Home"),
 
+          wellPanel(
+            style = "font-size: 14px; margin-bottom: 12px; line-height: 1.5; color: var(--text-color);",
+            p(
+              tags$strong(
+                "Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator."
+              ),
+              "The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.",
+              "Get started on this page by loading an existing network, or by creating the agency details and projet location if starting from scratch.",
+              "This open-source software was developed in R Shiny. It is in active development and does not include an 'undo' functionality (yet!). Save your work often by clicking the Save",
+              icon("floppy-disk", class = "fa-solid"),
+              "icon above and exporting your project file.",
+              "Please report any bugs and provide your ideas for improvement by submitting an",
+              tags$a(
+                "issue on GitHub",
+                href = "https://github.com/julian-city/croquis/issues/new",
+                target = "_blank"
+              ),
+              "."
+            )
+          ),
+
           # -- Load Network (collapsible, collapsed by default) --
           div(
             id = "load-network-panel",
@@ -327,12 +348,12 @@ croquis <- function(ssfs = NULL) {
             h4("2. Create and edit stops in the stops module"),
             p(
               tags$ul(
-                tags$li("Click on the map to add stops"),
+                tags$li("Manage and create stops using the left-hand panel"),
                 tags$li(
-                  "Provide unique stop IDs and stop names for each stop"
+                  "When creating or editing a stop, click on the map or drag the stop to set its location."
                 ),
                 tags$li(
-                  "Edit the location and details for existing stops"
+                  "Provide unique stop IDs and stop names for each stop"
                 ),
               )
             ),
@@ -393,7 +414,9 @@ croquis <- function(ssfs = NULL) {
             ),
 
             h4(
-              "5. Click the save icon to export a GTFS or save your croquis in .rds format to work on it later"
+              "5. Click the save",
+              icon("floppy-disk", class = "fa-solid"),
+              "icon to export a GTFS or save your croquis in .rds format to work on it later"
             )
           )
         )
@@ -518,7 +541,7 @@ croquis <- function(ssfs = NULL) {
                   "https://gtfs.org/schedule/reference/#feed_infotxt"
                 )
               ),
-              value = "contact@julian.city"
+              value = "julian@comotive.net"
             ),
             textInput(
               "fi_feed_version",
