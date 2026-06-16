@@ -279,9 +279,17 @@ gtfs_to_ssfs <- function(
 
   #stop times object, validation
 
-  #important to rewrite stop_sequence in case
-  #there are gaps of >1 between the stop_sequence values of two sequential stops
-  #(for example, King County Metro gtfs September 2025)
+  #coerce stop sequence to integer
+  tryCatch(
+    {
+      gtfs$stop_times$stop_sequence <- as.integer(gtfs$stop_times$stop_sequence)
+    },
+    error = function(e) {
+      cli::cli_abort(
+        "Failed to coerce input gtfs$stop_times$stop_sequence to integer"
+      )
+    }
+  )
 
   stop_times <-
     gtfs$stop_times |>
