@@ -37,7 +37,7 @@ routeLineWeight <- function(route_type) {
 }
 
 itineraryDrawOrder <- function(itin, routes) {
-  route_type_lookup <- setNames(routes$route_type, routes$route_id)
+  route_type_lookup <- setNames(as.integer(routes$route_type), routes$route_id)
   route_name_lookup <- setNames(routes$route_short_name, routes$route_id)
 
   itin_route_types <- route_type_lookup[itin$route_id]

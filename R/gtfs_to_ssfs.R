@@ -463,6 +463,7 @@ gtfs_to_ssfs <- function(
         route_color,
         route_text_color
       ) |>
+      mutate(route_type = as.integer(route_type)) |>
       mutate(
         route_color = case_when(
           #handle for when route color column exists but it's blank
