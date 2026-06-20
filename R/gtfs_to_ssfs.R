@@ -114,6 +114,39 @@ gtfs_to_ssfs <- function(
       unique()
   }
 
+  # check if there is a frequency table and if so
+  # convert frequencies to stop times (and create trip ids) if there are relevant trip ids in the frequencies table
+  # (associated with route service ids and routes)
+  if ("frequencies" %in% gtfs_table_names) {
+    frequencies_trip_ids <- gtfs$frequencies$trip_id |> unique()
+
+    trips_to_convert_stop_times <-
+      gtfs$trips |>
+      filter(
+        route_id %in% routes,
+        service_id %in% service_id,
+        trip_id %in% frequencies_trip_ids
+      )
+
+    if (nrow(trips_to_convert_stop_times) > 0) {
+      #coerce headways_secs to integer
+      tryCatch(
+        {
+          gtfs$frequencies$headway_secs <- as.integer(
+            gtfs$frequencies$headway_secs
+          )
+        },
+        error = function(e) {
+          cli::cli_abort(
+            "Failed to coerce input gtfs$frequencies$headway_secs to integer"
+          )
+        }
+      )
+      #use gtfstools convert frequencies to stop times (and create trip ids)
+      gtfs <- gtfstools::frequencies_to_stop_times(gtfs)
+    }
+  }
+
   #we only want the trips associated with service ids that are associated with the last states of service
   #for each day of the week
 
@@ -464,6 +497,22 @@ gtfs_to_ssfs <- function(
         route_text_color
       ) |>
       mutate(route_type = as.integer(route_type)) |>
+      #sanitize route_color already supplied
+      mutate(route_color = stringr::str_remove_all(route_color, "^#")) |>
+      mutate(
+        route_color = if_else(
+          grepl("^[A-Za-z0-9]*$", route_color),
+          route_color,
+          ""
+        )
+      ) |>
+      mutate(
+        route_color = if_else(
+          nchar(route_color) %in% c(3L, 6L),
+          route_color,
+          ""
+        )
+      ) |>
       mutate(
         route_color = case_when(
           #handle for when route color column exists but it's blank
