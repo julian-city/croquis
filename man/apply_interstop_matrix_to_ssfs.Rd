@@ -2,7 +2,7 @@
 % Please edit documentation in R/calibration-intermediaries.R
 \name{apply_interstop_matrix_to_ssfs}
 \alias{apply_interstop_matrix_to_ssfs}
-\title{Apply interstop matrixx to ssfs}
+\title{Apply interstop matrix to ssfs}
 \usage{
 apply_interstop_matrix_to_ssfs(
   ssfs,
@@ -30,29 +30,22 @@ apply_interstop_matrix_to_ssfs(
 A ssfs list
 }
 \description{
-Apply interstop matrixx to ssfs
+Using the interstop matrix produced by gtfs_to_interstop_matrix, revises
+the speeds detailed in a target ssfs to reflect the speeds detailed in
+a reference GTFS. This function represents the second half of apply_gtfs_speeds_to_ssfs
+and is included for development purposes.
 }
 \examples{
-\dontrun{
-# First, create an interstop speed matrix from a reference GTFS
-gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
-interstop_matrix <- gtfs_to_interstop_matrix(
-  gtfs,
-  ssfs,
-  max_date = as.Date("2026-03-31")
+# First, create an interstop speed matrix from a reference GTFS for the Railway City Transit redesign target ssfs
+interstop_matrix_rct <- gtfs_to_interstop_matrix(
+  gtfs = gtfs_rct,
+  ssfs = ssfs_rct2
 )
 
 # Apply the interstop matrix to calibrate ssfs speeds
-ssfs_calibrated <- apply_interstop_matrix_to_ssfs(ssfs, interstop_matrix)
-
-# With custom parameters
 ssfs_calibrated <- apply_interstop_matrix_to_ssfs(
-  ssfs,
-  interstop_matrix,
-  buffer_dist = 15,
-  dist_factor = 0.4,
-  stop_time = 12,
-  osrm_speed_adj_factor = 0.70
+ssfs = ssfs_rct2,
+interstop_matrices_by_service = interstop_matrix_rct
 )
-}
+
 }

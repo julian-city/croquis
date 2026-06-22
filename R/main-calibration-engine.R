@@ -16,26 +16,8 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
-#' # Create reference GTFS
-#' gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
-#'
-#' # Import reference ssfs
-#' ssfs <- readRDS("path/to/ssfs.rds")
-#'
-#' # Apply the reference GTFS speeds to ssfs
-#' ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(gtfs, ssfs)
-#'
-#' # With custom parameters
-#' ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(
-#'   gtfs,
-#'   ssfs,
-#'   buffer_dist = 15,
-#'   dist_factor = 0.4,
-#'   stop_time = 12,
-#'   osrm_speed_adj_factor = 0.70
-#' )
-#' }
+#' # Calibrate Railway City Transit redesign SSFS speeds using reference GTFS
+#' ssfs_calibrated <- apply_gtfs_speeds_to_ssfs(gtfs = gtfs_rct, ssfs = ssfs_rct2)
 apply_gtfs_speeds_to_ssfs <- function(
   gtfs,
   ssfs,

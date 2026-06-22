@@ -81,3 +81,5 @@ NULL
 # gtfstools:   read_gtfs(), get_trip_speed(), write_gtfs()
 #
 # osrm:        osrmRoute()
+#
+# digest:      digest()

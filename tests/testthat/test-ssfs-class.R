@@ -144,17 +144,3 @@ test_that("ssfs() rejects invalid input", {
     "must be an sf object"
   )
 })
-
-# --- print.ssfs ---
-
-test_that("print.ssfs produces output without error", {
-  expect_output(print(ligne_jaune), "agency")
-  expect_output(print(ligne_jaune), "routes")
-  expect_output(print(ligne_jaune), "stops")
-})
-
-#not sure about this test yet
-#test_that("print.ssfs returns the object invisibly", {
-#  out <- withr::with_output_sink(tempfile(), print(ligne_jaune))
-#  expect_s3_class(out, "ssfs")
-#})

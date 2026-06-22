@@ -82,7 +82,7 @@ scheduleUI <- function(id) {
         style = "margin-top: 15px;",
         uiOutput(ns("sched_editing_ui")),
 
-        # Configuration buttons — always visible below editing panels
+        # Configuration buttons: always visible below editing panels
         div(
           class = "sched-config-buttons",
           tags$button(
@@ -636,7 +636,7 @@ scheduleServer <- function(id, ssfs, map_center) {
               "<span style='font-size:11px;'>",
               "<b>",
               htmltools::htmlEscape(sid),
-              "</b> — ",
+              "</b> - ",
               htmltools::htmlEscape(sname),
               "<br>Itineraries: ",
               htmltools::htmlEscape(itin_text),

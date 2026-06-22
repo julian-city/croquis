@@ -312,7 +312,7 @@ ssfs_subset <- function(
 #' @export
 #' @examples
 #' # Generate table for the 99 B line to view runtimes by hour for all itin ids
-#' b_line_route_id <- translink$routes |> filter(route_short_name=="099") |> pull(route_id)
+#' b_line_route_id <- translink$routes |> dplyr::filter(route_short_name=="099") |> dplyr::pull(route_id)
 #' generate_tdrh(ssfs=translink, id_type="route_id", id = b_line_route_id, service="mon-fri")
 generate_tdrh <- function(
   ssfs,
@@ -433,7 +433,7 @@ generate_tdrh <- function(
 #' @export
 #' @examples
 #' # Calculate weekday daily service kilometers and service hours of the 99 B-Line in Vancouver
-#' b_line_route_id <- translink$routes |> filter(route_short_name=="099") |> pull(route_id)
+#' b_line_route_id <- translink$routes |> dplyr::filter(route_short_name=="099") |> dplyr::pull(route_id)
 #' generate_service_cost(ssfs=translink,id_type="route_id",id=b_line_route_id,service="mon-fri")
 generate_service_cost <- function(
   ssfs,

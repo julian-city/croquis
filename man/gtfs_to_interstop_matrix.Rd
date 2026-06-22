@@ -4,7 +4,12 @@
 \alias{gtfs_to_interstop_matrix}
 \title{Turn GTFS into interstop speed matrix}
 \usage{
-gtfs_to_interstop_matrix(gtfs, ssfs, max_date)
+gtfs_to_interstop_matrix(
+  gtfs,
+  ssfs,
+  max_date = NULL,
+  accepted_route_types = c(0, 3)
+)
 }
 \arguments{
 \item{gtfs}{An object with class 'gtfs'}
@@ -12,24 +17,24 @@ gtfs_to_interstop_matrix(gtfs, ssfs, max_date)
 \item{ssfs}{A ssfs list}
 
 \item{max_date}{A date representing the maximum date range of services retained from the reference GTFS}
+
+\item{accepted_route_types}{Route types that can be used to build the reference speed matrix. By default, 0 (tramways) and 3 (buses).}
 }
 \value{
 An interstop speed matrix table
 }
 \description{
-Turn GTFS into interstop speed matrix
+Creates a table record of every interstop (including geometry) and
+the speed of every trip along every interstop in a reference GTFS,
+for every service detailed in a target SSFS. This table (the interstop speed matrix)
+contains the data necessary to calibrate the speeds of the target SSFS.
+This function consists of the first half of the process in apply_gtfs_speeds_to_ssfs
+and is included for development purposes
 }
 \examples{
-\dontrun{
-# Create interstop speed matrix
-# For now, specifying a max date within the gtfs is mandatory
-# SSFS must be supplied to evaluate service structure
-# First, create an interstop speed matrix from a reference GTFS
-gtfs <- gtfstools::read_gtfs("path/to/gtfs.zip")
+# Create interstop speed matrix using a GTFS
 interstop_matrix <- gtfs_to_interstop_matrix(
-  gtfs,
-  ssfs,
-  max_date = as.Date("2026-03-31")
+  gtfs = gtfs_rct,
+  ssfs = ssfs_rct2
 )
-}
 }

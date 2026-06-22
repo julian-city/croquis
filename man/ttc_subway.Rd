@@ -8,7 +8,7 @@
 An ssfs object (a named list of 8 tables).
 }
 \source{
-Created by the package author based on public TTC GTFS data.
+Created by the package author based on public GTFS data.
 }
 \usage{
 ttc_subway
