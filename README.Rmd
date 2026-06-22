@@ -16,6 +16,8 @@ knitr::opts_chunk$set(
 # croquis: Transit Sketch Planning <img src="man/figures/logo.png" align="right" height="300" alt="" />
 
 <!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/julian-city/croquis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/julian-city/croquis/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 Croquis is a transit sketch planning tool. Use it to rapidly create and edit transit networks and schedules in GTFS (General Transit Feed Specification) format. The easiest way to get started, once Croquis is installed, is to launch the Shiny app using `croquis()`.

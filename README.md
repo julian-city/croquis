@@ -5,6 +5,9 @@
 
 <!-- badges: start -->
 
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/julian-city/croquis/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/julian-city/croquis/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 Croquis is a transit sketch planning tool. Use it to rapidly create and
