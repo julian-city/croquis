@@ -50,6 +50,12 @@ body {
   border-color: var(--border-color);
 }
 
+/* Global save/action button — prevents unstyled fallback in dark mode */
+.btn-save {
+  background-color: #2B5D2C;
+  color: white;
+}
+
 .dataTables_wrapper {
   color: var(--text-color);
 }
@@ -114,8 +120,8 @@ body {
 .map-container {
   position: relative;
   width: 100%;
-  height: calc(100vh - 120px);
-  min-height: 600px;
+  height: calc(100vh - 150px);
+  min-height: 500px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
@@ -527,11 +533,11 @@ body {
 }
 
 .stop-action-btn.delete-btn {
-  color: #444;
+  color: var(--text-color);
 }
 
 .stop-action-btn.delete-btn:hover {
-  background-color: #888;
+  background-color: var(--hover-color);
 }
 
 .stop-action-btn.add-btn {
@@ -750,11 +756,11 @@ body {
 }
 
 .route-action-btn.delete-btn {
-  color: #444;
+  color: var(--text-color);
 }
 
 .route-action-btn.delete-btn:hover {
-  background-color: #888;
+  background-color: var(--hover-color);
 }
 
 .route-action-btn.expand-btn {
@@ -1878,3 +1884,11 @@ body {
    border-radius: 4px;
    cursor: pointer;
  }
+
+ /* Undo / redo button disabled state */
+#undo_btn:disabled,
+#redo_btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: auto;
+}

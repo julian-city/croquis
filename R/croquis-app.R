@@ -74,7 +74,8 @@ croquis <- function(ssfs = NULL) {
       tags$script(src = "www/js/routes.js"),
       tags$script(src = "www/js/itineraries.js"),
       tags$script(src = "www/js/popovers.js"),
-      tags$script(src = "www/js/schedule.js")
+      tags$script(src = "www/js/schedule.js"),
+      tags$script(src = "www/js/undo.js")
     ),
 
     #loading indicator div
@@ -83,10 +84,26 @@ croquis <- function(ssfs = NULL) {
     #Module architecture
     navbarPage(
       title = "Croquis",
-      # div for the theme toggle
+      # div for the undo/redo buttons and theme toggle
       header = tagList(
         div(
-          style = "position: absolute; right: 10px; top: 10px; z-index: 1000;",
+          style = "position: absolute; right: 10px; top: 10px; z-index: 1000; display: flex; gap: 4px; align-items: center;",
+          tags$button(
+            id = "undo_btn",
+            onclick = "Shiny.setInputValue('undo_click', Math.random(), {priority:'event'})",
+            class = "btn btn-default btn-sm",
+            title = "Undo (Ctrl+Z)",
+            disabled = "disabled",
+            icon("rotate-left", class = "fa-solid")
+          ),
+          tags$button(
+            id = "redo_btn",
+            onclick = "Shiny.setInputValue('redo_click', Math.random(), {priority:'event'})",
+            class = "btn btn-default btn-sm",
+            title = "Redo (Ctrl+Shift+Z)",
+            disabled = "disabled",
+            icon("rotate-right", class = "fa-solid")
+          ),
           tags$button(
             id = "theme-toggle",
             onclick = "toggleTheme()",
@@ -111,7 +128,7 @@ croquis <- function(ssfs = NULL) {
               ),
               "The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.",
               "Get started on this page by loading an existing network, or by creating the agency details and projet location if starting from scratch.",
-              "This open-source software was developed in R Shiny. It is in active development and does not include an 'undo' functionality (yet!). Save your work often by clicking the Save",
+              "This open-source software was developed in R Shiny. It is in active development.  Save your work often by clicking the Save",
               icon("floppy-disk", class = "fa-solid"),
               "icon above and exporting your project file.",
               "Please report any bugs and provide your ideas for improvement by submitting an",
@@ -634,8 +651,10 @@ croquis <- function(ssfs = NULL) {
     #   #   #
 
     # Initialize ssfs : data structure for the whole app
+    # ssfs_raw holds the current SSFS state.  The ssfs() wrapper defined
+    # below adds undo/redo history tracking on every write.
 
-    ssfs <- reactiveVal(
+    ssfs_raw <- reactiveVal(
       if (!is.null(input_ssfs)) {
         input_ssfs
       } else {
@@ -707,6 +726,75 @@ croquis <- function(ssfs = NULL) {
     )
     #stringsAsFactors = FALSE used to be in each table, removed as it is not relevant
     #for versions of R > 4.0
+
+    # --- Undo / redo history ---
+    ssfs_history <- reactiveVal(list()) # undo stack
+    ssfs_future <- reactiveVal(list()) # redo stack
+    SSFS_MAX_HISTORY <- 40L
+
+    # History-aware wrapper
+    # Read:  ssfs()           -- returns current value, registers reactive dependency
+    # Write: ssfs(new_value)  -- pushes previous state to undo stack, clears redo stack
+    ssfs <- function(new_value) {
+      if (missing(new_value)) {
+        return(ssfs_raw())
+      }
+      # Push current state onto undo stack (isolate to avoid reactive dependency)
+      history <- isolate(ssfs_history())
+      history <- c(history, list(isolate(ssfs_raw())))
+      if (length(history) > SSFS_MAX_HISTORY) {
+        history <- history[
+          (length(history) - SSFS_MAX_HISTORY + 1):length(history)
+        ]
+      }
+      ssfs_history(history)
+      # Any new edit clears the redo stack
+      ssfs_future(list())
+      ssfs_raw(new_value)
+    }
+
+    # --- Undo / redo event handlers ---
+
+    observeEvent(input$undo_click, {
+      history <- ssfs_history()
+      if (length(history) == 0) {
+        return()
+      }
+
+      # Push current state onto redo stack
+      future <- ssfs_future()
+      future <- c(future, list(isolate(ssfs_raw())))
+      ssfs_future(future)
+
+      # Pop from undo stack and apply (write directly to ssfs_raw so we
+      # don't push another history entry)
+      prev_state <- history[[length(history)]]
+      ssfs_history(history[-length(history)])
+      ssfs_raw(prev_state)
+    })
+
+    observeEvent(input$redo_click, {
+      future <- ssfs_future()
+      if (length(future) == 0) {
+        return()
+      }
+
+      # Push current state onto undo stack
+      history <- ssfs_history()
+      history <- c(history, list(isolate(ssfs_raw())))
+      ssfs_history(history)
+
+      # Pop from redo stack and apply
+      next_state <- future[[length(future)]]
+      ssfs_future(future[-length(future)])
+      ssfs_raw(next_state)
+    })
+
+    # Enable/disable the toolbar buttons based on stack state
+    observe({
+      shinyjs::toggleState("undo_btn", condition = length(ssfs_history()) > 0)
+      shinyjs::toggleState("redo_btn", condition = length(ssfs_future()) > 0)
+    })
 
     #reactive values for cities db and agency info on home page / in gtfs
 
