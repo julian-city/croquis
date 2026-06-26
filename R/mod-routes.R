@@ -138,6 +138,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
     route_editing_mode <- reactiveVal(FALSE)
     selected_point_index <- reactiveVal(NULL)
+    waypoint_temp_point <- reactiveVal(NULL)
     active_itin_id <- reactiveVal(NULL)
     editing_existing_itin <- reactiveVal(FALSE)
     prepend_mode <- reactiveVal(FALSE)
@@ -187,8 +188,202 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       active_itin_id(NULL)
       selected_point_index(NULL)
+      waypoint_temp_point(NULL)
       prepend_mode(FALSE)
       drawing_mode_reactive("network")
+    }
+
+    # Helper: commit a waypoint move to new coordinates.
+    # Reroutes adjacent route segments via generateRouteSegment() and
+    # updates route_nodes / route_points. Called from both the map-click
+    # and marker-drag-end handlers.
+    commitWaypointMove <- function(new_lng, new_lat) {
+      curr_nodes <- route_nodes()
+      curr_points <- route_points()
+
+      idx <- which(curr_nodes$node_id == selected_point_index())
+
+      # Guard: selected node no longer exists
+      if (length(idx) == 0) {
+        selected_point_index(NULL)
+        waypoint_temp_point(NULL)
+        showNotification(
+          "Selected waypoint no longer exists.",
+          type = "warning"
+        )
+        return()
+      }
+
+      if (nrow(curr_nodes) == 1) {
+        curr_nodes$lat <- new_lat
+        curr_nodes$lng <- new_lng
+        curr_points$lat <- new_lat
+        curr_points$lng <- new_lng
+      } else if (idx == 1) {
+        nb_points_before <- curr_nodes[2, ]$index - 1
+
+        from_point <- c(new_lng, new_lat)
+        to_point <- c(curr_nodes[2, ]$lng, curr_nodes[2, ]$lat)
+
+        new_segment <- generateRouteSegment(
+          from_point,
+          to_point,
+          drawing_mode = drawing_mode_reactive(),
+          routing_server = routing_server()
+        )
+
+        new_points <-
+          new_segment[1:(nrow(new_segment) - 1), ] |>
+          mutate(index = row_number(), .before = "lng")
+
+        adj_index <- nrow(new_points) - nb_points_before
+
+        curr_points <-
+          rbind(
+            new_points,
+            curr_points[(nb_points_before + 1):nrow(curr_points), ] |>
+              mutate(index = index + adj_index)
+          )
+
+        row.names(curr_points) <- 1:nrow(curr_points)
+
+        curr_nodes[1, ]$lng <- new_lng
+        curr_nodes[1, ]$lat <- new_lat
+
+        curr_nodes <-
+          rbind(
+            curr_nodes[1, ],
+            curr_nodes[2:nrow(curr_nodes), ] |>
+              mutate(index = index + adj_index)
+          )
+      } else if (idx == nrow(curr_nodes)) {
+        from_point <- c(
+          curr_nodes[idx - 1, ]$lng,
+          curr_nodes[idx - 1, ]$lat
+        )
+        to_point <- c(new_lng, new_lat)
+
+        new_segment <- generateRouteSegment(
+          from_point,
+          to_point,
+          drawing_mode = drawing_mode_reactive(),
+          routing_server = routing_server()
+        )
+
+        nb_points_retained <- curr_nodes[idx - 1, ]$index
+
+        new_points <-
+          new_segment[2:(nrow(new_segment)), ] |>
+          mutate(
+            index = row_number() + nb_points_retained,
+            .before = "lng"
+          )
+
+        curr_points <-
+          rbind(
+            curr_points[1:nb_points_retained, ],
+            new_points
+          )
+
+        row.names(curr_points) <- 1:nrow(curr_points)
+
+        curr_nodes[idx, ]$lng <- new_lng
+        curr_nodes[idx, ]$lat <- new_lat
+        curr_nodes[idx, ]$index <- max(curr_points$index)
+      } else {
+        before_idx <- idx - 1
+        after_idx <- idx + 1
+
+        nodes_a <- curr_nodes[1:before_idx, ]
+        nodes_a_idx_max <- max(nodes_a$index)
+        points_a <- curr_points[1:nodes_a_idx_max, ]
+
+        nodes_d <- curr_nodes[after_idx:nrow(curr_nodes), ]
+        nodes_d_idx_min <- min(nodes_d$index)
+        points_d <- curr_points[nodes_d_idx_min:nrow(curr_points), ]
+
+        nb_points_bc_before <-
+          min(points_d$index) - max(points_a$index) - 1
+
+        from_point <- c(
+          curr_nodes[before_idx, ]$lng,
+          curr_nodes[before_idx, ]$lat
+        )
+        to_point <- c(new_lng, new_lat)
+
+        segment_b <- generateRouteSegment(
+          from_point,
+          to_point,
+          drawing_mode = drawing_mode_reactive(),
+          routing_server = routing_server()
+        )
+
+        points_b <-
+          segment_b[2:nrow(segment_b), ] |>
+          mutate(
+            index = row_number() + nodes_a_idx_max,
+            .before = "lng"
+          )
+
+        points_b_idx_max <- max(points_b$index)
+
+        from_point <- c(new_lng, new_lat)
+        to_point <- c(
+          curr_nodes[after_idx, ]$lng,
+          curr_nodes[after_idx, ]$lat
+        )
+
+        segment_c <- generateRouteSegment(
+          from_point,
+          to_point,
+          drawing_mode = drawing_mode_reactive(),
+          routing_server = routing_server()
+        )
+
+        points_c <-
+          segment_c[2:(nrow(segment_c) - 1), ] |>
+          mutate(
+            index = row_number() + points_b_idx_max,
+            .before = "lng"
+          )
+
+        points_bc <- rbind(points_b, points_c)
+
+        nb_points_bc_after <- nrow(points_bc)
+        adj_index_d <- nb_points_bc_after - nb_points_bc_before
+
+        points_d <-
+          points_d |>
+          mutate(index = index + adj_index_d)
+
+        nodes_d <-
+          nodes_d |>
+          mutate(index = index + adj_index_d)
+
+        node_bc <-
+          data.frame(
+            node_id = selected_point_index(),
+            lng = new_lng,
+            lat = new_lat,
+            is_stop = FALSE,
+            stop_id = "",
+            stop_name = "",
+            speed_factor = NA_real_,
+            index = points_b_idx_max
+          )
+
+        curr_points <- rbind(points_a, points_b, points_c, points_d)
+        curr_nodes <- rbind(nodes_a, node_bc, nodes_d)
+
+        row.names(curr_points) <- 1:nrow(curr_points)
+        row.names(curr_nodes) <- 1:nrow(curr_nodes)
+      }
+
+      route_points(curr_points)
+      route_nodes(curr_nodes)
+      selected_point_index(NULL)
+      waypoint_temp_point(NULL)
+      showNotification("Waypoint moved", type = "message")
     }
 
     # --- UI Renderers ---
@@ -1231,8 +1426,9 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         leaflet::addMapPane("routes_pane", zIndex = 410) |>
         leaflet::addMapPane("highlight_pane", zIndex = 420) |>
         leaflet::addMapPane("stops_pane", zIndex = 430) |>
-        leaflet::addMapPane("route_nodes_pane", zIndex = 440) |>
-        leaflet::addMapPane("current_route_pane", zIndex = 450) |>
+        leaflet::addMapPane("current_route_pane", zIndex = 440) |>
+        leaflet::addMapPane("route_nodes_pane", zIndex = 450) |>
+        leaflet::addMapPane("wp_drag_pane", zIndex = 460) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
         leaflet::addLayersControl(
           baseGroups = c("Positron", "Satellite", "OSM"),
@@ -1529,6 +1725,13 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       # Waypoint nodes
       waypoint_nodes <- curr_nodes[!curr_nodes$is_stop, ]
+      # Exclude selected waypoint from orange rendering, if there is one
+      if (!is.null(selected_point_index())) {
+        waypoint_nodes <- waypoint_nodes[
+          waypoint_nodes$node_id != selected_point_index(),
+        ]
+      }
+      # Render non-selected waypoints as orange points
       if (nrow(waypoint_nodes) > 0) {
         proxy <- proxy |>
           leaflet::addCircleMarkers(
@@ -1537,8 +1740,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             group = "route_nodes",
             options = leaflet::pathOptions(pane = "route_nodes_pane"),
             radius = 6,
-            color = "orange",
-            fillColor = "orange",
+            color = "#D6604D",
+            fillColor = "#D6604D",
             fillOpacity = 0.9,
             stroke = TRUE,
             weight = 2,
@@ -1546,28 +1749,59 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             label = "Waypoint"
           )
       }
+    })
 
-      if (!is.null(selected_point_index())) {
-        selected_node <- curr_nodes[
-          curr_nodes$node_id == selected_point_index(),
-        ]
-        if (nrow(selected_node) > 0) {
-          proxy <- proxy |>
-            leaflet::addCircleMarkers(
-              lng = selected_node$lng,
-              lat = selected_node$lat,
-              group = "route_nodes",
-              options = leaflet::pathOptions(pane = "route_nodes_pane"),
+    # ---- Draggable waypoint marker (when selected for moving) ----
+    observe({
+      req(map_ready())
+      temp <- waypoint_temp_point()
 
-              radius = 8,
-              color = "#FFE999",
-              fillColor = "#FFE999",
-              fillOpacity = 0.9,
-              stroke = TRUE,
-              weight = 3,
-              layerId = "selected_node"
-            )
-        }
+      proxy <- leaflet::leafletProxy("routes_map") |>
+        leaflet::clearGroup("wp_drag")
+
+      if (!is.null(temp)) {
+        icon_size <- 20L
+
+        svg_string <- sprintf(
+          paste0(
+            '<svg xmlns="http://www.w3.org/2000/svg" ',
+            'width="%d" height="%d">',
+            '<circle cx="%d" cy="%d" r="%d" ',
+            'fill="#D6604D" stroke="#FFE999" stroke-width="3"/>',
+            '</svg>'
+          ),
+          icon_size,
+          icon_size,
+          as.integer(icon_size / 2),
+          as.integer(icon_size / 2),
+          as.integer((icon_size / 2) - 3)
+        )
+
+        icon_url <- paste0(
+          "data:image/svg+xml,",
+          URLencode(svg_string, reserved = TRUE)
+        )
+
+        wp_drag_icon <- leaflet::makeIcon(
+          iconUrl = icon_url,
+          iconWidth = icon_size,
+          iconHeight = icon_size,
+          iconAnchorX = as.integer(icon_size / 2),
+          iconAnchorY = as.integer(icon_size / 2)
+        )
+
+        proxy |>
+          leaflet::addMarkers(
+            lng = temp[1],
+            lat = temp[2],
+            layerId = "wp_temp_drag",
+            icon = wp_drag_icon,
+            options = leaflet::markerOptions(
+              draggable = TRUE,
+              pane = "wp_drag_pane"
+            ),
+            group = "wp_drag"
+          )
       }
     })
 
@@ -1607,17 +1841,23 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       last_marker_click_time(as.numeric(Sys.time()))
 
-      if (!is.null(click) && grepl("^wp_", click$id)) {
-        node_id <- as.numeric(gsub("wp_", "", click$id))
-        selected_point_index(node_id)
-        showNotification(
-          "Waypoint selected. Click on map to move it.",
-          type = "message"
-        )
-      } else if (!is.null(click) && click$id == "selected_node") {
+      if (!is.null(click) && click$id == "wp_temp_drag") {
         selected_point_index(NULL)
+        waypoint_temp_point(NULL)
         showNotification(
           "Waypoint deselected. Movement cancelled.",
+          type = "message"
+        )
+      } else if (!is.null(click) && grepl("^wp_", click$id)) {
+        node_id <- as.numeric(gsub("wp_", "", click$id))
+        curr_nodes <- route_nodes()
+        wp_node <- curr_nodes[curr_nodes$node_id == node_id, ]
+        selected_point_index(node_id)
+        if (nrow(wp_node) > 0) {
+          waypoint_temp_point(c(wp_node$lng, wp_node$lat))
+        }
+        showNotification(
+          "Waypoint selected. Drag it or click on the map to move it.",
           type = "message"
         )
       } else if (!is.null(click) && grepl("^stop_", click$id)) {
@@ -1634,10 +1874,22 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         curr_points <- route_points()
 
         if (!is.null(selected_point_index())) {
-          is_last_node <- (selected_point_index() == nrow(curr_nodes))
+          idx <- which(curr_nodes$node_id == selected_point_index())
+
+          # Guard: selected node no longer exists (e.g. deleted via right-click)
+          if (length(idx) == 0) {
+            selected_point_index(NULL)
+            showNotification(
+              "Selected waypoint no longer exists.",
+              type = "warning"
+            )
+            return()
+          }
+
+          is_last_node <- (idx == nrow(curr_nodes))
 
           if (is_last_node) {
-            if (selected_point_index() == 1) {
+            if (idx == 1) {
               curr_nodes <- data.frame(
                 node_id = 1,
                 lng = st_coordinates(clicked_stop)[1],
@@ -1656,7 +1908,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                   lat = st_coordinates(clicked_stop)[2]
                 )
             } else {
-              before_idx <- selected_point_index() - 1
+              before_idx <- idx - 1
 
               nodes_a <- curr_nodes[1:before_idx, ]
               nodes_a_idx_max <- max(nodes_a$index)
@@ -1703,8 +1955,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               row.names(curr_nodes) <- 1:nrow(curr_nodes)
             }
           } else {
-            before_idx <- selected_point_index() - 1
-            after_idx <- selected_point_index() + 1
+            before_idx <- idx - 1
+            after_idx <- idx + 1
 
             nodes_a <- curr_nodes[1:before_idx, ]
             nodes_a_idx_max <- max(nodes_a$index)
@@ -1794,6 +2046,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           route_points(curr_points)
           route_nodes(curr_nodes)
           selected_point_index(NULL)
+          waypoint_temp_point(NULL)
 
           showNotification(
             "Waypoint moved to stop & adopted stop properties.",
@@ -1933,6 +2186,19 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       }
     })
 
+    # Handle drag end for the draggable waypoint marker
+    observeEvent(input$routes_map_marker_dragend, {
+      drag_event <- input$routes_map_marker_dragend
+
+      if (!is.null(drag_event$id) && drag_event$id == "wp_temp_drag") {
+        if (!is.null(selected_point_index())) {
+          commitWaypointMove(drag_event$lng, drag_event$lat)
+        } else {
+          waypoint_temp_point(NULL)
+        }
+      }
+    })
+
     # Map click handler
     observeEvent(input$routes_map_click, {
       click <- input$routes_map_click
@@ -1950,168 +2216,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         curr_points <- route_points()
 
         if (!is.null(selected_point_index())) {
-          idx <- which(curr_nodes$node_id == selected_point_index())
-
-          if (nrow(curr_nodes) == 1) {
-            curr_nodes$lat <- click$lat
-            curr_nodes$lng <- click$lng
-            curr_points$lat <- click$lat
-            curr_points$lng <- click$lng
-          } else if (idx == 1) {
-            nb_points_before <- curr_nodes[2, ]$index - 1
-
-            from_point <- c(click$lng, click$lat)
-            to_point <- c(curr_nodes[2, ]$lng, curr_nodes[2, ]$lat)
-
-            new_segment <- generateRouteSegment(
-              from_point,
-              to_point,
-              drawing_mode = drawing_mode_reactive(),
-              routing_server = routing_server()
-            )
-
-            new_points <-
-              new_segment[1:(nrow(new_segment) - 1), ] |>
-              mutate(index = row_number(), .before = "lng")
-
-            adj_index <- nrow(new_points) - nb_points_before
-
-            curr_points <-
-              rbind(
-                new_points,
-                curr_points[(nb_points_before + 1):nrow(curr_points), ] |>
-                  mutate(index = index + adj_index)
-              )
-
-            row.names(curr_points) <- 1:nrow(curr_points)
-
-            curr_nodes[1, ]$lng <- click$lng
-            curr_nodes[1, ]$lat <- click$lat
-
-            curr_nodes <-
-              rbind(
-                curr_nodes[1, ],
-                curr_nodes[2:nrow(curr_nodes), ] |>
-                  mutate(index = index + adj_index)
-              )
-          } else if (idx == nrow(curr_nodes)) {
-            from_point <- c(
-              curr_nodes[idx - 1, ]$lng,
-              curr_nodes[idx - 1, ]$lat
-            )
-            to_point <- c(click$lng, click$lat)
-
-            new_segment <- generateRouteSegment(
-              from_point,
-              to_point,
-              drawing_mode = drawing_mode_reactive(),
-              routing_server = routing_server()
-            )
-
-            nb_points_retained <- curr_nodes[idx - 1, ]$index
-
-            new_points <-
-              new_segment[2:(nrow(new_segment)), ] |>
-              mutate(index = row_number() + nb_points_retained, .before = "lng")
-
-            curr_points <-
-              rbind(
-                curr_points[1:nb_points_retained, ],
-                new_points
-              )
-
-            row.names(curr_points) <- 1:nrow(curr_points)
-
-            curr_nodes[idx, ]$lng <- click$lng
-            curr_nodes[idx, ]$lat <- click$lat
-            curr_nodes[idx, ]$index <- max(curr_points$index)
-          } else {
-            before_idx <- idx - 1
-            after_idx <- idx + 1
-
-            nodes_a <- curr_nodes[1:before_idx, ]
-            nodes_a_idx_max <- max(nodes_a$index)
-            points_a <- curr_points[1:nodes_a_idx_max, ]
-
-            nodes_d <- curr_nodes[after_idx:nrow(curr_nodes), ]
-            nodes_d_idx_min <- min(nodes_d$index)
-            points_d <- curr_points[nodes_d_idx_min:nrow(curr_points), ]
-
-            nb_points_bc_before <-
-              min(points_d$index) - max(points_a$index) - 1
-
-            from_point <- c(
-              curr_nodes[before_idx, ]$lng,
-              curr_nodes[before_idx, ]$lat
-            )
-            to_point <- c(click$lng, click$lat)
-
-            segment_b <- generateRouteSegment(
-              from_point,
-              to_point,
-              drawing_mode = drawing_mode_reactive(),
-              routing_server = routing_server()
-            )
-
-            points_b <-
-              segment_b[2:nrow(segment_b), ] |>
-              mutate(index = row_number() + nodes_a_idx_max, .before = "lng")
-
-            points_b_idx_max <- max(points_b$index)
-
-            from_point <- c(click$lng, click$lat)
-            to_point <- c(
-              curr_nodes[after_idx, ]$lng,
-              curr_nodes[after_idx, ]$lat
-            )
-
-            segment_c <- generateRouteSegment(
-              from_point,
-              to_point,
-              drawing_mode = drawing_mode_reactive(),
-              routing_server = routing_server()
-            )
-
-            points_c <-
-              segment_c[2:(nrow(segment_c) - 1), ] |>
-              mutate(index = row_number() + points_b_idx_max, .before = "lng")
-
-            points_bc <- rbind(points_b, points_c)
-
-            nb_points_bc_after <- nrow(points_bc)
-            adj_index_d <- nb_points_bc_after - nb_points_bc_before
-
-            points_d <-
-              points_d |>
-              mutate(index = index + adj_index_d)
-
-            nodes_d <-
-              nodes_d |>
-              mutate(index = index + adj_index_d)
-
-            node_bc <-
-              data.frame(
-                node_id = idx,
-                lng = click$lng,
-                lat = click$lat,
-                is_stop = FALSE,
-                stop_id = "",
-                stop_name = "",
-                speed_factor = NA_real_,
-                index = points_b_idx_max
-              )
-
-            curr_points <- rbind(points_a, points_b, points_c, points_d)
-            curr_nodes <- rbind(nodes_a, node_bc, nodes_d)
-
-            row.names(curr_points) <- 1:nrow(curr_points)
-            row.names(curr_nodes) <- 1:nrow(curr_nodes)
-          }
-
-          route_points(curr_points)
-          route_nodes(curr_nodes)
-          selected_point_index(NULL)
-          showNotification("Waypoint moved", type = "message")
+          commitWaypointMove(click$lng, click$lat)
         } else if (nrow(curr_nodes) >= 1) {
           if (nrow(curr_nodes) >= 2) {
             point_added <- FALSE
