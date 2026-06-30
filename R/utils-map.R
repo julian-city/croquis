@@ -19,11 +19,12 @@ addBaseMaps <- function(map) {
     )
 }
 
-# Calculate click-proximity threshold (in degrees) based on zoom level
-calculateThreshold <- function(zoom) {
-  base_threshold <- 0.02
-  adjusted_threshold <- base_threshold * (2^(10 - zoom))
-  min(max(adjusted_threshold, 0.0001), 0.01)
+# Calculate click-proximity threshold (in degrees) based on zoom level.
+# Converts a fixed screen-pixel tolerance to geographic degrees so the
+# threshold matches visual proximity at every zoom level.
+calculateThreshold <- function(zoom, pixels = 10) {
+  degrees_per_pixel <- 360 / (256 * 2^zoom)
+  pixels * degrees_per_pixel
 }
 
 routeLineWeight <- function(route_type) {

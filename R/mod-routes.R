@@ -1927,83 +1927,85 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           if (nrow(curr_nodes) >= 2) {
             point_added <- FALSE
 
-            for (i in 1:(nrow(curr_points) - 1)) {
-              p1 <- curr_points[i, ]
-              p2 <- curr_points[i + 1, ]
+            # Vectorized point-to-segment distance across all route points
+            p1_lng <- curr_points$lng[-nrow(curr_points)]
+            p1_lat <- curr_points$lat[-nrow(curr_points)]
+            p2_lng <- curr_points$lng[-1]
+            p2_lat <- curr_points$lat[-1]
 
-              d <- abs(
-                (p2$lat - p1$lat) *
-                  click$lng -
-                  (p2$lng - p1$lng) * click$lat +
-                  p2$lng * p1$lat -
-                  p2$lat * p1$lng
-              ) /
-                sqrt((p2$lat - p1$lat)^2 + (p2$lng - p1$lng)^2)
+            seg_len_sq <- (p2_lng - p1_lng)^2 + (p2_lat - p1_lat)^2
 
-              within_bounds <- (min(p1$lng, p2$lng) <= click$lng &&
-                click$lng <= max(p1$lng, p2$lng) &&
-                min(p1$lat, p2$lat) <= click$lat &&
-                click$lat <= max(p1$lat, p2$lat))
+            # Project click onto each segment, clamped to [0, 1]
+            t_raw <- ((click$lng - p1_lng) *
+              (p2_lng - p1_lng) +
+              (click$lat - p1_lat) * (p2_lat - p1_lat)) /
+              seg_len_sq
+            t_raw[seg_len_sq == 0] <- 0
+            t_clamped <- pmax(0, pmin(1, t_raw))
 
-              if (
-                d < calculateThreshold(current_zoom()) &&
-                  within_bounds
-              ) {
-                new_pt_idx <- p1$index + 1
+            # Distance from click to nearest point on each segment
+            dists <- sqrt(
+              (click$lng - (p1_lng + t_clamped * (p2_lng - p1_lng)))^2 +
+                (click$lat - (p1_lat + t_clamped * (p2_lat - p1_lat)))^2
+            )
 
-                new_point <- data.frame(
-                  index = new_pt_idx,
+            # 15-pixel tolerance matches Leaflet polyline hover area
+            threshold <- calculateThreshold(current_zoom(), pixels = 15)
+            i <- which.min(dists)
+
+            if (dists[i] < threshold) {
+              new_pt_idx <- curr_points$index[i] + 1
+
+              new_point <- data.frame(
+                index = new_pt_idx,
+                lng = click$lng,
+                lat = click$lat
+              )
+
+              new_points <- rbind(
+                curr_points[1:i, ],
+                new_point,
+                curr_points[(i + 1):nrow(curr_points), ]
+              )
+
+              new_points$index <- 1:nrow(new_points)
+              curr_points <- new_points
+
+              nodes_a <-
+                curr_nodes |>
+                filter(index <= i)
+
+              nodes_b <-
+                curr_nodes |>
+                filter(index > i) |>
+                mutate(
+                  node_id = node_id + 1,
+                  index = index + 1
+                )
+
+              new_node <-
+                data.frame(
+                  node_id = max(nodes_a$node_id) + 1,
                   lng = click$lng,
-                  lat = click$lat
+                  lat = click$lat,
+                  is_stop = FALSE,
+                  stop_id = "",
+                  stop_name = "",
+                  speed_factor = NA_real_,
+                  index = new_pt_idx
                 )
 
-                new_points <- rbind(
-                  curr_points[1:i, ],
-                  new_point,
-                  curr_points[(i + 1):nrow(curr_points), ]
-                )
+              curr_nodes <- rbind(nodes_a, new_node, nodes_b)
 
-                new_points$index <- 1:nrow(new_points)
-                curr_points <- new_points
+              row.names(curr_points) <- 1:nrow(curr_points)
+              row.names(curr_nodes) <- 1:nrow(curr_nodes)
 
-                nodes_a <-
-                  curr_nodes |>
-                  filter(index <= i)
+              point_added <- TRUE
 
-                nodes_b <-
-                  curr_nodes |>
-                  filter(index > i) |>
-                  mutate(
-                    node_id = node_id + 1,
-                    index = index + 1
-                  )
+              route_points(curr_points)
+              route_nodes(curr_nodes)
 
-                new_node <-
-                  data.frame(
-                    node_id = max(nodes_a$node_id) + 1,
-                    lng = click$lng,
-                    lat = click$lat,
-                    is_stop = FALSE,
-                    stop_id = "",
-                    stop_name = "",
-                    speed_factor = NA_real_,
-                    index = new_pt_idx
-                  )
-
-                curr_nodes <- rbind(nodes_a, new_node, nodes_b)
-
-                row.names(curr_points) <- 1:nrow(curr_points)
-                row.names(curr_nodes) <- 1:nrow(curr_nodes)
-
-                point_added <- TRUE
-
-                route_points(curr_points)
-                route_nodes(curr_nodes)
-
-                showNotification("Waypoint added along route", type = "message")
-
-                break
-              }
+              showNotification("Waypoint added along route", type = "message")
             }
 
             if (!point_added) {
