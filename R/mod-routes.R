@@ -231,6 +231,14 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       showNotification("Waypoint moved", type = "message")
     }
 
+    # Observer for tracking editing and disabling undo / redo
+    # In routesServer, after the existing reactive value declarations
+    observe({
+      is_editing <- !is.null(active_itin_id()) &&
+        (editing_existing_itin() || !is.null(itin_adding_for_route()))
+      session$sendCustomMessage("setEditingMode", is_editing)
+    })
+
     # --- UI Renderers ---
 
     # Render editing instruction for route itinerary drawing
