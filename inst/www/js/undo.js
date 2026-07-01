@@ -7,6 +7,7 @@ document.addEventListener('keydown', function(e) {
   var tag = document.activeElement.tagName.toLowerCase();
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
   if (document.activeElement.isContentEditable) return;
+    if (window.croquis_editing_mode) return; 
 
   var ctrl = e.ctrlKey || e.metaKey;
 

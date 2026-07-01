@@ -79,3 +79,9 @@ Shiny.addCustomMessageHandler('scrollToRoute', function(routeId) {
     }
   }, 100);
 });
+
+// Track editing mode to disable undo / redo
+Shiny.addCustomMessageHandler('setEditingMode', function(editing) {
+  window.croquis_editing_mode = !!editing;
+  Shiny.setInputValue('routes_editing_active', !!editing, {priority: 'event'});
+});

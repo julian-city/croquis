@@ -756,6 +756,9 @@ croquis <- function(ssfs = NULL) {
     # --- Undo / redo event handlers ---
 
     observeEvent(input$undo_click, {
+      if (isTRUE(input$routes_editing_active)) {
+        return()
+      }
       history <- ssfs_history()
       if (length(history) == 0) {
         return()
@@ -774,6 +777,9 @@ croquis <- function(ssfs = NULL) {
     })
 
     observeEvent(input$redo_click, {
+      if (isTRUE(input$routes_editing_active)) {
+        return()
+      }
       future <- ssfs_future()
       if (length(future) == 0) {
         return()
@@ -790,10 +796,17 @@ croquis <- function(ssfs = NULL) {
       ssfs_raw(next_state)
     })
 
-    # Enable/disable the toolbar buttons based on stack state
+    # Enable/disable the toolbar buttons based on stack state and whether editing an itinerary
     observe({
-      shinyjs::toggleState("undo_btn", condition = length(ssfs_history()) > 0)
-      shinyjs::toggleState("redo_btn", condition = length(ssfs_future()) > 0)
+      editing <- isTRUE(input$routes_editing_active)
+      shinyjs::toggleState(
+        "undo_btn",
+        condition = !editing && length(ssfs_history()) > 0
+      )
+      shinyjs::toggleState(
+        "redo_btn",
+        condition = !editing && length(ssfs_future()) > 0
+      )
     })
 
     #reactive values for cities db and agency info on home page / in gtfs
