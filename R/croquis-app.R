@@ -3,6 +3,11 @@
 #' Launches the Croquis Shiny app
 #'
 #' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
+#' #' @param lang UI language code: `"en"` (English, default), `"fr"` (French),
+#'   or `"es"` (Spanish).  Sets the initial language for all interface elements.
+#'   The language can also be changed mid-session via the selector in the
+#'   top-right corner.  Additional languages can be registered in
+#'   `SUPPORTED_LANGS` (see `R/i18n.R`).
 #'
 #' @returns Does not inherently return anything
 #'
@@ -14,11 +19,17 @@
 #'
 #' #Launch the app with a SSFS project pre-loaded
 #' croquis(stm_metro)
+#'
+#' #Launch the app in French
+#' croquis(lang = "fr")
 #' }
-croquis <- function(ssfs = NULL) {
+croquis <- function(ssfs = NULL, lang = "en") {
   # Validate input ssfs (and change name to avoid name collision in the server)
 
   input_ssfs <- NULL
+
+  # Validate language parameter
+  lang_init <- match.arg(lang, names(SUPPORTED_LANGS))
 
   if (!is.null(ssfs)) {
     validate_ssfs(ssfs, verbose = FALSE) # throws informative error if invalid
@@ -68,6 +79,9 @@ croquis <- function(ssfs = NULL) {
       ),
 
       tags$script(src = "www/js/theme.js"),
+      tags$script(src = "www/js/i18n.js"),
+      tags$script(htmltools::HTML(sprintf("croquisLang = '%s';", lang_init))),
+      tags$script(src = "www/js/theme.js"),
       tags$script(src = "www/js/loading.js"),
       tags$script(src = "www/js/agency.js"),
       tags$script(src = "www/js/stops.js"),
@@ -88,6 +102,18 @@ croquis <- function(ssfs = NULL) {
       header = tagList(
         div(
           style = "position: absolute; right: 10px; top: 10px; z-index: 1000; display: flex; gap: 4px; align-items: center;",
+          do.call(
+            tags$select,
+            c(
+              list(
+                id = "lang_select",
+                class = "btn btn-default btn-sm",
+                style = "padding: 2px 6px; font-size: 12px; cursor: pointer;",
+                onchange = "Shiny.setInputValue('app_lang', this.value, {priority: 'event'})"
+              ),
+              build_lang_options(lang_init)
+            )
+          ),
           tags$button(
             id = "undo_btn",
             onclick = "Shiny.setInputValue('undo_click', Math.random(), {priority:'event'})",
@@ -117,8 +143,12 @@ croquis <- function(ssfs = NULL) {
       tabPanel(
         tags$span(icon("house")),
         #unicode house emoji
+        value = "home",
         fluidPage(
-          titlePanel("Home"),
+          tags$h2(span(
+            tr("home_title", lang_init),
+            `data-i18n` = "home_title"
+          )),
 
           wellPanel(
             style = "font-size: 14px; margin-bottom: 12px; line-height: 1.5; color: var(--text-color);",
@@ -148,7 +178,10 @@ croquis <- function(ssfs = NULL) {
             div(
               class = "collapsible-section-header",
               onclick = "togglePanel('load-network-panel')",
-              h4("Load Network"),
+              h4(span(
+                tr("load_network", lang_init),
+                `data-i18n` = "load_network"
+              )),
               tags$button(
                 class = "floating-panel-toggle",
                 htmltools::HTML("+")
@@ -161,13 +194,21 @@ croquis <- function(ssfs = NULL) {
                 column(
                   6,
                   wellPanel(
-                    h4("Load a GTFS"),
+                    h4(span(
+                      tr("load_gtfs", lang_init),
+                      `data-i18n` = "load_gtfs"
+                    )),
                     p(
-                      "You can load an existing GTFS here.",
+                      span(
+                        tr("load_gtfs_desc", lang_init),
+                        `data-i18n` = "load_gtfs_desc"
+                      ),
                       tags$br(),
                       tags$small(
-                        "Larger files may take several minutes",
-                        "(maximum size: 100MB)."
+                        span(
+                          tr("load_gtfs_size", lang_init),
+                          `data-i18n` = "load_gtfs_size"
+                        )
                       )
                     ),
                     fileInput(
@@ -178,18 +219,25 @@ croquis <- function(ssfs = NULL) {
                       placeholder = "Drag and drop or click to select file"
                     ),
                     tags$small(
-                      "Uploading a GTFS here will convert it to an",
-                      "editable format in Croquis"
+                      span(
+                        tr("load_gtfs_note", lang_init),
+                        `data-i18n` = "load_gtfs_note"
+                      )
                     )
                   )
                 ),
                 column(
                   6,
                   wellPanel(
-                    h4("Load your croquis"),
+                    h4(span(
+                      tr("load_croquis", lang_init),
+                      `data-i18n` = "load_croquis"
+                    )),
                     p(
-                      "To continue working on a previous croquis,",
-                      "upload your .rds file:"
+                      span(
+                        tr("load_croquis_desc", lang_init),
+                        `data-i18n` = "load_croquis_desc"
+                      )
                     ),
                     fileInput(
                       "load_ssfs",
@@ -199,20 +247,25 @@ croquis <- function(ssfs = NULL) {
                       placeholder = "Drag and drop or click to select file"
                     ),
                     tags$small(
-                      "Upload a transit model .rds file previously",
-                      "created with Croquis"
+                      span(
+                        tr("load_croquis_note", lang_init),
+                        `data-i18n` = "load_croquis_note"
+                      )
                     )
                   )
                 )
               ),
               # Bottom row: Sample networks
               wellPanel(
-                h4("Load a sample transit network"),
+                h4(span(
+                  tr("load_sample", lang_init),
+                  `data-i18n` = "load_sample"
+                )),
                 p(
-                  "To explore this tool, you can get started by",
-                  "loading a sample network. The Ligne Jaune model",
-                  "is the simplest and will help you familiarize",
-                  "yourself with how Croquis works."
+                  span(
+                    tr("load_sample_desc", lang_init),
+                    `data-i18n` = "load_sample_desc"
+                  )
                 ),
                 actionButton(
                   "load_yellowline_ssfs",
@@ -226,7 +279,7 @@ croquis <- function(ssfs = NULL) {
                 ),
                 actionButton(
                   "load_mileend_ssfs",
-                  "STM Mile-End bus network",
+                  "STM Mile-End bus",
                   class = "btn-success"
                 ),
                 actionButton(
@@ -440,17 +493,18 @@ croquis <- function(ssfs = NULL) {
       ),
 
       #stops tab
-      stopsUI("stops"),
+      stopsUI("stops", lang = lang_init),
 
       #routes tab
-      routesUI("routes"),
+      routesUI("routes", lang = lang_init),
 
       # Schedule tab
-      scheduleUI("schedule"),
+      scheduleUI("schedule", lang = lang_init),
 
       #export tab
       tabPanel(
         tags$span(icon("floppy-disk", class = "fa-solid")),
+        value = "export",
         fluidPage(
           titlePanel("export or save your project"),
 
@@ -503,6 +557,7 @@ croquis <- function(ssfs = NULL) {
       #settings tab
       tabPanel(
         tags$span(icon("gear")),
+        value = "settings",
         fluidPage(
           titlePanel("settings"),
 
@@ -809,6 +864,18 @@ croquis <- function(ssfs = NULL) {
       )
     })
 
+    # ── i18n language state ──
+    lang <- reactiveVal(lang_init)
+
+    observeEvent(input$app_lang, {
+      lang(input$app_lang)
+    })
+
+    # Sync language to JS and re-translate static DOM elements
+    observeEvent(lang(), {
+      shinyjs::runjs(sprintf("croquisLang = '%s'; updateI18n();", lang()))
+    })
+
     #reactive values for cities db and agency info on home page / in gtfs
 
     # Reactive values for map center and agency info
@@ -888,13 +955,13 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "Transit system loaded successfully",
+            tr("notif_project_loaded", lang()),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading file:", e$message),
+            sprintf(tr("notif_load_file_error", lang()), e$message),
             type = "error"
           )
         }
@@ -943,11 +1010,11 @@ croquis <- function(ssfs = NULL) {
 
           map_center(center)
 
-          showNotification("GTFS loaded successfully", type = "message")
+          showNotification(tr("notif_gtfs_loaded", lang()), type = "message")
         },
         error = function(e) {
           showNotification(
-            paste("Error loading file:", e$message),
+            sprintf(tr("notif_load_file_error", lang()), e$message),
             type = "error"
           )
         }
@@ -983,13 +1050,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM Ligne Jaune loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Ligne Jaune"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM Ligne Jaune:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Ligne Jaune",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1022,13 +1093,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM metro network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Metro"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM metro network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Metro",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1061,13 +1136,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM Mile-End bus network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Mile-End"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM Mile-End bus network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Mile-End",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1105,13 +1184,17 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "TTC subway network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "TTC Subway"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading TTC subway network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "TTC Subway",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1149,13 +1232,17 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "TransLink network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "TransLink Vancouver"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading TransLink network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "TransLink Vancouver",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1767,7 +1854,8 @@ croquis <- function(ssfs = NULL) {
       map_center,
       current_zoom,
       reactive(input$settings_min_stop_dist),
-      reactive(input$settings_osm_provider)
+      reactive(input$settings_osm_provider),
+      lang
     )
 
     #   #   #

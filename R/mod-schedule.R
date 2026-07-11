@@ -1,8 +1,13 @@
-scheduleUI <- function(id) {
+scheduleUI <- function(id, lang = "en") {
   ns <- NS(id)
 
   tabPanel(
-    "schedule",
+    title = tags$span(
+      #icon("calendar"),
+      #" ",
+      span(tr("tab_schedule", lang), `data-i18n` = "tab_schedule")
+    ),
+    value = "schedule",
     fluidPage(
       titlePanel("schedule"),
 

@@ -43,7 +43,7 @@ function viewStopFromList(stopId) {
 
 // Delete stop (trash icon on stop row)
 function deleteStopFromList(stopId) {
-  if (confirm('This stop will be deleted if it is not associated with any itineraries.')) {
+  if (confirm(jsTr('confirm_delete_stop'))) {
     Shiny.setInputValue(stopsNs + 'stop_list_delete_click', {id: stopId, ts: Math.random()}, {priority: 'event'});
   }
 }

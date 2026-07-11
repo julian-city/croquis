@@ -3,17 +3,19 @@
 # @param stop_id_val Current stop ID value (or "" for new)
 # @param stop_name_val Current stop name value (or "" for new)
 # @param is_new If TRUE, shows placeholder text in inputs
+# @param lang "en" by default
 build_stop_form <- function(
   stop_id_val = "",
   stop_name_val = "",
-  is_new = TRUE
+  is_new = TRUE,
+  lang = "en"
 ) {
   div(
     class = "route-edit-form",
     tags$label(
-      "Stop ID",
+      tr("lbl_stop_id", lang),
       info_popover(
-        "Unique identifier for a stop, station or platform.",
+        tr("pop_stop_id", lang),
         "https://gtfs.org/schedule/reference/#stopstxt"
       )
     ),
@@ -21,7 +23,7 @@ build_stop_form <- function(
       tags$input(
         type = "text",
         id = "inline_stop_id",
-        placeholder = "e.g., S001",
+        placeholder = tr("stop_ph_id", lang),
         value = stop_id_val
       )
     } else {
@@ -32,9 +34,9 @@ build_stop_form <- function(
       )
     },
     tags$label(
-      "Stop name",
+      tr("lbl_stop_name", lang),
       info_popover(
-        "Name of the stop, station or platform. It should match the agency's rider-facing name for the location as printed on a timetable, published online, or represented on signage.",
+        tr("pop_stop_name", lang),
         "https://gtfs.org/schedule/reference/#stopstxt"
       )
     ),
@@ -42,7 +44,7 @@ build_stop_form <- function(
       tags$input(
         type = "text",
         id = "inline_stop_name",
-        placeholder = "e.g., Main St Station",
+        placeholder = tr("stop_ph_name", lang),
         value = stop_name_val
       )
     } else {
@@ -57,12 +59,12 @@ build_stop_form <- function(
       tags$button(
         class = "btn-save",
         onclick = "saveEditingStop()",
-        htmltools::HTML("&#10003; Save")
+        htmltools::HTML(paste0("&#10003; ", tr("btn_save", lang)))
       ),
       tags$button(
         class = "btn-cancel",
         onclick = "cancelEditingStop()",
-        "Cancel"
+        tr("btn_cancel", lang)
       )
     )
   )

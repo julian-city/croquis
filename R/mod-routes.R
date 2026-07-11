@@ -1,9 +1,14 @@
 # UI
-routesUI <- function(id) {
+routesUI <- function(id, lang = "en") {
   ns <- NS(id)
 
   tabPanel(
-    "routes",
+    title = tags$span(
+      #icon("route"),
+      #" ",
+      span(tr("tab_routes", lang), `data-i18n` = "tab_routes")
+    ),
+    value = "routes",
     fluidPage(
       titlePanel("routes"),
       # Map container with floating panels
