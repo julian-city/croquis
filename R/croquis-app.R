@@ -154,16 +154,37 @@ croquis <- function(ssfs = NULL, lang = "en") {
             style = "font-size: 14px; margin-bottom: 12px; line-height: 1.5; color: var(--text-color);",
             p(
               tags$strong(
-                "Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator."
+                span(
+                  tr("intro_tagline", lang_init),
+                  `data-i18n` = "intro_tagline"
+                )
               ),
-              "The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.",
-              "Get started on this page by loading an existing network, or by creating the agency details and projet location if starting from scratch.",
-              "This open-source software was developed in R Shiny. It is in active development.  Save your work often by clicking the Save",
+              span(
+                tr("intro_tabs", lang_init),
+                `data-i18n` = "intro_tabs"
+              ),
+              span(
+                tr("intro_get_started", lang_init),
+                `data-i18n` = "intro_get_started"
+              ),
+              span(
+                tr("intro_save_pre", lang_init),
+                `data-i18n` = "intro_save_pre"
+              ),
               icon("floppy-disk", class = "fa-solid"),
-              "icon above and exporting your project file.",
-              "Please report any bugs and provide your ideas for improvement by submitting an",
+              span(
+                tr("intro_save_post", lang_init),
+                `data-i18n` = "intro_save_post"
+              ),
+              span(
+                tr("intro_report_pre", lang_init),
+                `data-i18n` = "intro_report_pre"
+              ),
               tags$a(
-                "issue on GitHub",
+                span(
+                  tr("intro_report_link", lang_init),
+                  `data-i18n` = "intro_report_link"
+                ),
                 href = "https://github.com/julian-city/croquis/issues/new",
                 target = "_blank"
               ),
@@ -216,7 +237,11 @@ croquis <- function(ssfs = NULL, lang = "en") {
                       "",
                       multiple = FALSE,
                       accept = ".zip",
-                      placeholder = "Drag and drop or click to select file"
+                      buttonLabel = span(
+                        tr("btn_browse", lang_init),
+                        `data-i18n` = "btn_browse"
+                      ),
+                      placeholder = tr("file_placeholder", lang_init)
                     ),
                     tags$small(
                       span(
@@ -244,7 +269,11 @@ croquis <- function(ssfs = NULL, lang = "en") {
                       "",
                       multiple = FALSE,
                       accept = ".rds",
-                      placeholder = "Drag and drop or click to select file"
+                      buttonLabel = span(
+                        tr("btn_browse", lang_init),
+                        `data-i18n` = "btn_browse"
+                      ),
+                      placeholder = tr("file_placeholder", lang_init)
                     ),
                     tags$small(
                       span(

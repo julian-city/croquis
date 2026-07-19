@@ -51,10 +51,58 @@ var jsI18n = {
   load_croquis_note: { en: 'Upload a transit model .rds file previously created with Croquis', fr: 'T\u00e9l\u00e9versez un fichier .rds de mod\u00e8le de transport cr\u00e9\u00e9 pr\u00e9c\u00e9demment avec Croquis', es: 'Suba un archivo .rds de modelo de transporte creado previamente con Croquis' },
   load_sample_desc:  { en: 'To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.', fr: 'Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.', es: 'Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo L\u00ednea Amarilla (Ligne Jaune) es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis.' },
 
+// -- Home module: intro panel --
+  // Split *_pre / *_post fragments sit on either side of an inline icon or
+  // link; see R/i18n.R for the full assembled sentences. Strings must match
+  // R/i18n.R exactly to avoid visible text changes on language sync.
+  intro_tagline: {
+    en: 'Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator.',
+    fr: 'Croquis est un outil de planification du transport collectif et un cr\u00e9ateur de GTFS.',
+    es: 'Croquis es una herramienta de planificaci\u00f3n del transporte p\u00fablico y un creador de GTFS.'
+  },
+  intro_tabs: {
+    en: 'The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.',
+    fr: 'Les onglets arr\u00eats, lignes et horaires ci-dessus permettent de g\u00e9rer tous ces aspects de votre mod\u00e8le de r\u00e9seau de transport.',
+    es: 'Las pesta\u00f1as paradas, rutas y horarios de arriba permiten gestionar todos estos aspectos de su modelo de red de transporte.'
+  },
+  intro_get_started: {
+    en: 'Get started on this page by loading an existing network, or by creating the agency details and project location if starting from scratch.',
+    fr: 'Commencez sur cette page en chargeant un r\u00e9seau existant, ou en cr\u00e9ant les d\u00e9tails de l\'agence et l\'emplacement du projet si vous partez de z\u00e9ro.',
+    es: 'Comience en esta p\u00e1gina cargando una red existente, o creando los detalles de la agencia y la ubicaci\u00f3n del proyecto si empieza desde cero.'
+  },
+  intro_save_pre: {
+    en: 'This open-source software was developed in R Shiny. It is in active development. Save your work often by clicking the Save',
+    fr: 'Ce logiciel libre a \u00e9t\u00e9 d\u00e9velopp\u00e9 en R Shiny. Il est en d\u00e9veloppement actif. Enregistrez souvent votre travail en cliquant sur l\'ic\u00f4ne Enregistrer',
+    es: 'Este software de c\u00f3digo abierto fue desarrollado en R Shiny. Est\u00e1 en desarrollo activo. Guarde su trabajo con frecuencia haciendo clic en el \u00edcono Guardar'
+  },
+  intro_save_post: {
+    en: 'icon above and exporting your project file.',
+    fr: 'ci-dessus et en exportant votre fichier de projet.',
+    es: 'de arriba y exportando su archivo de proyecto.'
+  },
+  intro_report_pre: {
+    en: 'Please report any bugs and provide your ideas for improvement by submitting an',
+    fr: 'Veuillez signaler tout bogue et proposer vos id\u00e9es d\'am\u00e9lioration en soumettant une',
+    es: 'Reporte cualquier error y comparta sus ideas de mejora enviando un'
+  },
+  intro_report_link: {
+    en: 'issue on GitHub',
+    fr: 'issue sur GitHub',
+    es: 'issue en GitHub'
+  },
+
+  // -- Home module: file inputs (button label only; placeholder is
+  //    build-time only and lives solely in R/i18n.R) --
+  btn_browse: {
+    en: 'Browse...',
+    fr: 'Parcourir...',
+    es: 'Examinar...'
+  },
+
   // -- Stops module: static panel chrome --
   stops_title:         { en: 'stops',    fr: 'arr\u00eats',  es: 'paradas'  },
   stops_panel_title:   { en: 'Stops',    fr: 'Arr\u00eats',  es: 'Paradas'  },
-  stops_search:        { en: 'Search stops...', fr: 'Rechercher un arr\u00eats...', es: 'Buscar una parada...' },
+  stops_search:        { en: 'Search stops...', fr: 'Rechercher des arr\u00eats...', es: 'Buscar paradas...' },
   stops_ie_title:      { en: 'Import / Export / Generate', fr: 'Importer / Exporter / G\u00e9n\u00e9rer', es: 'Importar / Exportar / Generar' },
   stops_import_title:  { en: 'Import Stops', fr: 'Importer des arr\u00eats', es: 'Importar paradas' },
   stops_export_title:  { en: 'Export Stops', fr: 'Exporter les arr\u00eats', es: 'Exportar paradas' },

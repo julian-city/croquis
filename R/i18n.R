@@ -319,8 +319,67 @@ i18n_dict <- list(
     es = "Dibujar zona en el mapa"
   ),
 
-  # ── Notifications ──────────────────────────────────────────────────────
-  notif_stop_added = c(
+  # =============
+  # Descriptive text — Intro panel
+  # ========
+  intro_tagline = c(
+    en = "Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator.",
+    fr = "Croquis est un outil de planification du transport collectif et un cr\u00e9ateur de GTFS.",
+    es = "Croquis es una herramienta de planificaci\u00f3n del transporte p\u00fablico y un creador de GTFS."
+  ),
+  intro_tabs = c(
+    en = "The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.",
+    fr = "Les onglets arr\u00eats, lignes et horaires ci-dessus permettent de g\u00e9rer tous ces aspects de votre mod\u00e8le de r\u00e9seau de transport.",
+    es = "Las pesta\u00f1as paradas, rutas y horarios de arriba permiten gestionar todos estos aspectos de su modelo de red de transporte."
+  ),
+  intro_get_started = c(
+    en = "Get started on this page by loading an existing network, or by creating the agency details and project location if starting from scratch.",
+    fr = "Commencez sur cette page en chargeant un r\u00e9seau existant, ou en cr\u00e9ant les d\u00e9tails de l'agence et l'emplacement du projet si vous partez de z\u00e9ro.",
+    es = "Comience en esta p\u00e1gina cargando una red existente, o creando los detalles de la agencia y la ubicaci\u00f3n del proyecto si empieza desde cero."
+  ),
+  # Split pair. Full sentence (en): "This open-source software was developed
+  # in R Shiny. It is in active development. Save your work often by clicking
+  # the Save [floppy-disk icon] icon above and exporting your project file."
+  intro_save_pre = c(
+    en = "This open-source software was developed in R Shiny. It is in active development. Save your work often by clicking the Save",
+    fr = "Ce logiciel libre a \u00e9t\u00e9 d\u00e9velopp\u00e9 en R Shiny. Il est en d\u00e9veloppement actif. Enregistrez souvent votre travail en cliquant sur l'ic\u00f4ne Enregistrer",
+    es = "Este software de c\u00f3digo abierto fue desarrollado en R Shiny. Est\u00e1 en desarrollo activo. Guarde su trabajo con frecuencia haciendo clic en el \u00edcono Guardar"
+  ),
+  intro_save_post = c(
+    en = "icon above and exporting your project file.",
+    fr = "ci-dessus et en exportant votre fichier de projet.",
+    es = "de arriba y exportando su archivo de proyecto."
+  ),
+  # Split pair. Full sentence (en): "Please report any bugs and provide your
+  # ideas for improvement by submitting an [issue on GitHub]." The article at
+  # the end of *_pre agrees in gender/number with intro_report_link.
+  intro_report_pre = c(
+    en = "Please report any bugs and provide your ideas for improvement by submitting an",
+    fr = "Veuillez signaler tout bogue et proposer vos id\u00e9es d'am\u00e9lioration en soumettant une",
+    es = "Reporte cualquier error y comparta sus ideas de mejora enviando un"
+  ),
+  intro_report_link = c(
+    en = "issue on GitHub",
+    fr = "issue sur GitHub",
+    es = "issue en GitHub"
+  ),
+
+  # File inputs. btn_browse is live-switchable (data-i18n span);
+  # file_placeholder is build-time only (fileInput placeholder accepts
+  # character only) and is deliberately absent from inst/www/js/i18n.js.
+  btn_browse = c(
+    en = "Browse...",
+    fr = "Parcourir...",
+    es = "Examinar..."
+  ),
+  file_placeholder = c(
+    en = "Drag and drop or click to select file",
+    fr = "Glissez-d\u00e9posez ou cliquez pour s\u00e9lectionner un fichier",
+    es = "Arrastre y suelte o haga clic para seleccionar un archivo"
+  ),
+
+  # Notifications — loading
+  notif_gtfs_loaded = c(
     en = "Stop %s added",
     fr = "Arr\u00eat %s ajout\u00e9",
     es = "Parada %s agregada"
