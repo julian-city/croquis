@@ -127,7 +127,7 @@ i18n_dict <- list(
     es = "Cargar una red de transporte de ejemplo"
   ),
 
-  # Descriptive text — Load a GTFS
+  # Descriptive text - Load a GTFS
   load_gtfs_desc = c(
     en = "You can load an existing GTFS here.",
     fr = "Chargez un GTFS existant ici.",
@@ -144,7 +144,7 @@ i18n_dict <- list(
     es = "Al subir un GTFS, se convertir\u00e1 a un formato editable en Croquis"
   ),
 
-  # Descriptive text — Load your croquis
+  # Descriptive text - Load your croquis
   load_croquis_desc = c(
     en = "To continue working on a previous croquis, upload your .rds file:",
     fr = "Pour continuer \u00e0 travailler sur un croquis pr\u00e9c\u00e9dent, t\u00e9l\u00e9versez votre fichier .rds\u00a0:",
@@ -156,14 +156,91 @@ i18n_dict <- list(
     es = "Suba un archivo .rds de modelo de transporte creado previamente con Croquis"
   ),
 
-  # Descriptive text — Sample networks
+  # Descriptive text - Sample networks
   load_sample_desc = c(
     en = "To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.",
     fr = "Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.",
     es = "Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo L\u00ednea Amarilla (Ligne Jaune) es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis."
   ),
 
-  # Notifications — loading
+  # ── Project Location panel ─────────────────────────────────────────────
+  loc_title = c(
+    en = "Project Location",
+    fr = "Emplacement du projet",
+    es = "Ubicaci\u00f3n del proyecto"
+  ),
+  loc_search_label = c(
+    en = "Search for a city",
+    fr = "Rechercher une ville",
+    es = "Buscar una ciudad"
+  ),
+  # Build-time only (textInput placeholder accepts character only);
+  # deliberately absent from inst/www/js/i18n.js.
+  loc_search_ph = c(
+    en = "Type city name...",
+    fr = "Saisissez le nom d'une ville...",
+    es = "Escriba el nombre de la ciudad..."
+  ),
+  btn_select_city = c(
+    en = "Select City",
+    fr = "Choisir la ville",
+    es = "Seleccionar ciudad"
+  ),
+  loc_updates_note = c(
+    en = "Updates the map center and fetches timezone",
+    fr = "Met \u00e0 jour le centre de la carte et r\u00e9cup\u00e8re le fuseau horaire",
+    es = "Actualiza el centro del mapa y obtiene la zona horaria"
+  ),
+  loc_manual_title = c(
+    en = "...Or set project coordinates manually",
+    fr = "...Ou d\u00e9finissez les coordonn\u00e9es du projet manuellement",
+    es = "...O defina las coordenadas del proyecto manualmente"
+  ),
+  lbl_latitude = c(
+    en = "Latitude",
+    fr = "Latitude",
+    es = "Latitud"
+  ),
+  lbl_longitude = c(
+    en = "Longitude",
+    fr = "Longitude",
+    es = "Longitud"
+  ),
+
+  # Notifications - Project Location
+  notif_center_from_stops = c(
+    en = "The map center is set from the loaded network's stops. Remove all stops to set a city manually.",
+    fr = "Le centre de la carte est d\u00e9fini \u00e0 partir des arr\u00eats du r\u00e9seau charg\u00e9. Supprimez tous les arr\u00eats pour d\u00e9finir une ville manuellement.",
+    es = "El centro del mapa se define a partir de las paradas de la red cargada. Elimine todas las paradas para definir una ciudad manualmente."
+  ),
+  notif_city_empty = c(
+    en = "Please enter a city name",
+    fr = "Veuillez renseigner le nom d'une ville",
+    es = "Ingrese un nombre de ciudad"
+  ),
+  notif_city_not_found = c(
+    en = "City not found. Please select from the suggestions.",
+    fr = "Ville introuvable. Veuillez choisir parmi les suggestions.",
+    es = "Ciudad no encontrada. Seleccione una de las sugerencias."
+  ),
+  #stale notification ? city database does not have duplicate names
+  notif_city_multiple = c(
+    en = "Multiple cities found with that name. Please be more specific.",
+    fr = "Plusieurs villes portent ce nom. Veuillez \u00eatre plus pr\u00e9cis.",
+    es = "Se encontraron varias ciudades con ese nombre. Sea m\u00e1s espec\u00edfico."
+  ),
+  notif_city_set = c(
+    en = "City set to: %s",
+    fr = "Ville d\u00e9finie\u00a0: %s",
+    es = "Ciudad definida: %s"
+  ),
+  notif_coords_range = c(
+    en = "Latitude must be between -90 and 90, longitude between -180 and 180",
+    fr = "La latitude doit \u00eatre comprise entre -90 et 90, la longitude entre -180 et 180",
+    es = "La latitud debe estar entre -90 y 90, la longitud entre -180 y 180"
+  ),
+
+  # Notifications - loading
   notif_gtfs_loaded = c(
     en = "GTFS loaded successfully",
     fr = "GTFS charg\u00e9 avec succ\u00e8s",
@@ -190,8 +267,113 @@ i18n_dict <- list(
     es = "Error al cargar %s: %s"
   ),
 
+  # ── Agencies panel ─────────────────────────────────────────────────────
+  # Static header (data-i18n + JS mirror)
+  agencies_title = c(en = "Agencies", fr = "Agences", es = "Agencias"),
+
+  # Dynamic list and inline form (reactive tr(lang()) in renderUI; R-only)
+  agency_add_new = c(
+    en = "Add new agency",
+    fr = "Ajouter une nouvelle agence",
+    es = "Agregar nueva agencia"
+  ),
+  agency_edit_title = c(
+    en = "Edit agency",
+    fr = "Modifier l'agence",
+    es = "Editar agencia"
+  ),
+  agency_delete_title = c(
+    en = "Delete agency",
+    fr = "Supprimer l'agence",
+    es = "Eliminar agencia"
+  ),
+  lbl_agency_id = c(
+    en = "Agency ID",
+    fr = "ID de l'agence",
+    es = "ID de agencia"
+  ),
+  lbl_agency_name = c(
+    en = "Agency name",
+    fr = "Nom de l'agence",
+    es = "Nombre de agencia"
+  ),
+  lbl_agency_url = c(
+    en = "Agency URL",
+    fr = "URL de l'agence",
+    es = "URL de agencia"
+  ),
+  lbl_agency_tz = c(
+    en = "Agency timezone",
+    fr = "Fuseau horaire de l'agence",
+    es = "Zona horaria de agencia"
+  ),
+  agency_ph_id = c(
+    en = "e.g., STM",
+    fr = "p.\u00a0ex. STM",
+    es = "p.\u00a0ej. STM"
+  ),
+  agency_ph_name = c(
+    en = "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al",
+    fr = "p.\u00a0ex. Soci\u00e9t\u00e9 de transport de Montr\u00e9al",
+    es = "p.\u00a0ej. Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
+  ),
+  agency_ph_url = c(
+    en = "e.g., http://www.stm.info",
+    fr = "p.\u00a0ex. http://www.stm.info",
+    es = "p.\u00a0ej. http://www.stm.info"
+  ),
+  agency_ph_tz = c(
+    en = "e.g., America/Montreal",
+    fr = "p.\u00a0ex. America/Montreal",
+    es = "p.\u00a0ej. America/Montreal"
+  ),
+
+  # JS confirm dialog (mirrored in inst/www/js/i18n.js)
+  confirm_delete_agency = c(
+    en = "Delete this agency? Routes referencing it must be removed first.",
+    fr = "Supprimer cette agence\u00a0? Les lignes qui y font r\u00e9f\u00e9rence doivent d'abord \u00eatre supprim\u00e9es.",
+    es = "\u00bfEliminar esta agencia? Las rutas que la referencian deben eliminarse primero."
+  ),
+
+  # Notifications — Agencies
+  notif_agency_id_empty = c(
+    en = "Agency ID cannot be empty.",
+    fr = "L'ID de l'agence ne peut pas \u00eatre vide.",
+    es = "El ID de agencia no puede estar vac\u00edo."
+  ),
+  notif_agency_id_exists = c(
+    en = "This agency ID already exists. Please use a different ID.",
+    fr = "Cet ID d'agence existe d\u00e9j\u00e0. Veuillez utiliser un ID diff\u00e9rent.",
+    es = "Este ID de agencia ya existe. Use un ID diferente."
+  ),
+  notif_agency_not_found = c(
+    en = "Agency not found.",
+    fr = "Agence introuvable.",
+    es = "Agencia no encontrada."
+  ),
+  notif_agency_added = c(
+    en = "Agency added successfully",
+    fr = "Agence ajout\u00e9e avec succ\u00e8s",
+    es = "Agencia agregada con \u00e9xito"
+  ),
+  notif_agency_updated = c(
+    en = "Agency updated successfully",
+    fr = "Agence mise \u00e0 jour avec succ\u00e8s",
+    es = "Agencia actualizada con \u00e9xito"
+  ),
+  notif_agency_deleted = c(
+    en = "Agency deleted successfully",
+    fr = "Agence supprim\u00e9e avec succ\u00e8s",
+    es = "Agencia eliminada con \u00e9xito"
+  ),
+  notif_agency_cant_delete = c(
+    en = "Cannot delete agency '%s'. It is referenced by one or more routes. Delete or reassign the routes first.",
+    fr = "Impossible de supprimer l'agence \u00ab\u00a0%s\u00a0\u00bb. Une ou plusieurs lignes y font r\u00e9f\u00e9rence. Supprimez ou r\u00e9assignez d'abord les lignes.",
+    es = "No se puede eliminar la agencia '%s'. Una o m\u00e1s rutas la referencian. Elimine o reasigne las rutas primero."
+  ),
+
   # ════════════════════════════════════════════════════════════════════════
-  # Stops module — panel chrome (static UI, translated via JS updateI18n)
+  # Stops module - panel chrome (static UI, translated via JS updateI18n)
   # ════════════════════════════════════════════════════════════════════════
   stops_title = c(en = "stops", fr = "arr\u00eats", es = "paradas"),
   stops_panel_title = c(en = "Stops", fr = "Arr\u00eats", es = "Paradas"),
@@ -281,11 +463,15 @@ i18n_dict <- list(
     fr = "Nom de l'arr\u00eat, de la gare ou du quai. Il doit correspondre au nom utilis\u00e9 par l'agence pour les usagers, tel qu'imprim\u00e9 sur un horaire, publi\u00e9 en ligne ou affich\u00e9 sur la signal\u00e9tique.",
     es = "Nombre de la parada, estaci\u00f3n o plataforma. Debe coincidir con el nombre que la agencia usa de cara al usuario, tal como aparece en horarios impresos, en l\u00ednea o en se\u00f1alizaci\u00f3n."
   ),
-  stop_ph_id = c(en = "e.g., S001", fr = "ex.\u00a0: S001", es = "ej.: S001"),
+  stop_ph_id = c(
+    en = "e.g., S001",
+    fr = "p. ex., S001",
+    es = "p. ej., S001"
+  ),
   stop_ph_name = c(
     en = "e.g., Main St Station",
-    fr = "ex.\u00a0: Station Principale",
-    es = "ej.: Estaci\u00f3n Central"
+    fr = "p. ex., Gare Centrale",
+    es = "p. ej., Salto del Agua"
   ),
 
   # Hover labels
@@ -378,8 +564,8 @@ i18n_dict <- list(
     es = "Arrastre y suelte o haga clic para seleccionar un archivo"
   ),
 
-  # Notifications — loading
-  notif_gtfs_loaded = c(
+  # Notifications ===============
+  notif_stop_added = c(
     en = "Stop %s added",
     fr = "Arr\u00eat %s ajout\u00e9",
     es = "Parada %s agregada"

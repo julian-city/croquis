@@ -7,7 +7,7 @@ function editAgencyFromList(agencyId) {
 
 // Delete agency (trash icon)
 function deleteAgencyFromList(agencyId) {
-  if (confirm('Delete this agency? Routes referencing it must be removed first.')) {
+  if (confirm(jsTr('confirm_delete_agency'))) {
     Shiny.setInputValue('ag_list_delete_click', {id: agencyId, ts: Math.random()}, {priority: 'event'});
   }
 }

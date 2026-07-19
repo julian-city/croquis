@@ -99,6 +99,56 @@ var jsI18n = {
     es: 'Examinar...'
   },
 
+  // -- Home module: Project Location panel --
+  // (loc_search_ph is build-time only and lives solely in R/i18n.R)
+  loc_title: {
+    en: 'Project Location',
+    fr: 'Emplacement du projet',
+    es: 'Ubicaci\u00f3n del proyecto'
+  },
+  loc_search_label: {
+    en: 'Search for a city',
+    fr: 'Rechercher une ville',
+    es: 'Buscar una ciudad'
+  },
+  btn_select_city: {
+    en: 'Select City',
+    fr: 'Choisir la ville',
+    es: 'Seleccionar ciudad'
+  },
+  loc_updates_note: {
+    en: 'Updates the map center and fetches timezone',
+    fr: 'Met \u00e0 jour le centre de la carte et r\u00e9cup\u00e8re le fuseau horaire',
+    es: 'Actualiza el centro del mapa y obtiene la zona horaria'
+  },
+  loc_manual_title: {
+    en: '...Or set project coordinates manually',
+    fr: '...Ou d\u00e9finissez les coordonn\u00e9es du projet manuellement',
+    es: '...O defina las coordenadas del proyecto manualmente'
+  },
+  lbl_latitude: {
+    en: 'Latitude',
+    fr: 'Latitude',
+    es: 'Latitud'
+  },
+  lbl_longitude: {
+    en: 'Longitude',
+    fr: 'Longitude',
+    es: 'Longitud'
+  },
+
+  // -- Home module: Agencies panel (static header + confirm dialog) --
+  agencies_title: {
+    en: 'Agencies',
+    fr: 'Agences',
+    es: 'Agencias'
+  },
+  confirm_delete_agency: {
+    en: 'Delete this agency? Routes referencing it must be removed first.',
+    fr: 'Supprimer cette agence\u00a0? Les lignes qui y font r\u00e9f\u00e9rence doivent d\'abord \u00eatre supprim\u00e9es.',
+    es: '\u00bfEliminar esta agencia? Las rutas que la referencian deben eliminarse primero.'
+  },
+
   // -- Stops module: static panel chrome --
   stops_title:         { en: 'stops',    fr: 'arr\u00eats',  es: 'paradas'  },
   stops_panel_title:   { en: 'Stops',    fr: 'Arr\u00eats',  es: 'Paradas'  },

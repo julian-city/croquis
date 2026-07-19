@@ -335,7 +335,10 @@ croquis <- function(ssfs = NULL, lang = "en") {
                 #  "height: 30vh; min-height: 200px; ",
                 #  "overflow-y: auto; margin-bottom: 15px;"
                 #),
-                h4("Project Location"),
+                h4(span(
+                  tr("loc_title", lang_init),
+                  `data-i18n` = "loc_title"
+                )),
                 div(
                   style = "display: flex; align-items: flex-end; gap: 8px;",
                   div(
@@ -343,12 +346,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
                     textInput(
                       "city_search",
                       tags$label(
-                        "Search for a city",
+                        span(
+                          tr("loc_search_label", lang_init),
+                          `data-i18n` = "loc_search_label"
+                        ),
                         info_popover(
-                          "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you made need to set coordinates manually below.",
+                          "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you may need to set coordinates manually below."
                         )
                       ),
-                      placeholder = "Type city name...",
+                      placeholder = tr("loc_search_ph", lang_init),
                       width = "100%"
                     ),
                     div(
@@ -360,19 +366,31 @@ croquis <- function(ssfs = NULL, lang = "en") {
                     style = "margin-bottom: 15px;",
                     actionButton(
                       "select_city",
-                      "Select City",
+                      span(
+                        tr("btn_select_city", lang_init),
+                        `data-i18n` = "btn_select_city"
+                      ),
                       class = "btn-info"
                     )
                   )
                 ),
-                tags$small("Updates the map center and fetches timezone"),
-                h5("...Or set project coordinates manually"),
+                tags$small(span(
+                  tr("loc_updates_note", lang_init),
+                  `data-i18n` = "loc_updates_note"
+                )),
+                h5(span(
+                  tr("loc_manual_title", lang_init),
+                  `data-i18n` = "loc_manual_title"
+                )),
                 fluidRow(
                   column(
                     6,
                     numericInput(
                       "manual_lat",
-                      "Latitude",
+                      span(
+                        tr("lbl_latitude", lang_init),
+                        `data-i18n` = "lbl_latitude"
+                      ),
                       value = NA,
                       min = -90,
                       max = 90,
@@ -383,7 +401,10 @@ croquis <- function(ssfs = NULL, lang = "en") {
                     6,
                     numericInput(
                       "manual_lng",
-                      "Longitude",
+                      span(
+                        tr("lbl_longitude", lang_init),
+                        `data-i18n` = "lbl_longitude"
+                      ),
                       value = NA,
                       min = -180,
                       max = 180,
@@ -415,7 +436,10 @@ croquis <- function(ssfs = NULL, lang = "en") {
           # -- Agency list --
           wellPanel(
             style = "overflow-y: auto; max-height: 60vh;",
-            h4("Agencies"),
+            h4(span(
+              tr("agencies_title", lang_init),
+              `data-i18n` = "agencies_title"
+            )),
             div(
               class = "agency-list-container",
               uiOutput("agency_list_ui")
@@ -1338,10 +1362,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
     observeEvent(input$select_city, {
       if (network_has_stops()) {
         showNotification(
-          paste(
-            "The map center is set from the loaded network's stops.",
-            "Remove all stops to set a city manually."
-          ),
+          tr("notif_center_from_stops", lang()),
           type = "warning"
         )
         return()
@@ -1350,7 +1371,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
       search_term <- input$city_search
 
       if (is.null(search_term) || search_term == "") {
-        showNotification("Please enter a city name", type = "warning")
+        showNotification(tr("notif_city_empty", lang()), type = "warning")
         return()
       }
 
@@ -1361,13 +1382,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
 
       if (nrow(exact_matches) == 0) {
         showNotification(
-          "City not found. Please select from the suggestions.",
+          tr("notif_city_not_found", lang()),
           type = "warning"
         )
         return()
       } else if (nrow(exact_matches) > 1) {
+        #flag : text for this notification could be changed. Verify that the case is real
         showNotification(
-          "Multiple cities found with that name. Please be more specific.",
+          tr("notif_city_multiple", lang()),
           type = "warning"
         )
         return()
@@ -1388,7 +1410,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
         session$sendCustomMessage("hideSuggestions", "")
 
         showNotification(
-          paste("City set to:", selected_city$name),
+          sprintf(tr("notif_city_set", lang()), selected_city$name),
           type = "message"
         )
       }
@@ -1460,7 +1482,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
             coords$lng > 180
         ) {
           showNotification(
-            "Latitude must be between -90 and 90, longitude between -180 and 180",
+            tr("notif_coords_range", lang()),
             type = "warning"
           )
           return()
@@ -1491,7 +1513,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
     ag_last_tz <- reactiveVal(NULL) # timezone associated with selected city
 
     # -- Helper: build an agency display row --
-    build_agency_row <- function(agency) {
+    build_agency_row <- function(agency, lang) {
       div(
         class = "agency-list-row",
         div(
@@ -1518,7 +1540,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
               "event.stopPropagation(); editAgencyFromList('%s')",
               agency$agency_id
             ),
-            title = "Edit agency",
+            title = tr("agency_edit_title", lang),
             htmltools::HTML("&#9998;")
           ),
           tags$button(
@@ -1527,7 +1549,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
               "event.stopPropagation(); deleteAgencyFromList('%s')",
               agency$agency_id
             ),
-            title = "Delete agency",
+            title = tr("agency_delete_title", lang),
             htmltools::HTML('<i class="fa-solid fa-trash"></i>')
           )
         )
@@ -1535,12 +1557,12 @@ croquis <- function(ssfs = NULL, lang = "en") {
     }
 
     # -- Helper: build the inline agency edit/add form --
-    build_agency_form <- function(agency = NULL, default_tz = NULL) {
+    build_agency_form <- function(agency = NULL, default_tz = NULL, lang) {
       is_new <- is.null(agency)
       div(
         class = "agency-edit-form",
         tags$label(
-          "Agency ID",
+          tr("lbl_agency_id", lang),
           info_popover(
             "Identifies a unique transit agency or transit brand.",
             "https://gtfs.org/schedule/reference/#agencytxt"
@@ -1550,10 +1572,10 @@ croquis <- function(ssfs = NULL, lang = "en") {
           type = "text",
           id = "inline_ag_agency_id",
           value = if (!is_new) agency$agency_id else NULL,
-          placeholder = if (is_new) "e.g., STM" else NULL
+          placeholder = if (is_new) tr("agency_ph_id", lang) else NULL
         ),
         tags$label(
-          "Agency name",
+          tr("lbl_agency_name", lang),
           info_popover(
             "Full name of the transit agency.",
             "https://gtfs.org/schedule/reference/#agencytxt"
@@ -1564,13 +1586,13 @@ croquis <- function(ssfs = NULL, lang = "en") {
           id = "inline_ag_agency_name",
           value = if (!is_new) agency$agency_name else NULL,
           placeholder = if (is_new) {
-            "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
+            tr("agency_ph_name", lang)
           } else {
             NULL
           }
         ),
         tags$label(
-          "Agency URL",
+          tr("lbl_agency_url", lang),
           info_popover(
             "URL of the transit agency.",
             "https://gtfs.org/schedule/reference/#agencytxt"
@@ -1580,10 +1602,10 @@ croquis <- function(ssfs = NULL, lang = "en") {
           type = "text",
           id = "inline_ag_agency_url",
           value = if (!is_new) agency$agency_url else NULL,
-          placeholder = if (is_new) "e.g., http://www.stm.info" else NULL
+          placeholder = if (is_new) tr("agency_ph_url", lang) else NULL
         ),
         tags$label(
-          "Agency timezone",
+          tr("lbl_agency_tz", lang),
           info_popover(
             "Timezone in IANA tz database format.",
             "https://gtfs.org/schedule/reference/#agencytxt"
@@ -1593,19 +1615,23 @@ croquis <- function(ssfs = NULL, lang = "en") {
           type = "text",
           id = "inline_ag_agency_timezone",
           value = if (!is_new) agency$agency_timezone else default_tz,
-          placeholder = if (is_new) "e.g., America/Montreal" else NULL
+          placeholder = if (is_new) tr("agency_ph_tz", lang) else NULL
         ),
         div(
           class = "btn-row",
           tags$button(
             class = "btn-save",
             onclick = "saveAgencyFromForm()",
-            if (is_new) "Create" else htmltools::HTML("&#10003; Save")
+            if (is_new) {
+              tr("btn_create", lang)
+            } else {
+              tagList(htmltools::HTML("&#10003;"), tr("btn_save", lang))
+            }
           ),
           tags$button(
             class = "btn-cancel",
             onclick = "cancelAgencyEdit()",
-            "Cancel"
+            tr("btn_cancel", lang)
           )
         )
       )
@@ -1614,6 +1640,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
     # -- Render the agency list UI --
     output$agency_list_ui <- renderUI({
       current_data <- ssfs()
+      current_lang <- lang()
       editing_id <- ag_editing_id()
       is_adding <- ag_adding()
 
@@ -1627,11 +1654,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
             editing_id == ag$agency_id
 
           # Always show the display row
-          rows[[length(rows) + 1]] <- build_agency_row(ag)
+          rows[[length(rows) + 1]] <- build_agency_row(ag, current_lang)
 
           # If editing this row, show form directly below
           if (is_editing_this) {
-            rows[[length(rows) + 1]] <- build_agency_form(ag)
+            rows[[length(rows) + 1]] <- build_agency_form(
+              ag,
+              lang = current_lang
+            )
           }
         }
       }
@@ -1639,7 +1669,8 @@ croquis <- function(ssfs = NULL, lang = "en") {
       # "Add new agency" row or add form
       if (is_adding) {
         rows[[length(rows) + 1]] <- build_agency_form(
-          default_tz = isolate(ag_last_tz())
+          default_tz = isolate(ag_last_tz()),
+          lang = current_lang
         )
       } else {
         rows[[length(rows) + 1]] <- div(
@@ -1648,10 +1679,13 @@ croquis <- function(ssfs = NULL, lang = "en") {
           tags$button(
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingAgency()",
-            title = "Add new agency",
+            title = tr("agency_add_new", current_lang),
             htmltools::HTML("+")
           ),
-          span(style = "margin-left: 8px;", "Add new agency")
+          span(
+            style = "margin-left: 8px;",
+            tr("agency_add_new", current_lang)
+          )
         )
       }
 
@@ -1688,7 +1722,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
       new_agency_id <- trimws(data$agency_id)
 
       if (nchar(new_agency_id) == 0) {
-        showNotification("Agency ID cannot be empty.", type = "warning")
+        showNotification(tr("notif_agency_id_empty", lang()), type = "warning")
         return()
       }
 
@@ -1698,7 +1732,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
         # -- Adding a new agency --
         if (new_agency_id %in% current_data$agency$agency_id) {
           showNotification(
-            "This agency ID already exists. Please use a different ID.",
+            tr("notif_agency_id_exists", lang()),
             type = "warning"
           )
           return()
@@ -1716,14 +1750,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
         ssfs(current_data)
         ag_adding(FALSE)
 
-        showNotification("Agency added successfully", type = "message")
+        showNotification(tr("notif_agency_added", lang()), type = "message")
       } else if (!is.null(ag_editing_id())) {
         # ── Editing an existing agency ──
         old_agency_id <- ag_editing_id()
         idx <- which(current_data$agency$agency_id == old_agency_id)
 
         if (length(idx) == 0) {
-          showNotification("Agency not found.", type = "error")
+          showNotification(tr("notif_agency_not_found", lang()), type = "error")
           return()
         }
 
@@ -1732,7 +1766,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
           other_ids <- current_data$agency$agency_id[-idx]
           if (new_agency_id %in% other_ids) {
             showNotification(
-              "This agency ID already exists. Please use a different ID.",
+              tr("notif_agency_id_exists", lang()),
               type = "warning"
             )
             return()
@@ -1755,7 +1789,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
         ssfs(current_data)
         ag_editing_id(NULL)
 
-        showNotification("Agency updated successfully", type = "message")
+        showNotification(tr("notif_agency_updated", lang()), type = "message")
       }
     })
 
@@ -1770,12 +1804,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
           agency_to_delete %in% current_data$routes$agency_id
       ) {
         showNotification(
-          paste0(
-            "Cannot delete agency '",
-            agency_to_delete,
-            "'. It is referenced by one or more routes. ",
-            "Delete or reassign the routes first."
-          ),
+          sprintf(tr("notif_agency_cant_delete", lang()), agency_to_delete),
           type = "error",
           duration = 5
         )
@@ -1792,7 +1821,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
         ag_editing_id(NULL)
       }
 
-      showNotification("Agency deleted successfully", type = "message")
+      showNotification(tr("notif_agency_deleted", lang()), type = "message")
     })
 
     # Agency map initialization
