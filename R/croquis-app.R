@@ -448,99 +448,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
 
           # -- Instructions --
           wellPanel(
-            h3("Instructions"),
-            p(
-              "Build your transit system model by following these steps:"
-            ),
-
-            h4(
-              "1. Get started here by loading an existing network or specifying agency details for a new one"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Load a GTFS or a network that you've previously worked on in Croquis"
-                ),
-                tags$li(
-                  "Set the location of your network, if you're starting a network from scratch"
-                ),
-                tags$li("View and edit agency details.")
-              )
-            ),
-
-            h4("2. Create and edit stops in the stops module"),
-            p(
-              tags$ul(
-                tags$li("Manage and create stops using the left-hand panel"),
-                tags$li(
-                  "When creating or editing a stop, click on the map or drag the stop to set its location."
-                ),
-                tags$li(
-                  "Provide unique stop IDs and stop names for each stop"
-                ),
-              )
-            ),
-
-            h4(
-              "3. Create your routes and route itineraries in the routes module"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Create routes with their details (mode, colours) and define route itineraries within each route."
-                ),
-                tags$li(
-                  "A route itinerary corresponds to a unique stop pattern for trips. Each itinerary is associated with a stop sequence and a shape."
-                ),
-                tags$li(
-                  "Create and edit route geometries by selecting stops in the desired order and by creating waypoints by clicking on the map and along the route. You may delete waypoints or remove stops from a route itinerary by right-clicking."
-                ),
-                tags$li(
-                  "Move a waypoint by clicking on it and activating editing mode. Click on the desired location on the map or on a stop to move the waypoint there. If clicked on a stop, it will be added to the sequence."
-                ),
-                tags$li(
-                  "Toggle between network and simple drawing modes. Network drawing mode calculates the path along the Open Street Maps road network between stops and waypoints."
-                ),
-                tags$li(
-                  "Toggle between prepending and appending stops when drawing a route itinerary. Prepend mode adds stops clicked to the beginning of the stop sequence (the default is that stops clicks are added to the end)."
-                )
-              )
-            ),
-
-            h4(
-              "4. Define and edit service levels and speeds for routes in the schedule module"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Bulk apply preset service levels (e.g. all-day frequent or peak frequent), speeds and operating hours to routes by service."
-                ),
-                tags$li(
-                  "View cumulative service-level by route segment by hour by clicking on the map."
-                ),
-                tags$li(
-                  "Apply preset service levels, speeds and operating hours for individual route itineraries."
-                ),
-                tags$li(
-                  "Define and edit headways and speeds by hour in detail for individual route itineraries, if desired."
-                ),
-                tags$li(
-                  "View and toggle interstop speeds at the route itinerary level, if desired."
-                ),
-                tags$li(
-                  "Manage service level presets, create them from scratch, or create them based on the service level of an existing route itinerary."
-                ),
-                tags$li(
-                  "Manage service calendar, including start and end dates for services defined by day of the week active (e.g. weekday vs. weekend service)."
-                )
-              )
-            ),
-
-            h4(
-              "5. Click the save",
-              icon("floppy-disk", class = "fa-solid"),
-              "icon to export a GTFS or save your croquis in .rds format to work on it later"
-            )
+            uiOutput("home_instructions_ui")
           )
         )
       ),
@@ -1822,6 +1730,37 @@ croquis <- function(ssfs = NULL, lang = "en") {
       }
 
       showNotification(tr("notif_agency_deleted", lang()), type = "message")
+    })
+
+    # -- Helper: build a translated instructions bullet list --
+    build_instr_list <- function(step, n_items, lang) {
+      items <- lapply(seq_len(n_items), function(i) {
+        tags$li(tr(sprintf("instr_s%d_li%d", step, i), lang))
+      })
+      p(tags$ul(items))
+    }
+
+    # -- Render the instructions panel (server-side for i18n) --
+    output$home_instructions_ui <- renderUI({
+      current_lang <- lang()
+
+      tagList(
+        h3(tr("instr_title", current_lang)),
+        p(tr("instr_intro", current_lang)),
+        h4(tr("instr_s1", current_lang)),
+        build_instr_list(1, 3, current_lang),
+        h4(tr("instr_s2", current_lang)),
+        build_instr_list(2, 3, current_lang),
+        h4(tr("instr_s3", current_lang)),
+        build_instr_list(3, 6, current_lang),
+        h4(tr("instr_s4", current_lang)),
+        build_instr_list(4, 7, current_lang),
+        h4(
+          tr("instr_s5_pre", current_lang),
+          icon("floppy-disk", class = "fa-solid"),
+          tr("instr_s5_post", current_lang)
+        )
+      )
     })
 
     # Agency map initialization

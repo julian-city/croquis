@@ -372,6 +372,150 @@ i18n_dict <- list(
     es = "No se puede eliminar la agencia '%s'. Una o m\u00e1s rutas la referencian. Elimine o reasigne las rutas primero."
   ),
 
+  # ── Instructions panel ─────────────────────────────────────────────────
+  # Rendered fully server-side (output$home_instructions_ui) via the
+  # reactive tr(lang()) pattern; R-only, no JS mirror. Bullet keys follow
+  # the strict naming scheme instr_s{step}_li{n} consumed programmatically
+  # by build_instr_list().
+  instr_title = c(
+    en = "Instructions",
+    fr = "Instructions",
+    es = "Instrucciones"
+  ),
+  instr_intro = c(
+    en = "Build your transit system model by following these steps:",
+    fr = "Construisez votre mod\u00e8le de r\u00e9seau de transport en suivant ces \u00e9tapes\u00a0:",
+    es = "Construya su modelo de red de transporte siguiendo estos pasos:"
+  ),
+  instr_s1 = c(
+    en = "1. Get started here by loading an existing network or specifying agency details for a new one",
+    fr = "1. Commencez ici en chargeant un r\u00e9seau existant ou en pr\u00e9cisant les d\u00e9tails de l'agence pour un nouveau r\u00e9seau",
+    es = "1. Comience aqu\u00ed cargando una red existente o especificando los detalles de la agencia para una nueva"
+  ),
+  instr_s1_li1 = c(
+    en = "Load a GTFS or a network that you've previously worked on in Croquis",
+    fr = "Chargez un GTFS ou un r\u00e9seau sur lequel vous avez d\u00e9j\u00e0 travaill\u00e9 dans Croquis",
+    es = "Cargue un GTFS o una red en la que haya trabajado previamente en Croquis"
+  ),
+  instr_s1_li2 = c(
+    en = "Set the location of your network, if you're starting a network from scratch",
+    fr = "D\u00e9finissez l'emplacement de votre r\u00e9seau si vous partez de z\u00e9ro",
+    es = "Defina la ubicaci\u00f3n de su red si empieza desde cero"
+  ),
+  instr_s1_li3 = c(
+    en = "View and edit agency details.",
+    fr = "Consultez et modifiez les d\u00e9tails de l'agence.",
+    es = "Consulte y edite los detalles de la agencia."
+  ),
+  instr_s2 = c(
+    en = "2. Create and edit stops in the stops module",
+    fr = "2. Cr\u00e9ez et modifiez des arr\u00eats dans le module des arr\u00eats",
+    es = "2. Cree y edite paradas en el m\u00f3dulo de paradas"
+  ),
+  instr_s2_li1 = c(
+    en = "Manage and create stops using the left-hand panel",
+    fr = "G\u00e9rez et cr\u00e9ez des arr\u00eats \u00e0 l'aide du panneau de gauche",
+    es = "Gestione y cree paradas con el panel izquierdo"
+  ),
+  instr_s2_li2 = c(
+    en = "When creating or editing a stop, click on the map or drag the stop to set its location.",
+    fr = "Lors de la cr\u00e9ation ou de la modification d'un arr\u00eat, cliquez sur la carte ou d\u00e9placez l'arr\u00eat pour d\u00e9finir son emplacement.",
+    es = "Al crear o editar una parada, haga clic en el mapa o arrastre la parada para definir su ubicaci\u00f3n."
+  ),
+  instr_s2_li3 = c(
+    en = "Provide unique stop IDs and stop names for each stop",
+    fr = "Attribuez un ID et un nom d'arr\u00eat uniques \u00e0 chaque arr\u00eat",
+    es = "Asigne un ID y un nombre de parada \u00fanicos a cada parada"
+  ),
+  instr_s3 = c(
+    en = "3. Create your routes and route itineraries in the routes module",
+    fr = "3. Cr\u00e9ez vos lignes et leurs parcours types dans le module des lignes",
+    es = "3. Cree sus rutas y sus itinerarios en el m\u00f3dulo de rutas"
+  ),
+  instr_s3_li1 = c(
+    en = "Create routes with their details (mode, colours) and define route itineraries within each route.",
+    fr = "Cr\u00e9ez des lignes avec leurs d\u00e9tails (mode, couleurs) et d\u00e9finissez des parcours types au sein de chaque ligne.",
+    es = "Cree rutas con sus detalles (modo, colores) y defina itinerarios dentro de cada ruta."
+  ),
+  instr_s3_li2 = c(
+    en = "A route itinerary corresponds to a unique stop pattern for trips. Each itinerary is associated with a stop sequence and a shape.",
+    fr = "Un parcours type correspond \u00e0 un encha\u00eenement d'arr\u00eats unique pour les voyages. Chaque parcours type est associ\u00e9 \u00e0 une s\u00e9quence d'arr\u00eats et \u00e0 un trac\u00e9.",
+    es = "Un itinerario corresponde a un patr\u00f3n de paradas \u00fanico para los viajes. Cada itinerario est\u00e1 asociado a una secuencia de paradas y a un trazado."
+  ),
+  instr_s3_li3 = c(
+    en = "Create and edit route geometries by selecting stops in the desired order and by creating waypoints by clicking on the map and along the route. You may delete waypoints or remove stops from a route itinerary by right-clicking.",
+    fr = "Cr\u00e9ez et modifiez les g\u00e9om\u00e9tries des lignes en s\u00e9lectionnant les arr\u00eats dans l'ordre souhait\u00e9 et en cr\u00e9ant des points de passage en cliquant sur la carte et le long de la ligne. Vous pouvez supprimer des points de passage ou retirer des arr\u00eats d'un parcours type par un clic droit.",
+    es = "Cree y edite las geometr\u00edas de las rutas seleccionando las paradas en el orden deseado y creando puntos de paso haciendo clic en el mapa y a lo largo de la ruta. Puede eliminar puntos de paso o quitar paradas de un itinerario con clic derecho."
+  ),
+  instr_s3_li4 = c(
+    en = "Move a waypoint by clicking on it and activating editing mode. Click on the desired location on the map or on a stop to move the waypoint there. If clicked on a stop, it will be added to the sequence.",
+    fr = "D\u00e9placez un point de passage en cliquant dessus pour activer le mode d'\u00e9dition. Cliquez sur l'emplacement souhait\u00e9 sur la carte ou sur un arr\u00eat pour y d\u00e9placer le point de passage. Si vous cliquez sur un arr\u00eat, celui-ci sera ajout\u00e9 \u00e0 la s\u00e9quence.",
+    es = "Mueva un punto de paso haciendo clic en \u00e9l para activar el modo de edici\u00f3n. Haga clic en la ubicaci\u00f3n deseada en el mapa o en una parada para mover el punto de paso all\u00ed. Si hace clic en una parada, esta se agregar\u00e1 a la secuencia."
+  ),
+  instr_s3_li5 = c(
+    en = "Toggle between network and simple drawing modes. Network drawing mode calculates the path along the OpenStreetMap road network between stops and waypoints.",
+    fr = "Basculez entre les modes de dessin r\u00e9seau et simple. Le mode r\u00e9seau calcule le trajet le long du r\u00e9seau routier d'OpenStreetMap entre les arr\u00eats et les points de passage.",
+    es = "Alterne entre los modos de dibujo de red y simple. El modo de red calcula el trayecto a lo largo de la red vial de OpenStreetMap entre paradas y puntos de paso."
+  ),
+  instr_s3_li6 = c(
+    en = "Toggle between prepending and appending stops when drawing a route itinerary. Prepend mode adds stops clicked to the beginning of the stop sequence (the default is that stops clicked are added to the end).",
+    fr = "Basculez entre l'ajout des arr\u00eats au d\u00e9but ou \u00e0 la fin lors du dessin d'un itin\u00e9raire. Le mode d'ajout au d\u00e9but ins\u00e8re les arr\u00eats cliqu\u00e9s au d\u00e9but de la s\u00e9quence d'arr\u00eats (par d\u00e9faut, les arr\u00eats cliqu\u00e9s sont ajout\u00e9s \u00e0 la fin).",
+    es = "Alterne entre agregar paradas al inicio o al final al dibujar un itinerario. El modo de inserci\u00f3n al inicio agrega las paradas seleccionadas al principio de la secuencia (por defecto, las paradas se agregan al final)."
+  ),
+  instr_s4 = c(
+    en = "4. Define and edit service levels and speeds for routes in the schedule module",
+    fr = "4. D\u00e9finissez et modifiez les niveaux de service et les vitesses des lignes dans le module des horaires",
+    es = "4. Defina y edite los niveles de servicio y las velocidades de las rutas en el m\u00f3dulo de horarios"
+  ),
+  instr_s4_li1 = c(
+    en = "Bulk apply preset service levels (e.g. all-day frequent or peak frequent), speeds and operating hours to routes by service.",
+    fr = "Appliquez en lot des niveaux de service pr\u00e9d\u00e9finis (p.\u00a0ex. fr\u00e9quent toute la journ\u00e9e ou fr\u00e9quent en pointe), des vitesses et des heures d'exploitation aux lignes par service.",
+    es = "Aplique en bloque niveles de servicio predefinidos (p.\u00a0ej. frecuente todo el d\u00eda o frecuente en hora punta), velocidades y horas de operaci\u00f3n a las rutas por servicio."
+  ),
+  instr_s4_li2 = c(
+    en = "View cumulative service-level by route segment by hour by clicking on the map.",
+    fr = "Consultez le niveau de service cumul\u00e9 par segment de ligne et par heure en cliquant sur la carte.",
+    es = "Consulte el nivel de servicio acumulado por segmento de ruta y por hora haciendo clic en el mapa."
+  ),
+  instr_s4_li3 = c(
+    en = "Apply preset service levels, speeds and operating hours for individual route itineraries.",
+    fr = "Appliquez des niveaux de service, des vitesses et des heures d'exploitation pr\u00e9d\u00e9finis aux parcours types individuels.",
+    es = "Aplique niveles de servicio, velocidades y horas de operaci\u00f3n predefinidos a itinerarios individuales."
+  ),
+  instr_s4_li4 = c(
+    en = "Define and edit headways and speeds by hour in detail for individual route itineraries, if desired.",
+    fr = "D\u00e9finissez et modifiez en d\u00e9tail les intervalles et les vitesses par heure pour les parcours types individuels, si d\u00e9sir\u00e9.",
+    es = "Defina y edite en detalle los intervalos y las velocidades por hora para itinerarios individuales, si lo desea."
+  ),
+  instr_s4_li5 = c(
+    en = "View and toggle interstop speeds at the route itinerary level, if desired.",
+    fr = "Consultez et ajustez les vitesses interarr\u00eats au niveau du parcours type, si d\u00e9sir\u00e9.",
+    es = "Consulte y ajuste las velocidades entre paradas a nivel de itinerario, si lo desea."
+  ),
+  instr_s4_li6 = c(
+    en = "Manage service level presets, create them from scratch, or create them based on the service level of an existing route itinerary.",
+    fr = "G\u00e9rez les niveaux de service pr\u00e9d\u00e9finis, cr\u00e9ez-les de toutes pi\u00e8ces ou cr\u00e9ez-les \u00e0 partir du niveau de service d'un parcours type existant.",
+    es = "Gestione los niveles de servicio predefinidos, cr\u00e9elos desde cero o cr\u00e9elos a partir del nivel de servicio de un itinerario existente."
+  ),
+  instr_s4_li7 = c(
+    en = "Manage service calendar, including start and end dates for services defined by day of the week active (e.g. weekday vs. weekend service).",
+    fr = "G\u00e9rez le calendrier de service, y compris les dates de d\u00e9but et de fin des services d\u00e9finis par jours de la semaine actifs (p.\u00a0ex. service en semaine ou de fin de semaine).",
+    es = "Gestione el calendario de servicio, incluidas las fechas de inicio y fin de los servicios definidos por los d\u00edas de la semana activos (p.\u00a0ej. servicio entre semana o de fin de semana)."
+  ),
+  # Split pair. Full sentence (en): "5. Click the save [floppy-disk icon]
+  # icon to export a GTFS or save your croquis in .rds format to work on
+  # it later"
+  instr_s5_pre = c(
+    en = "5. Click the save",
+    fr = "5. Cliquez sur l'ic\u00f4ne Enregistrer",
+    es = "5. Haga clic en el \u00edcono Guardar"
+  ),
+  instr_s5_post = c(
+    en = "icon to export a GTFS or save your croquis in .rds format to work on it later",
+    fr = "pour exporter un GTFS ou sauvegarder votre croquis au format .rds afin d'y travailler plus tard",
+    es = "para exportar un GTFS o guardar su croquis en formato .rds para trabajar en \u00e9l m\u00e1s tarde"
+  ),
+
   # ════════════════════════════════════════════════════════════════════════
   # Stops module - panel chrome (static UI, translated via JS updateI18n)
   # ════════════════════════════════════════════════════════════════════════
