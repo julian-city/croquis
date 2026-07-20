@@ -160,7 +160,7 @@ i18n_dict <- list(
   load_sample_desc = c(
     en = "To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.",
     fr = "Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.",
-    es = "Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo L\u00ednea Amarilla (Ligne Jaune) es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis."
+    es = "Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo Ligne Jaune es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis."
   ),
 
   # ── Project Location panel ─────────────────────────────────────────────
@@ -174,8 +174,8 @@ i18n_dict <- list(
     fr = "Rechercher une ville",
     es = "Buscar una ciudad"
   ),
-  # Build-time only (textInput placeholder accepts character only);
-  # deliberately absent from inst/www/js/i18n.js.
+  # Set at build time; tagged for live switching via i18n_placeholder()
+  # and mirrored in inst/www/js/i18n.js.
   loc_search_ph = c(
     en = "Type city name...",
     fr = "Saisissez le nom d'une ville...",
@@ -240,6 +240,50 @@ i18n_dict <- list(
     es = "La latitud debe estar entre -90 y 90, la longitud entre -180 y 180"
   ),
 
+  # ── Popover content ────────────────────────────────────────────────────
+  # lbl_read_more is shared app-wide (used inside info_popover for the
+  # link line); mirrored in inst/www/js/i18n.js.
+  lbl_read_more = c(
+    en = "Read more",
+    fr = "En savoir plus",
+    es = "Leer m\u00e1s"
+  ),
+  # Static UI popover (data-i18n-popover; mirrored in JS)
+  pop_city_search = c(
+    en = "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you may need to set coordinates manually below.",
+    fr = "Commencez \u00e0 saisir le nom d'une ville et s\u00e9lectionnez-la si vous d\u00e9marrez un projet de z\u00e9ro. Si vous ne trouvez pas votre ville, vous devrez peut-\u00eatre d\u00e9finir les coordonn\u00e9es manuellement ci-dessous.",
+    es = "Empiece a escribir el nombre de una ciudad y selecci\u00f3nela si inicia un proyecto desde cero. Si no encuentra su ciudad, puede que necesite definir las coordenadas manualmente abajo."
+  ),
+  # Dynamic renderUI popovers (re-translated by re-render; R-only)
+  pop_agency_id = c(
+    en = "Identifies a unique transit agency or transit brand.",
+    fr = "Identifie une agence de transport ou une marque de transport unique.",
+    es = "Identifica una agencia de transporte o una marca de transporte \u00fanica."
+  ),
+  pop_agency_name = c(
+    en = "Full name of the transit agency.",
+    fr = "Nom complet de l'agence de transport.",
+    es = "Nombre completo de la agencia de transporte."
+  ),
+  pop_agency_url = c(
+    en = "URL of the transit agency.",
+    fr = "URL de l'agence de transport.",
+    es = "URL de la agencia de transporte."
+  ),
+  pop_agency_tz = c(
+    en = "Timezone in IANA tz database format.",
+    fr = "Fuseau horaire au format de la base de donn\u00e9es tz de l'IANA.",
+    es = "Zona horaria en el formato de la base de datos tz de la IANA."
+  ),
+
+  # Stops import file input placeholder (live-switchable via
+  # i18n_placeholder(); mirrored in inst/www/js/i18n.js)
+  stops_import_ph = c(
+    en = "GeoJSON or KML file",
+    fr = "Fichier GeoJSON ou KML",
+    es = "Archivo GeoJSON o KML"
+  ),
+
   # Notifications - loading
   notif_gtfs_loaded = c(
     en = "GTFS loaded successfully",
@@ -275,7 +319,7 @@ i18n_dict <- list(
   agency_add_new = c(
     en = "Add new agency",
     fr = "Ajouter une nouvelle agence",
-    es = "Agregar nueva agencia"
+    es = "Agregar una nueva agencia"
   ),
   agency_edit_title = c(
     en = "Edit agency",
@@ -546,15 +590,13 @@ i18n_dict <- list(
     fr = "G\u00e9n\u00e9ration automatique d'arr\u00eats",
     es = "Generaci\u00f3n autom\u00e1tica de paradas"
   ),
-  stops_autogen_pop_1 = c(
-    en = "Automatically generate stops at road intersections within a drawn zone using OpenStreetMap data. Stops are placed at intersections based on minimum stop spacing set in",
-    fr = "G\u00e9n\u00e9rer automatiquement des arr\u00eats aux intersections routi\u00e8res dans une zone dessin\u00e9e \u00e0 partir des donn\u00e9es OpenStreetMap. Les arr\u00eats sont plac\u00e9s aux intersections en fonction de l'espacement minimal d\u00e9fini dans les",
-    es = "Generar autom\u00e1ticamente paradas en las intersecciones viales dentro de una zona dibujada usando datos de OpenStreetMap. Las paradas se ubican en intersecciones seg\u00fan el espaciamiento m\u00ednimo definido en la"
-  ),
-  stops_autogen_pop_2 = c(
-    en = "Settings.",
-    fr = "param\u00e8tres.",
-    es = "configuraci\u00f3n."
+  # Popover content for the auto-generate section. {icon} is replaced by
+  # the gear icon HTML at build time (info_popover) and at language
+  # switch (jsTr token replacement). Mirrored in inst/www/js/i18n.js.
+  stops_autogen_pop = c(
+    en = "Automatically generate stops within a drawn zone. Stops are placed at intersections based on the minimum spacing defined in the {icon} settings.",
+    fr = "G\u00e9n\u00e9rez automatiquement des arr\u00eats dans une zone dessin\u00e9e. Les arr\u00eats sont plac\u00e9s aux intersections en fonction de l'espacement minimal d\u00e9fini dans les {icon} param\u00e8tres.",
+    es = "Genere autom\u00e1ticamente paradas dentro de una zona dibujada. Las paradas se colocan en las intersecciones seg\u00fan el espaciamiento m\u00ednimo definido en la {icon} configuraci\u00f3n."
   ),
 
   # ════════════════════════════════════════════════════════════════════════
@@ -694,9 +736,9 @@ i18n_dict <- list(
     es = "issue en GitHub"
   ),
 
-  # File inputs. btn_browse is live-switchable (data-i18n span);
-  # file_placeholder is build-time only (fileInput placeholder accepts
-  # character only) and is deliberately absent from inst/www/js/i18n.js.
+  # File inputs. btn_browse is live-switchable (data-i18n span).
+  # file_placeholder is set at build time and tagged for live switching
+  # via i18n_placeholder() (see R/utils-ui.R); mirrored in i18n.js.
   btn_browse = c(
     en = "Browse...",
     fr = "Parcourir...",

@@ -232,16 +232,19 @@ croquis <- function(ssfs = NULL, lang = "en") {
                         )
                       )
                     ),
-                    fileInput(
-                      "load_gtfs",
-                      "",
-                      multiple = FALSE,
-                      accept = ".zip",
-                      buttonLabel = span(
-                        tr("btn_browse", lang_init),
-                        `data-i18n` = "btn_browse"
+                    i18n_placeholder(
+                      fileInput(
+                        "load_gtfs",
+                        "",
+                        multiple = FALSE,
+                        accept = ".zip",
+                        buttonLabel = span(
+                          tr("btn_browse", lang_init),
+                          `data-i18n` = "btn_browse"
+                        ),
+                        placeholder = tr("file_placeholder", lang_init)
                       ),
-                      placeholder = tr("file_placeholder", lang_init)
+                      "file_placeholder"
                     ),
                     tags$small(
                       span(
@@ -264,16 +267,19 @@ croquis <- function(ssfs = NULL, lang = "en") {
                         `data-i18n` = "load_croquis_desc"
                       )
                     ),
-                    fileInput(
-                      "load_ssfs",
-                      "",
-                      multiple = FALSE,
-                      accept = ".rds",
-                      buttonLabel = span(
-                        tr("btn_browse", lang_init),
-                        `data-i18n` = "btn_browse"
+                    i18n_placeholder(
+                      fileInput(
+                        "load_ssfs",
+                        "",
+                        multiple = FALSE,
+                        accept = ".rds",
+                        buttonLabel = span(
+                          tr("btn_browse", lang_init),
+                          `data-i18n` = "btn_browse"
+                        ),
+                        placeholder = tr("file_placeholder", lang_init)
                       ),
-                      placeholder = tr("file_placeholder", lang_init)
+                      "file_placeholder"
                     ),
                     tags$small(
                       span(
@@ -343,19 +349,24 @@ croquis <- function(ssfs = NULL, lang = "en") {
                   style = "display: flex; align-items: flex-end; gap: 8px;",
                   div(
                     style = "position: relative; flex: 1;",
-                    textInput(
-                      "city_search",
-                      tags$label(
-                        span(
-                          tr("loc_search_label", lang_init),
-                          `data-i18n` = "loc_search_label"
+                    i18n_placeholder(
+                      textInput(
+                        "city_search",
+                        tags$label(
+                          span(
+                            tr("loc_search_label", lang_init),
+                            `data-i18n` = "loc_search_label"
+                          ),
+                          info_popover(
+                            tr("pop_city_search", lang_init),
+                            key = "pop_city_search",
+                            lang = lang_init
+                          )
                         ),
-                        info_popover(
-                          "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you may need to set coordinates manually below."
-                        )
+                        placeholder = tr("loc_search_ph", lang_init),
+                        width = "100%"
                       ),
-                      placeholder = tr("loc_search_ph", lang_init),
-                      width = "100%"
+                      "loc_search_ph"
                     ),
                     div(
                       id = "city_suggestions",
@@ -1472,8 +1483,9 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$label(
           tr("lbl_agency_id", lang),
           info_popover(
-            "Identifies a unique transit agency or transit brand.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_id", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
@@ -1485,8 +1497,9 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$label(
           tr("lbl_agency_name", lang),
           info_popover(
-            "Full name of the transit agency.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_name", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
@@ -1502,8 +1515,9 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$label(
           tr("lbl_agency_url", lang),
           info_popover(
-            "URL of the transit agency.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_url", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
@@ -1515,8 +1529,9 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$label(
           tr("lbl_agency_tz", lang),
           info_popover(
-            "Timezone in IANA tz database format.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_tz", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(

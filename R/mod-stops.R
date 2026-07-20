@@ -74,11 +74,18 @@ stopsUI <- function(id, lang = "en") {
           div(
             class = "floating-panel-content",
             h5(span("Import Stops", `data-i18n` = "stops_import_title")),
-            fileInput(
-              ns("stops_import_file"),
-              label = NULL,
-              accept = c(".geojson", ".kml"),
-              placeholder = "GeoJSON or KML file"
+            i18n_placeholder(
+              fileInput(
+                ns("stops_import_file"),
+                label = NULL,
+                accept = c(".geojson", ".kml"),
+                buttonLabel = span(
+                  tr("btn_browse", lang),
+                  `data-i18n` = "btn_browse"
+                ),
+                placeholder = tr("stops_import_ph", lang)
+              ),
+              "stops_import_ph"
             ),
             actionButton(
               ns("stops_import_confirm"),
@@ -106,11 +113,10 @@ stopsUI <- function(id, lang = "en") {
             h5(tagList(
               span("Auto-generate stops", `data-i18n` = "stops_autogen_title"),
               info_popover(
-                paste(
-                  tr("stops_autogen_pop_1", lang),
-                  icon("gear"),
-                  tr("stops_autogen_pop_2", lang)
-                )
+                tr("stops_autogen_pop", lang),
+                key = "stops_autogen_pop",
+                lang = lang,
+                tokens = list(icon = as.character(icon("gear")))
               )
             )),
             uiOutput(ns("stops_generate_ui"))

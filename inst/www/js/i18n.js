@@ -49,7 +49,7 @@ var jsI18n = {
   load_gtfs_note:    { en: 'Uploading a GTFS here will convert it to an editable format in Croquis', fr: 'Le t\u00e9l\u00e9versement d\u2019un GTFS le convertira en un format modifiable dans Croquis', es: 'Al subir un GTFS, se convertir\u00e1 a un formato editable en Croquis' },
   load_croquis_desc: { en: 'To continue working on a previous croquis, upload your .rds file:', fr: 'Pour continuer \u00e0 travailler sur un croquis pr\u00e9c\u00e9dent, t\u00e9l\u00e9versez votre fichier .rds\u00a0:', es: 'Para continuar trabajando en un croquis anterior, suba su archivo .rds:' },
   load_croquis_note: { en: 'Upload a transit model .rds file previously created with Croquis', fr: 'T\u00e9l\u00e9versez un fichier .rds de mod\u00e8le de transport cr\u00e9\u00e9 pr\u00e9c\u00e9demment avec Croquis', es: 'Suba un archivo .rds de modelo de transporte creado previamente con Croquis' },
-  load_sample_desc:  { en: 'To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.', fr: 'Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.', es: 'Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo L\u00ednea Amarilla (Ligne Jaune) es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis.' },
+  load_sample_desc:  { en: 'To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.', fr: 'Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.', es: 'Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo Ligne Jaune es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis.' },
 
 // -- Home module: intro panel --
   // Split *_pre / *_post fragments sit on either side of an inline icon or
@@ -91,8 +91,7 @@ var jsI18n = {
     es: 'issue en GitHub'
   },
 
-  // -- Home module: file inputs (button label only; placeholder is
-  //    build-time only and lives solely in R/i18n.R) --
+// -- Home module: file inputs --
   btn_browse: {
     en: 'Browse...',
     fr: 'Parcourir...',
@@ -149,6 +148,41 @@ var jsI18n = {
     es: '\u00bfEliminar esta agencia? Las rutas que la referencian deben eliminarse primero.'
   },
 
+  // -- Popover content (static UI) --
+  lbl_read_more: {
+    en: 'Read more',
+    fr: 'En savoir plus',
+    es: 'Leer m\u00e1s'
+  },
+  pop_city_search: {
+    en: 'Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you may need to set coordinates manually below.',
+    fr: 'Commencez \u00e0 saisir le nom d\'une ville et s\u00e9lectionnez-la si vous d\u00e9marrez un projet de z\u00e9ro. Si vous ne trouvez pas votre ville, vous devrez peut-\u00eatre d\u00e9finir les coordonn\u00e9es manuellement ci-dessous.',
+    es: 'Empiece a escribir el nombre de una ciudad y selecci\u00f3nela si inicia un proyecto desde cero. Si no encuentra su ciudad, puede que necesite definir las coordenadas manualmente abajo.'
+  },
+  stops_autogen_pop: {
+en: 'Automatically generate stops within a drawn zone. Stops are placed at intersections based on the minimum spacing defined in the {icon} settings.',
+    fr: 'G\u00e9n\u00e9rez automatiquement des arr\u00eats dans une zone dessin\u00e9e. Les arr\u00eats sont plac\u00e9s aux intersections en fonction de l\'espacement minimal d\u00e9fini dans les {icon} param\u00e8tres.',
+    es: 'Genere autom\u00e1ticamente paradas dentro de una zona dibujada. Las paradas se colocan en las intersecciones seg\u00fan el espaciamiento m\u00ednimo definido en la {icon} configuraci\u00f3n.'
+
+  },
+
+  // -- Live-switchable placeholders (tagged via i18n_placeholder in R) --
+  file_placeholder: {
+    en: 'Drag and drop or click to select file',
+    fr: 'Glissez-d\u00e9posez ou cliquez pour s\u00e9lectionner un fichier',
+    es: 'Arrastre y suelte o haga clic para seleccionar un archivo'
+  },
+  loc_search_ph: {
+    en: 'Type city name...',
+    fr: 'Saisissez le nom d\'une ville...',
+    es: 'Escriba el nombre de la ciudad...'
+  },
+  stops_import_ph: {
+    en: 'GeoJSON or KML file',
+    fr: 'Fichier GeoJSON ou KML',
+    es: 'Archivo GeoJSON o KML'
+  },
+
   // -- Stops module: static panel chrome --
   stops_title:         { en: 'stops',    fr: 'arr\u00eats',  es: 'paradas'  },
   stops_panel_title:   { en: 'Stops',    fr: 'Arr\u00eats',  es: 'Paradas'  },
@@ -190,7 +224,6 @@ function jsTr(key, replacements) {
   return str;
 }
 
-
 // === DOM scanner ==============================
 
 // Scan the DOM for elements tagged with data-i18n attributes and replace
@@ -201,6 +234,8 @@ function jsTr(key, replacements) {
 //   data-i18n="key"              → sets element's textContent
 //   data-i18n-placeholder="key"  → sets element's placeholder
 //   data-i18n-title="key"        → sets element's title attribute
+//   data-i18n-popover="key"      → rebuilds Bootstrap popover content
+//     (with data-i18n-popover-link and data-i18n-popover-token-* support)
 //
 // Called automatically when the server syncs croquisLang, and also
 // after Shiny re-renders UI (via shiny:value event).
@@ -223,7 +258,7 @@ function updateI18n() {
     }
   });
 
-  // title (tooltip)
+// title (tooltip)
   document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
     var key = el.getAttribute('data-i18n-title');
     var translated = jsTr(key);
@@ -231,15 +266,41 @@ function updateI18n() {
       el.title = translated;
     }
   });
-}
 
+  // popover content (data-content attribute + initialized BS3 instance)
+  document.querySelectorAll('[data-i18n-popover]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n-popover');
+    var replacements = null;
+    for (var i = 0; i < el.attributes.length; i++) {
+      var a = el.attributes[i];
+      if (a.name.indexOf('data-i18n-popover-token-') === 0) {
+        replacements = replacements || {};
+        replacements[a.name.substring(24)] = a.value;
+      }
+    }
+    var translated = jsTr(key, replacements);
+    if (translated === key) {
+      return;
+    }
+    var link = el.getAttribute('data-i18n-popover-link');
+    var content = translated;
+    if (link) {
+      content += "<br><a href='" + link + "' target='_blank'>" +
+        jsTr('lbl_read_more') + '</a>';
+    }
+    el.setAttribute('data-content', content);
+    var pop = $(el).data('bs.popover');
+    if (pop) {
+      pop.options.content = content;
+    }
+  });
+}
 
 // Re-run after Shiny rebuilds dynamic UI so that any new data-i18n
 // elements in renderUI output are also translated.
 $(document).on('shiny:value', function() {
   setTimeout(updateI18n, 120);
 });
-
 
 // === Browser locale detection =====================================
 

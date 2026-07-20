@@ -16,7 +16,8 @@ build_stop_form <- function(
       tr("lbl_stop_id", lang),
       info_popover(
         tr("pop_stop_id", lang),
-        "https://gtfs.org/schedule/reference/#stopstxt"
+        "https://gtfs.org/schedule/reference/#stopstxt",
+        lang = lang
       )
     ),
     if (is_new) {
@@ -37,7 +38,8 @@ build_stop_form <- function(
       tr("lbl_stop_name", lang),
       info_popover(
         tr("pop_stop_name", lang),
-        "https://gtfs.org/schedule/reference/#stopstxt"
+        "https://gtfs.org/schedule/reference/#stopstxt",
+        lang = lang
       )
     ),
     if (is_new) {
