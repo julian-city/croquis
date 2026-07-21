@@ -10,7 +10,10 @@ routesUI <- function(id, lang = "en") {
     ),
     value = "routes",
     fluidPage(
-      titlePanel("routes"),
+      tags$h2(span(
+        tr("routes_title", lang),
+        `data-i18n` = "routes_title"
+      )),
       # Map container with floating panels
       div(
         class = "map-container",
@@ -28,7 +31,10 @@ routesUI <- function(id, lang = "en") {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('routes-control-panel')",
-            h4("Routes"),
+            h4(span(
+              tr("routes_panel_title", lang),
+              `data-i18n` = "routes_panel_title"
+            )),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -50,7 +56,10 @@ routesUI <- function(id, lang = "en") {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('routes-drawing-panel')",
-            h4("Drawing Mode"),
+            h4(span(
+              tr("routes_drawing_title", lang),
+              `data-i18n` = "routes_drawing_title"
+            )),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -60,7 +69,10 @@ routesUI <- function(id, lang = "en") {
             class = "floating-panel-content",
             uiOutput(ns("drawing_mode_toggle_ui")),
             tags$small(
-              "Network mode routes along streets. Free mode draws straight lines between stops and waypoints."
+              span(
+                tr("routes_drawing_desc", lang),
+                `data-i18n` = "routes_drawing_desc"
+              )
             )
           )
         ),
@@ -72,7 +84,10 @@ routesUI <- function(id, lang = "en") {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('routes-stopseq-panel')",
-            h4("Stop Sequence"),
+            h4(span(
+              tr("routes_stopseq_title", lang),
+              `data-i18n` = "routes_stopseq_title"
+            )),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -89,7 +104,14 @@ routesUI <- function(id, lang = "en") {
 }
 
 # Server
-routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
+routesServer <- function(
+  id,
+  ssfs,
+  map_center,
+  current_zoom,
+  routing_server,
+  lang
+) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -233,7 +255,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       route_nodes(result$nodes)
       selected_point_index(NULL)
       waypoint_temp_point(NULL)
-      showNotification("Waypoint moved", type = "message")
+      showNotification(tr("notif_wp_moved", lang()), type = "message")
     }
 
     # Observer for tracking editing and disabling undo / redo
@@ -257,13 +279,13 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         div(
           class = "editing-instruction",
-          paste0("Editing: ", itin_id_display),
+          sprintf(tr("routes_editing_itin", lang()), itin_id_display),
           tags$br(),
           tags$small(
             if (is_prepending) {
-              "Prepend mode: next stop clicks will be added to the START of the sequence."
+              tr("routes_prepend_msg", lang())
             } else {
-              "Click stops to build sequence. Right-click to remove."
+              tr("routes_click_to_build", lang())
             }
           ),
           div(
@@ -282,7 +304,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             ),
             tags$span(
               style = "font-size: 12px;",
-              "Prepend stops to start of sequence"
+              tr("routes_prepend_label", lang())
             )
           )
         )
@@ -305,7 +327,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       # "Add new route" button / form at the top
       if (adding_new) {
-        rows[[length(rows) + 1]] <- build_route_form(current_data$agency)
+        rows[[length(rows) + 1]] <- build_route_form(
+          current_data$agency,
+          lang = lang()
+        )
       } else {
         rows[[length(rows) + 1]] <- div(
           class = "stop-list-row add-row",
@@ -313,10 +338,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           tags$button(
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingRoute()",
-            title = "Add new route",
+            title = tr("routes_add_new", lang()),
             htmltools::HTML("+")
           ),
-          span(style = "margin-left: 8px;", "Add new route")
+          span(style = "margin-left: 8px;", tr("routes_add_new", lang()))
         )
       }
 
@@ -354,8 +379,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                   "event.stopPropagation(); editRouteFromList('%s')",
                   route$route_id
                 ),
-                title = "Edit route",
-                htmltools::HTML("&#9998; Edit")
+                title = tr("routes_edit_title", lang()),
+                htmltools::HTML(paste0("&#9998; ", tr("lbl_edit", lang())))
               ),
               tags$button(
                 class = "route-action-btn",
@@ -363,8 +388,11 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                   "event.stopPropagation(); copyRouteFromList('%s')",
                   route$route_id
                 ),
-                title = "Duplicate route",
-                htmltools::HTML('<i class="fa-solid fa-clone"></i> Copy')
+                title = tr("routes_copy_title", lang()),
+                tagList(
+                  htmltools::HTML('<i class="fa-solid fa-clone"></i> '),
+                  tr("lbl_copy", lang())
+                )
               ),
               tags$button(
                 class = "route-action-btn delete-btn",
@@ -372,8 +400,11 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                   "event.stopPropagation(); deleteRouteFromList('%s')",
                   route$route_id
                 ),
-                title = "Delete route",
-                htmltools::HTML('<i class="fa-solid fa-trash"></i> Delete')
+                title = tr("routes_delete_title", lang()),
+                tagList(
+                  htmltools::HTML('<i class="fa-solid fa-trash"></i> '),
+                  tr("btn_delete", lang())
+                )
               )
             )
 
@@ -385,7 +416,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               expanded_children[[length(expanded_children) + 1]] <-
                 build_route_form(
                   current_data$agency,
-                  route
+                  route,
+                  lang = lang()
                 )
             }
 
@@ -427,7 +459,8 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
               expanded_children[[length(expanded_children) + 1]] <-
                 build_itin_form(
                   default_itin_id,
-                  current_dir
+                  current_dir,
+                  lang = lang()
                 )
             } else {
               expanded_children[[length(expanded_children) + 1]] <- div(
@@ -436,18 +469,14 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
                 onclick = sprintf("startAddingItin('%s')", route$route_id),
                 tags$button(
                   class = "stop-action-btn add-btn",
-                  style = "font-size: 14px; width: 22px; height: 22px;",
                   onclick = sprintf(
                     "event.stopPropagation(); startAddingItin('%s')",
                     route$route_id
                   ),
-                  title = "Add new itinerary",
+                  title = tr("routes_add_itin", lang()),
                   htmltools::HTML("+")
                 ),
-                span(
-                  style = "margin-left: 6px; font-size: 12px;",
-                  "Add itinerary"
-                )
+                span(style = "margin-left: 8px;", tr("routes_add_itin", lang()))
               )
             }
 
@@ -462,17 +491,18 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
                 if (is_editing_itin) {
                   expanded_children[[length(expanded_children) + 1]] <-
-                    build_itin_row(itin, is_active)
+                    build_itin_row(itin, is_active, lang = lang())
                   expanded_children[[length(expanded_children) + 1]] <-
                     build_itin_form(
                       itin$itin_id,
                       itin$direction_id,
                       itin$trip_headsign,
-                      is_new = FALSE
+                      is_new = FALSE,
+                      lang = lang()
                     )
                 } else {
                   expanded_children[[length(expanded_children) + 1]] <-
-                    build_itin_row(itin, is_active)
+                    build_itin_row(itin, is_active, lang = lang())
                 }
               }
             }
@@ -630,7 +660,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       routes_expanded_id(new_route_id)
 
       showNotification(
-        paste("Duplicated route as:", new_route_id),
+        sprintf(tr("notif_route_duplicated", lang()), new_route_id),
         type = "message"
       )
     })
@@ -653,13 +683,13 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       new_route_id <- trimws(data$route_id)
 
       if (is.null(new_route_id) || new_route_id == "") {
-        showNotification("Route ID cannot be empty.", type = "warning")
+        showNotification(tr("notif_route_id_empty", lang()), type = "warning")
         return()
       }
 
       if (is.null(data$agency_id) || data$agency_id == "") {
         showNotification(
-          "Please define at least one agency first.",
+          tr("notif_route_agency_first", lang()),
           type = "warning"
         )
         return()
@@ -671,7 +701,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
       if (routes_adding_new()) {
         if (new_route_id %in% current_data$routes$route_id) {
-          showNotification("This route ID already exists.", type = "warning")
+          showNotification(
+            tr("notif_route_id_exists", lang()),
+            type = "warning"
+          )
           return()
         }
 
@@ -691,13 +724,13 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         routes_adding_new(FALSE)
         routes_expanded_id(new_route_id)
         session$sendCustomMessage("scrollToRoute", new_route_id)
-        showNotification("Route added successfully", type = "message")
+        showNotification(tr("notif_route_added", lang()), type = "message")
       } else if (!is.null(routes_editing_id())) {
         old_route_id <- routes_editing_id()
         idx <- which(current_data$routes$route_id == old_route_id)
 
         if (length(idx) == 0) {
-          showNotification("Route not found.", type = "error")
+          showNotification(tr("notif_route_not_found", lang()), type = "error")
           return()
         }
 
@@ -705,7 +738,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           new_route_id != old_route_id &&
             new_route_id %in% current_data$routes$route_id
         ) {
-          showNotification("This route ID already exists.", type = "warning")
+          showNotification(
+            tr("notif_route_id_exists", lang()),
+            type = "warning"
+          )
           return()
         }
 
@@ -733,7 +769,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         routes_editing_id(NULL)
         session$sendCustomMessage("scrollToRoute", new_route_id)
-        showNotification("Route updated successfully", type = "message")
+        showNotification(tr("notif_route_updated", lang()), type = "message")
       }
     })
 
@@ -747,12 +783,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           route_to_delete %in% current_data$itin$route_id
       ) {
         showNotification(
-          paste0(
-            "Cannot delete route '",
-            route_to_delete,
-            "'. It is referenced by one or more itineraries. ",
-            "Delete the itineraries first."
-          ),
+          sprintf(tr("notif_route_cant_delete", lang()), route_to_delete),
           type = "error",
           duration = 5
         )
@@ -771,7 +802,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         routes_expanded_id(NULL)
       }
 
-      showNotification("Route deleted successfully", type = "message")
+      showNotification(tr("notif_route_deleted", lang()), type = "message")
     })
 
     # --- Itinerary list event handlers ---
@@ -912,7 +943,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           lat2 = bbox[["ymax"]]
         )
 
-      showNotification(paste("Editing itinerary:", itin_id), type = "message")
+      showNotification(
+        sprintf(tr("notif_editing_itin", lang()), itin_id),
+        type = "message"
+      )
     })
 
     # Start adding new itinerary
@@ -1002,12 +1036,15 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       new_headsign <- trimws(data$trip_headsign)
 
       if (new_itin_id == "") {
-        showNotification("Itinerary ID cannot be empty.", type = "warning")
+        showNotification(tr("notif_itin_id_empty", lang()), type = "warning")
         return()
       }
 
       if (new_headsign == "") {
-        showNotification("Trip headsign cannot be empty.", type = "warning")
+        showNotification(
+          tr("notif_itin_headsign_empty", lang()),
+          type = "warning"
+        )
         return()
       }
 
@@ -1023,7 +1060,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             new_itin_id %in% current_data$itin$itin_id
         ) {
           showNotification(
-            "This itinerary ID already exists.",
+            tr("notif_itin_id_exists", lang()),
             type = "warning"
           )
           return()
@@ -1031,7 +1068,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         if (nrow(curr_points) < 2) {
           showNotification(
-            "Itinerary must have at least 2 points.",
+            tr("notif_itin_min_points", lang()),
             type = "warning"
           )
           return()
@@ -1084,7 +1121,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         ssfs(current_data)
         clearInputs()
         session$sendCustomMessage("scrollToRoute", route_id)
-        showNotification("Itinerary saved successfully", type = "message")
+        showNotification(tr("notif_itin_saved", lang()), type = "message")
       } else if (!is.null(itin_adding_for_route())) {
         # --- ADDING NEW ITINERARY ---
 
@@ -1098,7 +1135,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
 
         if (nrow(curr_points) < 2) {
           showNotification(
-            "Please draw the route on the map before saving.",
+            tr("notif_itin_draw_first", lang()),
             type = "warning"
           )
           return()
@@ -1133,7 +1170,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         ssfs(current_data)
         clearInputs()
         session$sendCustomMessage("scrollToRoute", route_id)
-        showNotification("Itinerary saved successfully", type = "message")
+        showNotification(tr("notif_itin_saved", lang()), type = "message")
       }
     })
 
@@ -1148,7 +1185,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       current_data <- ssfs()
 
       if (!itin_to_delete %in% current_data$itin$itin_id) {
-        showNotification("Itinerary not found", type = "error")
+        showNotification(tr("notif_itin_not_found", lang()), type = "error")
         return()
       }
 
@@ -1166,7 +1203,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       }
 
       showNotification(
-        paste("Deleted itinerary:", itin_to_delete),
+        sprintf(tr("notif_itin_deleted", lang()), itin_to_delete),
         type = "message"
       )
     })
@@ -1180,7 +1217,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         current_data$itin$itin_id == itin_to_copy,
       ]
       if (nrow(source_itin) == 0) {
-        showNotification("Itinerary not found", type = "error")
+        showNotification(tr("notif_itin_not_found", lang()), type = "error")
         return()
       }
 
@@ -1222,7 +1259,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
       ssfs(current_data)
       routes_expanded_id(route_id)
 
-      showNotification(paste("Duplicated as:", new_itin_id), type = "message")
+      showNotification(
+        sprintf(tr("notif_itin_duplicated", lang()), new_itin_id),
+        type = "message"
+      )
     })
 
     # --- Prepend mode toggle
@@ -1245,7 +1285,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         class = "prepend-toggle-container",
         tags$span(
           style = "font-size: 12px;",
-          "Road Network"
+          tr("routes_mode_network", lang())
         ),
         tags$label(
           class = "toggle-switch",
@@ -1261,7 +1301,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         ),
         tags$span(
           style = "font-size: 12px;",
-          "Free Drawing"
+          tr("routes_mode_free", lang())
         )
       )
     })
@@ -1703,7 +1743,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         selected_point_index(NULL)
         waypoint_temp_point(NULL)
         showNotification(
-          "Waypoint deselected. Movement cancelled.",
+          tr("notif_wp_deselected", lang()),
           type = "message"
         )
       } else if (!is.null(click) && grepl("^wp_", click$id)) {
@@ -1715,12 +1755,12 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           waypoint_temp_point(c(wp_node$lng, wp_node$lat))
         }
         showNotification(
-          "Waypoint selected. Drag it or click on the map to move it.",
+          tr("notif_wp_selected", lang()),
           type = "message"
         )
       } else if (!is.null(click) && grepl("^stop_", click$id)) {
         showNotification(
-          "Stop already in route stop sequence. Cannot add stop again.",
+          tr("notif_stop_in_seq", lang()),
           type = "warning"
         )
       } else if (!is.null(click)) {
@@ -1738,7 +1778,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
             selected_point_index(NULL)
             waypoint_temp_point(NULL)
             showNotification(
-              "Selected waypoint no longer exists.",
+              tr("notif_wp_gone", lang()),
               type = "warning"
             )
             return()
@@ -1768,7 +1808,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           waypoint_temp_point(NULL)
 
           showNotification(
-            "Waypoint moved to stop & adopted stop properties.",
+            tr("notif_wp_to_stop", lang()),
             type = "message"
           )
         } else {
@@ -1777,7 +1817,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           if (nrow(curr_nodes) >= 1) {
             if (clicked_stop$stop_id %in% curr_nodes$stop_id) {
               showNotification(
-                "Stop already in route stop sequence. Cannot add stop again.",
+                tr("notif_stop_in_seq", lang()),
                 type = "warning"
               )
               return()
@@ -2401,7 +2441,7 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           route_nodes(),
           active_itin_id()
         ))
-        showNotification("Node removed", type = "message")
+        showNotification(tr("notif_node_removed", lang()), type = "message")
       }
     })
 
@@ -2436,7 +2476,10 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
           active_itin_id()
         ))
 
-        showNotification("Last node removed", type = "message")
+        showNotification(
+          tr("notif_last_node_removed", lang()),
+          type = "message"
+        )
       }
     })
 
@@ -2455,11 +2498,17 @@ routesServer <- function(id, ssfs, map_center, current_zoom, routing_server) {
         display_df,
         selection = "single",
         rownames = FALSE,
-        colnames = c("#" = "stop_sequence", "Stop name" = "stop_name"),
+        colnames = setNames(
+          c("stop_sequence", "stop_name"),
+          c("#", tr("lbl_stop_name_col", lang()))
+        ),
         options = list(
           pageLength = -1,
           dom = "t",
-          ordering = FALSE
+          ordering = FALSE,
+          language = list(
+            emptyTable = tr("dt_empty_table", lang())
+          )
         )
       )
     })

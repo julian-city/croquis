@@ -197,8 +197,31 @@ en: 'Automatically generate stops within a drawn zone. Stops are placed at inter
   // -- Stops module: JS confirm dialogs --
   confirm_delete_stop: {
     en: 'This stop will be deleted if it is not associated with any itineraries.',
-    fr: 'Cet arr\u00eat sera supprim\u00e9 s\u2019il n\u2019est associ\u00e9 \u00e0 aucun itin\u00e9raire.',
+    fr: 'Cet arr\u00eat sera supprim\u00e9 s\u2019il n\u2019est associ\u00e9 \u00e0 aucun parcours type.',
     es: 'Esta parada ser\u00e1 eliminada si no est\u00e1 asociada a ning\u00fan itinerario.'
+  },
+
+  // -- Routes module: static panel chrome --
+  routes_title:         { en: 'routes',    fr: 'lignes',       es: 'rutas'    },
+  routes_panel_title:   { en: 'Routes',    fr: 'Lignes',       es: 'Rutas'    },
+  routes_drawing_title: { en: 'Drawing Mode', fr: 'Mode de dessin', es: 'Modo de dibujo' },
+  routes_stopseq_title: { en: 'Stop Sequence', fr: 'S\u00e9quence d\u2019arr\u00eats', es: 'Secuencia de paradas' },
+  routes_drawing_desc:  {
+    en: 'Network mode routes along streets. Free mode draws straight lines between stops and waypoints.',
+    fr: 'Le mode r\u00e9seau trace le parcours le long des rues. Le mode libre dessine des lignes droites entre les arr\u00eats et les points de passage.',
+    es: 'El modo red traza la ruta a lo largo de las calles. El modo libre dibuja l\u00edneas rectas entre paradas y puntos de paso.'
+  },
+
+  // -- Routes module: JS confirm dialogs --
+  confirm_delete_route: {
+    en: 'Delete this route? Itineraries must be deleted first.',
+    fr: 'Supprimer cette ligne\u00a0? Les parcours types doivent d\u2019abord \u00eatre supprim\u00e9s.',
+    es: '\u00bfEliminar esta ruta? Los itinerarios deben eliminarse primero.'
+  },
+  confirm_delete_itin: {
+    en: 'Delete this itinerary and its associated data?',
+    fr: 'Supprimer ce parcours type et ses donn\u00e9es associ\u00e9es\u00a0?',
+    es: '\u00bfEliminar este itinerario y sus datos asociados?'
   }
 
   // -- Add keys for other modules here as they are migrated --

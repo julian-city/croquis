@@ -1881,7 +1881,8 @@ croquis <- function(ssfs = NULL, lang = "en") {
       ssfs,
       map_center,
       current_zoom,
-      reactive(input$settings_routing_server)
+      reactive(input$settings_routing_server),
+      lang
     )
 
     #   #   #

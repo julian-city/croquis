@@ -850,6 +850,486 @@ i18n_dict <- list(
     en = "Error exporting file: %s",
     fr = "Erreur lors de l'exportation du fichier\u00a0: %s",
     es = "Error al exportar el archivo: %s"
+  ),
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Routes module — panel chrome (static UI, translated via JS updateI18n)
+  # ════════════════════════════════════════════════════════════════════════
+  routes_title = c(
+    en = "routes",
+    fr = "lignes",
+    es = "rutas"
+  ),
+  routes_panel_title = c(
+    en = "Routes",
+    fr = "Lignes",
+    es = "Rutas"
+  ),
+  routes_drawing_title = c(
+    en = "Drawing Mode",
+    fr = "Mode de dessin",
+    es = "Modo de dibujo"
+  ),
+  routes_stopseq_title = c(
+    en = "Stop Sequence",
+    fr = "S\u00e9quence d'arr\u00eats",
+    es = "Secuencia de paradas"
+  ),
+  routes_drawing_desc = c(
+    en = "Network mode routes along streets. Free mode draws straight lines between stops and waypoints.",
+    fr = "Le mode r\u00e9seau trace le parcours le long des rues. Le mode libre dessine des lignes droites entre les arr\u00eats et les points de passage.",
+    es = "El modo red traza la ruta a lo largo de las calles. El modo libre dibuja l\u00edneas rectas entre paradas y puntos de paso."
+  ),
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Routes module — dynamic content (translated via tr() in renderUI)
+  # ════════════════════════════════════════════════════════════════════════
+
+  # Route list
+  routes_add_new = c(
+    en = "Add new route",
+    fr = "Ajouter une nouvelle ligne",
+    es = "Agregar nueva ruta"
+  ),
+  routes_add_itin = c(
+    en = "Add new itinerary",
+    fr = "Ajouter un nouveau parcours type",
+    es = "Agregar nuevo itinerario"
+  ),
+  routes_edit_title = c(
+    en = "Edit route",
+    fr = "Modifier la ligne",
+    es = "Editar ruta"
+  ),
+  routes_copy_title = c(
+    en = "Duplicate route",
+    fr = "Dupliquer la ligne",
+    es = "Duplicar ruta"
+  ),
+  routes_delete_title = c(
+    en = "Delete route",
+    fr = "Supprimer la ligne",
+    es = "Eliminar ruta"
+  ),
+  lbl_copy = c(
+    en = "Copy",
+    fr = "Copier",
+    es = "Copiar"
+  ),
+  itin_edit_title = c(
+    en = "Edit itinerary",
+    fr = "Modifier le parcours type",
+    es = "Editar itinerario"
+  ),
+  itin_copy_title = c(
+    en = "Duplicate itinerary",
+    fr = "Dupliquer le parcours type",
+    es = "Duplicar itinerario"
+  ),
+  itin_delete_title = c(
+    en = "Delete itinerary",
+    fr = "Supprimer le parcours type",
+    es = "Eliminar itinerario"
+  ),
+
+  # Editing instructions
+  routes_editing_itin = c(
+    en = "Editing: %s",
+    fr = "\u00c9dition\u00a0: %s",
+    es = "Editando: %s"
+  ),
+  routes_prepend_msg = c(
+    en = "Prepend mode: next stop clicks will be added to the START of the sequence.",
+    fr = "Mode d'insertion au d\u00e9but\u00a0: les prochains arr\u00eats cliqu\u00e9s seront ajout\u00e9s au D\u00c9BUT de la s\u00e9quence.",
+    es = "Modo de inserci\u00f3n al inicio: las pr\u00f3ximas paradas seleccionadas se agregar\u00e1n al INICIO de la secuencia."
+  ),
+  routes_click_to_build = c(
+    en = "Click stops to build sequence. Right-click to remove.",
+    fr = "Cliquez sur les arr\u00eats pour construire la s\u00e9quence. Clic droit pour supprimer.",
+    es = "Haga clic en las paradas para construir la secuencia. Clic derecho para eliminar."
+  ),
+  routes_prepend_label = c(
+    en = "Prepend stops to start of sequence",
+    fr = "Ins\u00e9rer les arr\u00eats au d\u00e9but de la s\u00e9quence",
+    es = "Insertar paradas al inicio de la secuencia"
+  ),
+
+  # Drawing mode toggle
+  routes_mode_network = c(
+    en = "Road Network",
+    fr = "R\u00e9seau routier",
+    es = "Red vial"
+  ),
+  routes_mode_free = c(
+    en = "Free Drawing",
+    fr = "Dessin libre",
+    es = "Dibujo libre"
+  ),
+
+  # ── Route form labels ──────────────────────────────────────────────────
+  lbl_route_id = c(
+    en = "Route ID",
+    fr = "ID de la ligne",
+    es = "ID de ruta"
+  ),
+  lbl_agency = c(
+    en = "Agency",
+    fr = "Agence",
+    es = "Agencia"
+  ),
+  lbl_short_name = c(
+    en = "Short name",
+    fr = "Nom court",
+    es = "Nombre corto"
+  ),
+  lbl_long_name = c(
+    en = "Long name",
+    fr = "Nom long",
+    es = "Nombre largo"
+  ),
+  lbl_route_type = c(
+    en = "Route type",
+    fr = "Type de ligne",
+    es = "Tipo de ruta"
+  ),
+  lbl_route_colour = c(
+    en = "Route colour",
+    fr = "Couleur de la ligne",
+    es = "Color de ruta"
+  ),
+  lbl_text_colour = c(
+    en = "Text colour",
+    fr = "Couleur du texte",
+    es = "Color del texto"
+  ),
+
+  # ── Route form popovers ────────────────────────────────────────────────
+  pop_route_id = c(
+    en = "Unique identifier for route.",
+    fr = "Identifiant unique de la ligne.",
+    es = "Identificador \u00fanico de la ruta."
+  ),
+  pop_route_agency = c(
+    en = "Agency for specified route.",
+    fr = "Agence de la ligne sp\u00e9cifi\u00e9e.",
+    es = "Agencia de la ruta especificada."
+  ),
+  pop_route_short_name = c(
+    en = "Short name of a route. Often a short, abstract identifier (e.g., '32', '100X', 'Green') that riders use to identify a route.",
+    fr = "Nom court d'une ligne. Souvent un identifiant court et abstrait (p.\u00a0ex. \u00ab\u00a032\u00a0\u00bb, \u00ab\u00a0100X\u00a0\u00bb, \u00ab\u00a0Verte\u00a0\u00bb) utilis\u00e9 par les usagers pour identifier une ligne.",
+    es = "Nombre corto de una ruta. A menudo un identificador breve y abstracto (p.\u00a0ej. '32', '100X', 'Verde') que los usuarios usan para identificar una ruta."
+  ),
+  pop_route_long_name = c(
+    en = "Full name of a route. This name is generally more descriptive than the route_short_name and often includes the route's destination or stop.",
+    fr = "Nom complet d'une ligne. Ce nom est g\u00e9n\u00e9ralement plus descriptif que le nom court et inclut souvent la destination ou l'arr\u00eat terminal de la ligne.",
+    es = "Nombre completo de una ruta. Este nombre es generalmente m\u00e1s descriptivo que el nombre corto y suele incluir el destino o la parada terminal de la ruta."
+  ),
+  pop_route_type = c(
+    en = "Indicates the type of transportation used on a route.",
+    fr = "Indique le type de transport utilis\u00e9 sur une ligne.",
+    es = "Indica el tipo de transporte utilizado en una ruta."
+  ),
+  pop_route_colour = c(
+    en = "Route colour designation that matches public facing material.",
+    fr = "D\u00e9signation de la couleur de la ligne correspondant au mat\u00e9riel destin\u00e9 au public.",
+    es = "Designaci\u00f3n de color de ruta que corresponde al material de cara al p\u00fablico."
+  ),
+  pop_route_text_colour = c(
+    en = "Legible color to use for text drawn against a background of route_color.",
+    fr = "Couleur lisible \u00e0 utiliser pour le texte affich\u00e9 sur un fond de la couleur de la ligne.",
+    es = "Color legible para el texto presentado sobre un fondo del color de la ruta."
+  ),
+
+  # ── Route form placeholders ────────────────────────────────────────────
+  route_ph_id = c(
+    en = "e.g., 14",
+    fr = "p.\u00a0ex. 18",
+    es = "p.\u00a0ej. 14"
+  ),
+  route_ph_short_name = c(
+    en = "e.g., 14",
+    fr = "p.\u00a0ex. 18",
+    es = "p.\u00a0ej. 14"
+  ),
+  route_ph_long_name = c(
+    en = "e.g., Hastings / UBC",
+    fr = "p.\u00a0ex. Beaubien",
+    es = "p.\u00a0ej. Hastings / UBC"
+  ),
+
+  # ── Route type options ─────────────────────────────────────────────────
+  route_type_bus = c(
+    en = "Bus",
+    fr = "Bus",
+    es = "Autob\u00fas"
+  ),
+  route_type_tram = c(
+    en = "Tram",
+    fr = "Tramway",
+    es = "Tranv\u00eda"
+  ),
+  route_type_metro = c(
+    en = "Metro",
+    fr = "M\u00e9tro",
+    es = "Metro"
+  ),
+  route_type_rail = c(
+    en = "Rail",
+    fr = "Train",
+    es = "Tren"
+  ),
+  route_type_ferry = c(
+    en = "Ferry",
+    fr = "Traversier",
+    es = "Ferry"
+  ),
+  route_type_cable_tram = c(
+    en = "Cable tram",
+    fr = "Tramway \u00e0 c\u00e2ble",
+    es = "Tranv\u00eda de cable"
+  ),
+  route_type_gondola = c(
+    en = "Gondola",
+    fr = "T\u00e9l\u00e9ph\u00e9rique",
+    es = "Telef\u00e9rico"
+  ),
+  route_type_funicular = c(
+    en = "Funicular",
+    fr = "Funiculaire",
+    es = "Funicular"
+  ),
+  route_type_trolleybus = c(
+    en = "Trolleybus",
+    fr = "Trolleybus",
+    es = "Troleb\u00fas"
+  ),
+  route_type_monorail = c(
+    en = "Monorail",
+    fr = "Monorail",
+    es = "Monorriel"
+  ),
+
+  # ── Itinerary form labels ──────────────────────────────────────────────
+  lbl_itin_id = c(
+    en = "Itinerary ID",
+    fr = "ID du parcours type",
+    es = "ID del itinerario"
+  ),
+  lbl_direction = c(
+    en = "Direction",
+    fr = "Direction",
+    es = "Direcci\u00f3n"
+  ),
+  lbl_trip_headsign = c(
+    en = "Trip Headsign",
+    fr = "Girouette",
+    es = "Letrero de destino"
+  ),
+
+  # ── Itinerary form popovers ───────────────────────────────────────────
+  pop_itin_id = c(
+    en = "Unique ID for this itinerary or variant of the route. Will be used as the trip_id prefix in exported GTFS for trips of this itinerary.",
+    fr = "Identifiant unique de ce parcours type ou variante de la ligne. Sera utilis\u00e9 comme pr\u00e9fixe de trip_id dans le GTFS export\u00e9 pour les voyages de ce parcours type.",
+    es = "Identificador \u00fanico de este itinerario o variante de la ruta. Se usar\u00e1 como prefijo de trip_id en el GTFS exportado para los viajes de este itinerario."
+  ),
+  pop_direction = c(
+    en = "Indicates the direction of travel for a trip. Routes generally have at least one outbound (e.g. Northbound or Eastbound) variant and at least one inbound or return variant (e.g. Southbound or Westbound). Outbound corresponds to 0 and Inbound corresponds to 1 in exported GTFS.",
+    fr = "Indique la direction de d\u00e9placement pour un voyage. Les lignes ont g\u00e9n\u00e9ralement au moins une variante aller (p.\u00a0ex. vers le nord ou l'est) et au moins une variante retour (p.\u00a0ex. vers le sud ou l'ouest). Aller correspond \u00e0 0 et Retour correspond \u00e0 1 dans le GTFS export\u00e9.",
+    es = "Indica la direcci\u00f3n de viaje. Las rutas generalmente tienen al menos una variante de ida (p.\u00a0ej. hacia el norte o el este) y al menos una variante de vuelta (p.\u00a0ej. hacia el sur o el oeste). Ida corresponde a 0 y Vuelta corresponde a 1 en el GTFS exportado."
+  ),
+  pop_trip_headsign = c(
+    en = "Text that appears on signage identifying the trip's destination to riders.",
+    fr = "Texte affich\u00e9 sur la signalisation identifiant la destination du voyage pour les usagers.",
+    es = "Texto que aparece en la se\u00f1alizaci\u00f3n identificando el destino del viaje para los usuarios."
+  ),
+
+  # ── Direction options ──────────────────────────────────────────────────
+  lbl_outbound = c(
+    en = "Outbound",
+    fr = "Aller",
+    es = "Ida"
+  ),
+  lbl_inbound = c(
+    en = "Inbound",
+    fr = "Retour",
+    es = "Vuelta"
+  ),
+  lbl_dir_out = c(en = "Out", fr = "Aller", es = "Ida"),
+  lbl_dir_in = c(en = "In", fr = "Retour", es = "Vuelta"),
+
+  # ── Itinerary placeholder ──────────────────────────────────────────────
+  itin_ph_headsign = c(
+    en = "e.g., Eastbound",
+    fr = "p.\u00a0ex. Est",
+    es = "p.\u00a0ej. Hacia el este"
+  ),
+
+  # -- Stop sequence table for selected itinerary -------------------------
+
+  lbl_stop_name_col = c(
+    en = "Stop name",
+    fr = "Nom d'arr\u00eat",
+    es = "Nombre de parada"
+  ),
+  dt_empty_table = c(
+    en = "No data available in table",
+    fr = "Aucune donn\u00e9e disponible dans le tableau",
+    es = "No hay datos disponibles en la tabla"
+  ),
+
+  # ── JS confirm dialogs (mirrored in inst/www/js/i18n.js) ───────────────
+  confirm_delete_route = c(
+    en = "Delete this route? Itineraries must be deleted first.",
+    fr = "Supprimer cette ligne\u00a0? Les parcours types doivent d'abord \u00eatre supprim\u00e9s.",
+    es = "\u00bfEliminar esta ruta? Los itinerarios deben eliminarse primero."
+  ),
+  confirm_delete_itin = c(
+    en = "Delete this itinerary and its associated data?",
+    fr = "Supprimer ce parcours type et ses donn\u00e9es associ\u00e9es\u00a0?",
+    es = "\u00bfEliminar este itinerario y sus datos asociados?"
+  ),
+
+  # ── Notifications — Routes ─────────────────────────────────────────────
+  notif_route_id_empty = c(
+    en = "Route ID cannot be empty.",
+    fr = "L'ID de la ligne ne peut pas \u00eatre vide.",
+    es = "El ID de ruta no puede estar vac\u00edo."
+  ),
+  notif_route_id_exists = c(
+    en = "This route ID already exists.",
+    fr = "Cet ID de ligne existe d\u00e9j\u00e0.",
+    es = "Este ID de ruta ya existe."
+  ),
+  notif_route_agency_first = c(
+    en = "Please define at least one agency first.",
+    fr = "Veuillez d'abord d\u00e9finir au moins une agence.",
+    es = "Defina al menos una agencia primero."
+  ),
+  notif_route_added = c(
+    en = "Route added successfully",
+    fr = "Ligne ajout\u00e9e avec succ\u00e8s",
+    es = "Ruta agregada con \u00e9xito"
+  ),
+  notif_route_updated = c(
+    en = "Route updated successfully",
+    fr = "Ligne mise \u00e0 jour avec succ\u00e8s",
+    es = "Ruta actualizada con \u00e9xito"
+  ),
+  notif_route_not_found = c(
+    en = "Route not found.",
+    fr = "Ligne introuvable.",
+    es = "Ruta no encontrada."
+  ),
+  notif_route_deleted = c(
+    en = "Route deleted successfully",
+    fr = "Ligne supprim\u00e9e avec succ\u00e8s",
+    es = "Ruta eliminada con \u00e9xito"
+  ),
+  notif_route_cant_delete = c(
+    en = "Cannot delete route '%s'. It is referenced by one or more itineraries. Delete the itineraries first.",
+    fr = "Impossible de supprimer la ligne \u00ab\u00a0%s\u00a0\u00bb. Un ou plusieurs parcours types y font r\u00e9f\u00e9rence. Supprimez d'abord les parcours types.",
+    es = "No se puede eliminar la ruta '%s'. Uno o m\u00e1s itinerarios la referencian. Elimine primero los itinerarios."
+  ),
+  notif_route_duplicated = c(
+    en = "Duplicated route as: %s",
+    fr = "Ligne dupliqu\u00e9e sous\u00a0: %s",
+    es = "Ruta duplicada como: %s"
+  ),
+
+  # ── Notifications — Itineraries ─────────────────────────────────────────
+  notif_itin_id_empty = c(
+    en = "Itinerary ID cannot be empty.",
+    fr = "L'ID du parcours type ne peut pas \u00eatre vide.",
+    es = "El ID del itinerario no puede estar vac\u00edo."
+  ),
+  notif_itin_headsign_empty = c(
+    en = "Trip headsign cannot be empty.",
+    fr = "L'enseigne de destination ne peut pas \u00eatre vide.",
+    es = "El letrero de destino no puede estar vac\u00edo."
+  ),
+  notif_itin_id_exists = c(
+    en = "This itinerary ID already exists.",
+    fr = "Cet ID de parcours type existe d\u00e9j\u00e0.",
+    es = "Este ID de itinerario ya existe."
+  ),
+  notif_itin_min_points = c(
+    en = "Itinerary must have at least 2 points.",
+    fr = "Le parcours type doit avoir au moins 2 points.",
+    es = "El itinerario debe tener al menos 2 puntos."
+  ),
+  notif_itin_draw_first = c(
+    en = "Please draw the route on the map before saving.",
+    fr = "Veuillez tracer le parcours sur la carte avant d'enregistrer.",
+    es = "Dibuje la ruta en el mapa antes de guardar."
+  ),
+  notif_itin_saved = c(
+    en = "Itinerary saved successfully",
+    fr = "Parcours type enregistr\u00e9 avec succ\u00e8s",
+    es = "Itinerario guardado con \u00e9xito"
+  ),
+  notif_itin_not_found = c(
+    en = "Itinerary not found",
+    fr = "Parcours type introuvable",
+    es = "Itinerario no encontrado"
+  ),
+  notif_itin_deleted = c(
+    en = "Deleted itinerary: %s",
+    fr = "Parcours type supprim\u00e9\u00a0: %s",
+    es = "Itinerario eliminado: %s"
+  ),
+  notif_itin_duplicated = c(
+    en = "Duplicated as: %s",
+    fr = "Dupliqu\u00e9 sous\u00a0: %s",
+    es = "Duplicado como: %s"
+  ),
+  notif_node_removed = c(
+    en = "Node removed",
+    fr = "N\u0153ud supprim\u00e9",
+    es = "Nodo eliminado"
+  ),
+  notif_last_node_removed = c(
+    en = "Last node removed",
+    fr = "Dernier n\u0153ud supprim\u00e9",
+    es = "\u00daltimo nodo eliminado"
+  ),
+
+  # ── Notifications — Waypoints ───────────────────────────────────────────
+  notif_wp_gone = c(
+    en = "Selected waypoint no longer exists.",
+    fr = "Le point de passage s\u00e9lectionn\u00e9 n'existe plus.",
+    es = "El punto de paso seleccionado ya no existe."
+  ),
+  notif_wp_moved = c(
+    en = "Waypoint moved",
+    fr = "Point de passage d\u00e9plac\u00e9",
+    es = "Punto de paso movido"
+  ),
+  notif_wp_deselected = c(
+    en = "Waypoint deselected. Movement cancelled.",
+    fr = "Point de passage d\u00e9s\u00e9lectionn\u00e9. D\u00e9placement annul\u00e9.",
+    es = "Punto de paso deseleccionado. Movimiento cancelado."
+  ),
+  notif_wp_selected = c(
+    en = "Waypoint selected. Drag it or click on the map to move it.",
+    fr = "Point de passage s\u00e9lectionn\u00e9. D\u00e9placez-le ou cliquez sur la carte pour le d\u00e9placer.",
+    es = "Punto de paso seleccionado. Arr\u00e1strelo o haga clic en el mapa para moverlo."
+  ),
+  notif_wp_to_stop = c(
+    en = "Waypoint moved to stop & adopted stop properties.",
+    fr = "Point de passage d\u00e9plac\u00e9 vers l'arr\u00eat et propri\u00e9t\u00e9s de l'arr\u00eat adopt\u00e9es.",
+    es = "Punto de paso movido a la parada y propiedades de parada adoptadas."
+  ),
+
+  # ── Notifications — Stop interaction (routes context) ───────────────────
+  notif_stop_in_seq = c(
+    en = "Stop already in route stop sequence. Cannot add stop again.",
+    fr = "L'arr\u00eat est d\u00e9j\u00e0 dans la s\u00e9quence d'arr\u00eats de la ligne. Impossible de l'ajouter \u00e0 nouveau.",
+    es = "La parada ya est\u00e1 en la secuencia de paradas de la ruta. No se puede agregar de nuevo."
+  ),
+  notif_editing_itin = c(
+    en = "Editing itinerary: %s",
+    fr = "\u00c9dition du parcours type\u00a0: %s",
+    es = "Editando itinerario: %s"
   )
 )
 

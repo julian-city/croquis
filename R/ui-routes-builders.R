@@ -28,18 +28,18 @@ build_agency_options <- function(agencies, selected_id = NULL) {
 }
 
 # Build the route type <option> HTML for a <select>
-build_route_type_options <- function(selected_type = 3L) {
+build_route_type_options <- function(selected_type = 3L, lang = "en") {
   route_types <- c(
-    "3" = "Bus",
-    "0" = "Tram",
-    "1" = "Metro",
-    "2" = "Rail",
-    "4" = "Ferry",
-    "5" = "Cable tram",
-    "6" = "Gondola",
-    "7" = "Funicular",
-    "11" = "Trolleybus",
-    "12" = "Monorail"
+    "3" = tr("route_type_bus", lang),
+    "0" = tr("route_type_tram", lang),
+    "1" = tr("route_type_metro", lang),
+    "2" = tr("route_type_rail", lang),
+    "4" = tr("route_type_ferry", lang),
+    "5" = tr("route_type_cable_tram", lang),
+    "6" = tr("route_type_gondola", lang),
+    "7" = tr("route_type_funicular", lang),
+    "11" = tr("route_type_trolleybus", lang),
+    "12" = tr("route_type_monorail", lang)
   )
   paste0(
     sapply(names(route_types), function(val) {
@@ -59,35 +59,38 @@ build_route_type_options <- function(selected_type = 3L) {
 }
 
 # Build the route inline form (used for both add and edit)
-build_route_form <- function(agencies, route = NULL) {
+build_route_form <- function(agencies, route = NULL, lang = "en") {
   agency_opts <- build_agency_options(
     agencies,
     selected_id = if (!is.null(route)) route$agency_id else NULL
   )
   rt_opts <- build_route_type_options(
-    selected_type = if (!is.null(route)) route$route_type else 3L
+    selected_type = if (!is.null(route)) route$route_type else 3L,
+    lang = lang
   )
 
   div(
     class = "route-edit-form",
     tags$label(
-      "Route ID",
+      tr("lbl_route_id", lang),
       info_popover(
-        "Unique identifier for route.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_id", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     tags$input(
       type = "text",
       id = "inline_route_id",
       value = if (!is.null(route)) route$route_id else NULL,
-      placeholder = if (is.null(route)) "e.g., 14" else NULL
+      placeholder = if (is.null(route)) tr("route_ph_id", lang) else NULL
     ),
     tags$label(
-      "Agency",
+      tr("lbl_agency", lang),
       info_popover(
-        "Agency for specified route.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_agency", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     htmltools::HTML(paste0(
@@ -96,36 +99,43 @@ build_route_form <- function(agencies, route = NULL) {
       '</select>'
     )),
     tags$label(
-      "Short name",
+      tr("lbl_short_name", lang),
       info_popover(
-        "Short name of a route. Often a short, abstract identifier (e.g., '32', '100X', 'Green') that riders use to identify a route.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_short_name", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     tags$input(
       type = "text",
       id = "inline_route_short_name",
       value = if (!is.null(route)) route$route_short_name else NULL,
-      placeholder = if (is.null(route)) "e.g., 14" else NULL
+      placeholder = if (is.null(route)) {
+        tr("route_ph_short_name", lang)
+      } else {
+        NULL
+      }
     ),
     tags$label(
-      "Long name",
+      tr("lbl_long_name", lang),
       info_popover(
-        "Full name of a route. This name is generally more descriptive than the route_short_name and often includes the route's destination or stop.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_long_name", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     tags$input(
       type = "text",
       id = "inline_route_long_name",
       value = if (!is.null(route)) route$route_long_name else NULL,
-      placeholder = if (is.null(route)) "e.g., Hastings / UBC" else NULL
+      placeholder = if (is.null(route)) tr("route_ph_long_name", lang) else NULL
     ),
     tags$label(
-      "Route type",
+      tr("lbl_route_type", lang),
       info_popover(
-        "Indicates the type of transportation used on a route.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_type", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     htmltools::HTML(paste0(
@@ -134,10 +144,11 @@ build_route_form <- function(agencies, route = NULL) {
       '</select>'
     )),
     tags$label(
-      "Route colour",
+      tr("lbl_route_colour", lang),
       info_popover(
-        "Route colour designation that matches public facing material.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_colour", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     tags$input(
@@ -151,10 +162,11 @@ build_route_form <- function(agencies, route = NULL) {
       style = "height: 30px; padding: 2px;"
     ),
     tags$label(
-      "Text colour",
+      tr("lbl_text_colour", lang),
       info_popover(
-        "Legible color to use for text drawn against a background of route_color.",
-        "https://gtfs.org/schedule/reference/#routestxt"
+        tr("pop_route_text_colour", lang),
+        "https://gtfs.org/schedule/reference/#routestxt",
+        lang = lang
       )
     ),
     tags$input(
@@ -172,9 +184,13 @@ build_route_form <- function(agencies, route = NULL) {
       tags$button(
         class = "btn-save",
         onclick = "saveRouteFromForm()",
-        htmltools::HTML("&#10003; Save")
+        htmltools::HTML(paste0("&#10003; ", tr("btn_save", lang)))
       ),
-      tags$button(class = "btn-cancel", onclick = "cancelRouteEdit()", "Cancel")
+      tags$button(
+        class = "btn-cancel",
+        onclick = "cancelRouteEdit()",
+        tr("btn_cancel", lang)
+      )
     )
   )
 }
@@ -218,52 +234,63 @@ build_itin_form <- function(
   itin_id,
   direction_id,
   trip_headsign = "",
-  is_new = TRUE
+  is_new = TRUE,
+  lang = "en"
 ) {
   dir_sel_0 <- if (as.integer(direction_id) == 0) " selected" else ""
   dir_sel_1 <- if (as.integer(direction_id) == 1) " selected" else ""
 
-  save_label <- if (is_new) "Create" else htmltools::HTML("&#10003; Save")
+  save_label <- if (is_new) {
+    tr("btn_create", lang)
+  } else {
+    htmltools::HTML(paste0("&#10003; ", tr("btn_save", lang)))
+  }
 
   div(
     class = "itin-edit-form",
     tags$label(
-      "Itinerary ID",
+      tr("lbl_itin_id", lang),
       info_popover(
-        "Unique ID for this itinerary or variant of the route. Will be used as the trip_id prefix in exported GTFS for trips of this itinerary."
+        tr("pop_itin_id", lang),
+        lang = lang
       )
     ),
     tags$input(type = "text", id = "inline_itin_id", value = itin_id),
     tags$label(
-      "Direction",
+      tr("lbl_direction", lang),
       info_popover(
-        "Indicates the direction of travel for a trip. Routes generally have at least one outbound (e.g. Northbound or Eastbound) variant and at least inbound or return variant (e.g. Southbound or Westbound). 
-                Outbond corresponds to 0 and Inbound corresponds to 1 in exported GTFS.",
-        "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+        tr("pop_direction", lang),
+        "https://gtfs.org/documentation/schedule/reference/#tripstxt",
+        lang = lang
       )
     ),
     htmltools::HTML(paste0(
       '<select id="inline_direction_id" onchange="onDirectionChanged()">',
       '<option value="0"',
       dir_sel_0,
-      '>Outbound</option>',
+      '>',
+      tr("lbl_outbound", lang),
+      '</option>',
       '<option value="1"',
       dir_sel_1,
-      '>Inbound</option>',
+      '>',
+      tr("lbl_inbound", lang),
+      '</option>',
       '</select>'
     )),
     tags$label(
-      "Trip Headsign",
+      tr("lbl_trip_headsign", lang),
       info_popover(
-        "Text that appears on signage identifying the trip's destination to riders.",
-        "https://gtfs.org/documentation/schedule/reference/#tripstxt"
+        tr("pop_trip_headsign", lang),
+        "https://gtfs.org/documentation/schedule/reference/#tripstxt",
+        lang = lang
       )
     ),
     tags$input(
       type = "text",
       id = "inline_trip_headsign",
       value = if (!is_new) trip_headsign else NULL,
-      placeholder = if (is_new) "e.g., Eastbound" else NULL
+      placeholder = if (is_new) tr("itin_ph_headsign", lang) else NULL
     ),
     div(
       class = "btn-row",
@@ -272,19 +299,27 @@ build_itin_form <- function(
         onclick = "saveItinFromForm()",
         save_label
       ),
-      tags$button(class = "btn-cancel", onclick = "cancelItinEdit()", "Cancel")
+      tags$button(
+        class = "btn-cancel",
+        onclick = "cancelItinEdit()",
+        tr("btn_cancel", lang)
+      )
     )
   )
 }
 
 # Build a normal (non-editing) itinerary row
-build_itin_row <- function(itin, is_active) {
+build_itin_row <- function(itin, is_active, lang = "en") {
   div(
     class = paste0("itin-list-row", if (is_active) " active-itin" else ""),
     onclick = sprintf("viewItinFromList('%s')", itin$itin_id),
     span(
       class = "itin-direction-badge",
-      if (as.integer(itin$direction_id) == 0) "Out" else "In"
+      if (as.integer(itin$direction_id) == 0) {
+        tr("lbl_dir_out", lang)
+      } else {
+        tr("lbl_dir_in", lang)
+      }
     ),
     div(
       class = "itin-info",
@@ -302,7 +337,7 @@ build_itin_row <- function(itin, is_active) {
           "event.stopPropagation(); editItinFromList('%s')",
           itin$itin_id
         ),
-        title = "Edit itinerary",
+        title = tr("itin_edit_title", lang),
         htmltools::HTML("&#9998;")
       ),
       tags$button(
@@ -311,7 +346,7 @@ build_itin_row <- function(itin, is_active) {
           "event.stopPropagation(); copyItinFromList('%s')",
           itin$itin_id
         ),
-        title = "Duplicate itinerary",
+        title = tr("itin_copy_title", lang),
         htmltools::HTML('<i class="fa-solid fa-clone"></i>')
       ),
       tags$button(
@@ -320,7 +355,7 @@ build_itin_row <- function(itin, is_active) {
           "event.stopPropagation(); deleteItinFromList('%s')",
           itin$itin_id
         ),
-        title = "Delete itinerary",
+        title = tr("itin_delete_title", lang),
         htmltools::HTML('<i class="fa-solid fa-trash"></i>')
       )
     )
