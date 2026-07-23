@@ -1330,6 +1330,128 @@ i18n_dict <- list(
     en = "Editing itinerary: %s",
     fr = "\u00c9dition du parcours type\u00a0: %s",
     es = "Editando itinerario: %s"
+  ),
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Schedule module — panel chrome (static UI, translated via JS updateI18n)
+  # ════════════════════════════════════════════════════════════════════════
+  sched_title = c(
+    en = "schedule",
+    fr = "horaires",
+    es = "horarios"
+  ),
+  sched_filter_title = c(
+    en = "Service & Hour",
+    fr = "Service et heure",
+    es = "Servicio y hora"
+  ),
+  sched_lbl_service = c(
+    en = "Service",
+    fr = "Service",
+    es = "Servicio"
+  ),
+  sched_lbl_hour = c(
+    en = "Hour",
+    fr = "Heure",
+    es = "Hora"
+  ),
+  sched_filter_desc = c(
+    en = "Click on any route segment on the map to view cumulative service level for this service and hour.",
+    fr = "Cliquez sur n'importe quel segment de ligne sur la carte pour afficher le niveau de service cumulatif pour ce service et cette heure.",
+    es = "Haga clic en cualquier segmento de ruta en el mapa para ver el nivel de servicio acumulado para este servicio y esta hora."
+  ),
+  sched_btn_calendar = c(
+    en = "Configure service calendar",
+    fr = "Configurer le calendrier de service",
+    es = "Configurar el calendario de servicio"
+  ),
+  sched_btn_presets = c(
+    en = "Manage service level presets",
+    fr = "G\u00e9rer les niveaux de service pr\u00e9d\u00e9finis",
+    es = "Gestionar niveles de servicio predefinidos"
+  ),
+
+  # ── Schedule module — route-level editing panel ────────────────────────
+
+  sched_empty_editing = c(
+    en = "Click on a route to edit its schedule.",
+    fr = "Cliquez sur une ligne pour modifier ses horaires.",
+    es = "Haga clic en una ruta para editar sus horarios."
+  ),
+  sched_no_routes = c(
+    en = "No routes defined. Add routes in the Routes module.",
+    fr = "Aucune ligne d\u00e9finie. Ajoutez des lignes dans le module Lignes.",
+    es = "No hay rutas definidas. Agregue rutas en el m\u00f3dulo Rutas."
+  ),
+  sched_no_itins = c(
+    en = "No itineraries for this route.",
+    fr = "Aucun parcours type pour cette ligne.",
+    es = "No hay itinerarios para esta ruta."
+  ),
+  sched_schedule_prefix = c(
+    en = "Schedule: %s",
+    fr = "Horaires\u00a0: %s",
+    es = "Horarios: %s"
+  ),
+  pop_sched_service = c(
+    en = "A service is a set of dates and days of the week during which different route schedules operate (e.g. weekday service vs. weekend), as configured in the Service Calendar (bottom left of this module).",
+    fr = "Un service est un ensemble de dates et de jours de la semaine pendant lesquels diff\u00e9rents horaires de lignes s'appliquent (p. ex. service en semaine vs. fin de semaine), tel que configur\u00e9 dans le Calendrier de service (en bas \u00e0 gauche de ce module).",
+    es = "Un servicio es un conjunto de fechas y d\u00edas de la semana durante los cuales operan diferentes horarios de rutas (p. ej. servicio entre semana vs. fin de semana), seg\u00fan la configuraci\u00f3n del Calendario de servicio (abajo a la izquierda de este m\u00f3dulo)."
+  ),
+  pop_sched_itineraries = c(
+    en = "Each itinerary consists of a unique stop pattern or variant for trips for this route",
+    fr = "Chaque parcours type consiste en un motif d'arr\u00eats unique ou une variante pour les voyages de cette ligne",
+    es = "Cada itinerario consiste en un patr\u00f3n de paradas \u00fanico o una variante para los viajes de esta ruta"
+  ),
+  sched_batch_span_title = c(
+    en = "Apply span to all route itineraries",
+    fr = "Appliquer la plage \u00e0 tous les parcours types de la ligne",
+    es = "Aplicar el per\u00edodo a todos los itinerarios de la ruta"
+  ),
+  lbl_first_dep = c(
+    en = "First departure",
+    fr = "Premier d\u00e9part",
+    es = "Primera salida"
+  ),
+  lbl_last_dep = c(
+    en = "Last departure",
+    fr = "Dernier d\u00e9part",
+    es = "\u00daltima salida"
+  ),
+  sched_batch_preset_title = c(
+    en = "Apply service level preset to all route itineraries",
+    fr = "Appliquer le niveau de service pr\u00e9d\u00e9fini \u00e0 tous les parcours types de la ligne",
+    es = "Aplicar el nivel de servicio predefinido a todos los itinerarios de la ruta"
+  ),
+  pop_sched_batch_preset = c(
+    en = "A service level preset defines a headway pattern by hour of day, reusable across itineraries. Applying one here will overwrite the hourly headways of all itineraries on this route for the selected service. The presets manager is at the bottom right of this module.",
+    fr = "Un niveau de service pr\u00e9d\u00e9fini s'agit d'une combinaison d'intervalles par heure de la journ\u00e9e, r\u00e9utilisable entre les parcours types. Son application ici \u00e9crasera les intervalles horaires de tous les parcours types de cette ligne pour le service s\u00e9lectionn\u00e9. Le gestionnaire de niveaux de service pr\u00e9d\u00e9finis se trouve en bas \u00e0 droite de ce module.",
+    es = "Un nivel de servicio predefinido es un patr\u00f3n de intervalos por hora del d\u00eda, reutilizable entre itinerarios. Aplicarlo aqu\u00ed sobrescribir\u00e1 los intervalos por hora de todos los itinerarios de esta ruta para el servicio seleccionado. El gestor de niveles de servicio predefinidos se encuentra abajo a la derecha de este m\u00f3dulo."
+  ),
+  sched_batch_hsh_title = c(
+    en = "Apply headway and speed to all route itineraries",
+    fr = "Appliquer l'intervalle et la vitesse \u00e0 tous les parcours types de la ligne",
+    es = "Aplicar el intervalo y la velocidad a todos los itinerarios de la ruta"
+  ),
+  lbl_headway_min = c(
+    en = "Headway (min)",
+    fr = "Intervalle (min)",
+    es = "Intervalo (min)"
+  ),
+  lbl_speed_kmh = c(
+    en = "Speed (km/h)",
+    fr = "Vitesse (km/h)",
+    es = "Velocidad (km/h)"
+  ),
+  sched_cost_vh = c(
+    en = "Daily vehicle-hours (in service): %s",
+    fr = "Heures de service quotidiennes : %s",
+    es = "Veh\u00edculos-hora diarios (en servicio): %s"
+  ),
+  sched_cost_vkm = c(
+    en = "Daily vehicle-km (in service): %s",
+    fr = "V\u00e9hicules-km quotidiens (en service)\u00a0: %s",
+    es = "Veh\u00edculos-km diarios (en servicio): %s"
   )
 )
 

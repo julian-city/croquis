@@ -222,7 +222,20 @@ en: 'Automatically generate stops within a drawn zone. Stops are placed at inter
     en: 'Delete this itinerary and its associated data?',
     fr: 'Supprimer ce parcours type et ses donn\u00e9es associ\u00e9es\u00a0?',
     es: '\u00bfEliminar este itinerario y sus datos asociados?'
-  }
+  },
+
+  // -- Schedule module: static panel chrome --
+  sched_title:        { en: 'schedule',  fr: 'horaires',   es: 'horarios'  },
+  sched_filter_title: { en: 'Service & Hour', fr: 'Service et heure', es: 'Servicio y hora' },
+  sched_lbl_service:  { en: 'Service',  fr: 'Service',    es: 'Servicio'  },
+  sched_lbl_hour:     { en: 'Hour',     fr: 'Heure',      es: 'Hora'      },
+  sched_filter_desc:  {
+    en: 'Click on any route segment on the map to view cumulative service level for this service and hour.',
+    fr: 'Cliquez sur n\u2019importe quel segment de ligne sur la carte pour afficher le niveau de service cumulatif pour ce service et cette heure.',
+    es: 'Haga clic en cualquier segmento de ruta en el mapa para ver el nivel de servicio acumulado para este servicio y esta hora.'
+  },
+  sched_btn_calendar: { en: 'Configure service calendar', fr: 'Configurer le calendrier de service', es: 'Configurar el calendario de servicio' },
+  sched_btn_presets:  { en: 'Manage service level presets', fr: 'G\u00e9rer les niveaux de service pr\u00e9d\u00e9finis', es: 'Gestionar niveles de servicio predefinidos' },
 
   // -- Add keys for other modules here as they are migrated --
 };

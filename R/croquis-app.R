@@ -1891,7 +1891,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
     #
     #   #   #
 
-    scheduleServer("schedule", ssfs, map_center)
+    scheduleServer("schedule", ssfs, map_center, lang)
 
     ###
     #
