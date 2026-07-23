@@ -1371,7 +1371,7 @@ i18n_dict <- list(
     es = "Gestionar niveles de servicio predefinidos"
   ),
 
-  # ── Schedule module — route-level editing panel ────────────────────────
+  # -- Schedule module - route-level editing panel -------------------
 
   sched_empty_editing = c(
     en = "Click on a route to edit its schedule.",
@@ -1452,11 +1452,118 @@ i18n_dict <- list(
     en = "Daily vehicle-km (in service): %s",
     fr = "V\u00e9hicules-km quotidiens (en service)\u00a0: %s",
     es = "Veh\u00edculos-km diarios (en servicio): %s"
+  ),
+  # ── Schedule module — itinerary-level editing panel ────────────────────
+
+  sched_empty_itin_editing = c(
+    en = "Click on an itinerary to edit its headways and speeds.",
+    fr = "Cliquez sur un parcours type pour modifier ses intervalles et vitesses.",
+    es = "Haga clic en un itinerario para editar sus intervalos y velocidades."
+  ),
+  sched_itin_prefix = c(
+    en = "Itinerary: %s - %s",
+    fr = "Parcours type\u00a0: %s - %s",
+    es = "Itinerario: %s - %s"
+  ),
+  sched_service_windows = c(
+    en = "Service windows",
+    fr = "Plages de service",
+    es = "Ventanas de servicio"
+  ),
+  pop_sched_service_window = c(
+    en = "A service window defines a time span during which a given itinerary operates for a specific service, defined by a first departure time and a last departure time.",
+    fr = "Une plage de service d\u00e9finit une p\u00e9riode pendant laquelle un parcours type op\u00e8re pour un service donn\u00e9, d\u00e9finie par un premier d\u00e9part et un dernier d\u00e9part.",
+    es = "Una ventana de servicio define un per\u00edodo durante el cual un itinerario opera para un servicio espec\u00edfico, definida por una primera salida y una \u00faltima salida."
+  ),
+  sched_sw_label = c(
+    en = "Service window %s",
+    fr = "Plage de service %s",
+    es = "Ventana de servicio %s"
+  ),
+  sched_sw_short_label = c(
+    en = "Window %s",
+    fr = "Plage %s",
+    es = "Ventana %s"
+  ),
+  sched_edit_sw_title = c(
+    en = "Edit service window",
+    fr = "Modifier la plage de service",
+    es = "Editar ventana de servicio"
+  ),
+  sched_delete_sw_title = c(
+    en = "Delete service window",
+    fr = "Supprimer la plage de service",
+    es = "Eliminar ventana de servicio"
+  ),
+  sched_add_sw = c(
+    en = "Add new service window",
+    fr = "Ajouter une nouvelle plage de service",
+    es = "Agregar nueva ventana de servicio"
+  ),
+  sched_itin_apply_preset = c(
+    en = "Apply service level preset",
+    fr = "Appliquer le profil de niveau de service",
+    es = "Aplicar el perfil de nivel de servicio"
+  ),
+  pop_sched_itin_preset = c(
+    en = "A service level preset defines a headway pattern by hour of day, reusable across itineraries. Applying one here will overwrite the hourly headways of this itinerary for the selected service. The presets manager is at the bottom right of this module.",
+    fr = "Un niveau de service prédéfini s'agit d'une combinaison d'intervalles par heure de la journ\u00e9e, r\u00e9utilisable entre les parcours types. Son application ici \u00e9crasera les intervalles horaires de ce parcours type pour le service s\u00e9lectionn\u00e9. Le gestionnaire de niveaux de service pr\u00e9d\u00e9finis se trouve en bas \u00e0 droite de ce module.",
+    es = "Un nivel de servicio predefinido es un patr\u00f3n de intervalos por hora del d\u00eda, reutilizable entre itinerarios. Aplicarlo aqu\u00ed sobrescribir\u00e1 los intervalos por hora de este itinerario para el servicio seleccionado. El gestor de niveles de servicio predefinidos se encuentra abajo a la derecha de este m\u00f3dulo."
+  ),
+  sched_apply_hdwy_label = c(
+    en = "Apply headway to all hours (min)",
+    fr = "Appliquer l'intervalle \u00e0 toutes les heures (min)",
+    es = "Aplicar el intervalo a todas las horas (min)"
+  ),
+  sched_apply_speed_label = c(
+    en = "Apply speed to all hours (km/h)",
+    fr = "Appliquer la vitesse \u00e0 toutes les heures (km/h)",
+    es = "Aplicar la velocidad a todas las horas (km/h)"
+  ),
+  sched_hsh_title = c(
+    en = "Headways & speeds by hour",
+    fr = "Intervalles et vitesses par heure",
+    es = "Intervalos y velocidades por hora"
+  ),
+  pop_sched_hsh = c(
+    en = "A headway is the interval or duration between trips. Headways and speeds specified here are used to create trips and scheduled stop times based on distances between stops along the routes defined in the previous module.",
+    fr = "Un intervalle est la dur\u00e9e entre les voyages. Les intervalles et vitesses sp\u00e9cifi\u00e9s ici servent \u00e0 cr\u00e9er les voyages et les horaires d'arr\u00eats planifi\u00e9s bas\u00e9s sur les distances entre les arr\u00eats le long des lignes d\u00e9finies dans le module pr\u00e9c\u00e9dent.",
+    es = "Un intervalo es la duraci\u00f3n entre viajes. Los intervalos y velocidades especificados aqu\u00ed se usan para crear viajes y horarios de paradas programados basados en las distancias entre paradas a lo largo de las rutas definidas en el m\u00f3dulo anterior."
+  ),
+  sched_hsh_runtime = c(
+    en = "Runtime (mins)",
+    fr = "Dur\u00e9e (min)",
+    es = "Duraci\u00f3n (min)"
+  ),
+  sched_hsh_edit_title = c(
+    en = "Edit row",
+    fr = "Modifier la ligne",
+    es = "Editar fila"
+  ),
+  sched_no_hsh = c(
+    en = "No headway entries. Add a service window first.",
+    fr = "Aucune entr\u00e9e d'intervalle. Ajoutez d'abord une plage de service.",
+    es = "No hay entradas de intervalo. Agregue primero una ventana de servicio."
+  ),
+  sched_save_preset_label = c(
+    en = "Save current headways as a new service level preset",
+    fr = "Enregistrer les intervalles actuels en tant que nouveau profil de niveau de service",
+    es = "Guardar los intervalos actuales como un nuevo perfil de nivel de servicio"
+  ),
+  pop_sched_save_preset = c(
+    en = "Saves the hourly headways currently defined for this itinerary and service as a reusable preset that can be applied to other itineraries.",
+    fr = "Enregistre les intervalles horaires actuellement d\u00e9finis pour ce parcours type et ce service en tant que profil r\u00e9utilisable applicable \u00e0 d'autres parcours types.",
+    es = "Guarda los intervalos por hora actualmente definidos para este itinerario y servicio como un perfil reutilizable que se puede aplicar a otros itinerarios."
+  ),
+  sched_save_as_preset = c(
+    en = "Save as preset",
+    fr = "Enregistrer comme profil",
+    es = "Guardar como perfil"
   )
 )
 
 
-# ── Helper: build language selector options ──────────────────────────────
+# -- Helper: build language selector options -------------------------
 #
 # Generates a list of tags$option(...) elements from SUPPORTED_LANGS,
 # marking the one matching `selected` as the default.
