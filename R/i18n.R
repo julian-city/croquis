@@ -1559,6 +1559,155 @@ i18n_dict <- list(
     en = "Save as preset",
     fr = "Enregistrer comme profil",
     es = "Guardar como perfil"
+  ),
+  # ── Schedule module — Calendar and Presets modals ──────────────────────
+
+  # Day abbreviations (used in calendar table headers and checkbox labels)
+  day_mon = c(en = "Mon", fr = "Lun", es = "Lun"),
+  day_tue = c(en = "Tue", fr = "Mar", es = "Mar"),
+  day_wed = c(en = "Wed", fr = "Mer", es = "Mi\u00e9"),
+  day_thu = c(en = "Thu", fr = "Jeu", es = "Jue"),
+  day_fri = c(en = "Fri", fr = "Ven", es = "Vie"),
+  day_sat = c(en = "Sat", fr = "Sam", es = "S\u00e1b"),
+  day_sun = c(en = "Sun", fr = "Dim", es = "Dom"),
+
+  # Calendar modal
+  sched_cal_title = c(
+    en = "Service Calendar",
+    fr = "Calendrier de service",
+    es = "Calendario de servicio"
+  ),
+  btn_close = c(
+    en = "Close",
+    fr = "Fermer",
+    es = "Cerrar"
+  ),
+  lbl_service_id = c(
+    en = "Service ID",
+    fr = "ID de service",
+    es = "ID de servicio"
+  ),
+  lbl_days_of_operation = c(
+    en = "Days of operation",
+    fr = "Jours d'exploitation",
+    es = "D\u00edas de operaci\u00f3n"
+  ),
+  lbl_start_date = c(
+    en = "Start date",
+    fr = "Date de d\u00e9but",
+    es = "Fecha de inicio"
+  ),
+  lbl_end_date = c(
+    en = "End date",
+    fr = "Date de fin",
+    es = "Fecha de fin"
+  ),
+  sched_cal_edit_title = c(
+    en = "Edit service",
+    fr = "Modifier le service",
+    es = "Editar servicio"
+  ),
+  sched_cal_delete_title = c(
+    en = "Delete service",
+    fr = "Supprimer le service",
+    es = "Eliminar servicio"
+  ),
+  sched_cal_add = c(
+    en = "Add new service",
+    fr = "Ajouter un nouveau service",
+    es = "Agregar nuevo servicio"
+  ),
+  sched_cal_cost_title = c(
+    en = "Total daily service cost",
+    fr = "Co\u00fbt de service quotidien total",
+    es = "Costo de servicio diario total"
+  ),
+  sched_cal_cost_desc = c(
+    en = "Calculate total daily vehicle-km and vehicle-hours for all routes and itineraries on a selected service. This may take several minutes for larger networks.",
+    fr = "Calculez les v\u00e9hicules-km et v\u00e9hicules-heures quotidiens totaux pour toutes les lignes et parcours types d'un service s\u00e9lectionn\u00e9. Le calcul peut prendre plusieurs minutes pour les r\u00e9seaux plus importants.",
+    es = "Calcule los veh\u00edculos-km y veh\u00edculos-hora diarios totales para todas las rutas e itinerarios de un servicio seleccionado. Esto puede tardar varios minutos para redes m\u00e1s grandes."
+  ),
+  btn_calculate = c(
+    en = "Calculate",
+    fr = "Calculer",
+    es = "Calcular"
+  ),
+  sched_cal_cost_empty = c(
+    en = "Add a service above to calculate costs.",
+    fr = "Ajoutez un service ci-dessus pour calculer les co\u00fbts.",
+    es = "Agregue un servicio arriba para calcular los costos."
+  ),
+  lbl_vehicle_km = c(
+    en = "Vehicle-km",
+    fr = "V\u00e9hicules-km",
+    es = "Veh\u00edculos-km"
+  ),
+  lbl_vehicle_hours = c(
+    en = "Vehicle-hours",
+    fr = "V\u00e9hicules-heures",
+    es = "Veh\u00edculos-hora"
+  ),
+  lbl_total = c(
+    en = "Total",
+    fr = "Total",
+    es = "Total"
+  ),
+
+  # Presets modal
+  sched_presets_title = c(
+    en = "Service Level Presets",
+    fr = "Niveaux de service pr\u00e9d\u00e9finis",
+    es = "Niveles de servicio predefinidos"
+  ),
+  sched_preset_edit_title = c(
+    en = "Edit preset",
+    fr = "Modifier le profil",
+    es = "Editar perfil"
+  ),
+  sched_preset_delete_title = c(
+    en = "Delete preset",
+    fr = "Supprimer le profil",
+    es = "Eliminar perfil"
+  ),
+  sched_preset_add = c(
+    en = "Add new service level preset",
+    fr = "Ajouter un nouveau profil de niveau de service",
+    es = "Agregar nuevo perfil de nivel de servicio"
+  ),
+  lbl_preset_name = c(
+    en = "Preset name",
+    fr = "Nom du profil",
+    es = "Nombre del perfil"
+  ),
+  btn_save_preset = c(
+    en = "Save preset",
+    fr = "Enregistrer le profil",
+    es = "Guardar perfil"
+  ),
+  btn_rename = c(
+    en = "Rename",
+    fr = "Renommer",
+    es = "Renombrar"
+  ),
+  lbl_hours = c(
+    en = "Hours",
+    fr = "Heures",
+    es = "Horas"
+  ),
+  sched_preset_hint = c(
+    en = "Add hours to build the preset.",
+    fr = "Ajoutez des heures pour construire le profil.",
+    es = "Agregue horas para construir el perfil."
+  ),
+  sched_preset_add_hour = c(
+    en = "Add new hour",
+    fr = "Ajouter une nouvelle heure",
+    es = "Agregar nueva hora"
+  ),
+  sched_preset_ph_name = c(
+    en = "e.g. Peak Frequent",
+    fr = "p. ex. Fr\u00e9quente en pointe",
+    es = "p. ej. Frecuente en hora punta"
   )
 )
 

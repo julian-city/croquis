@@ -1581,7 +1581,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           div(
             class = "sched-speed-profile-controls",
             h4(paste0("Speed profile: ", itin_display)),
-            tags$label("Hour"),
+            tags$label(tr("sched_lbl_hour", lang())),
             selectInput(
               ns("sched_sp_hour"),
               label = NULL,
@@ -3169,10 +3169,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_cal_adding(FALSE)
       sched_cal_cost_result(NULL)
       showModal(modalDialog(
-        title = "Service Calendar",
+        title = tr("sched_cal_title", lang()),
         size = "l",
         easyClose = TRUE,
-        footer = modalButton("Close"),
+        footer = modalButton(tr("btn_close", lang())),
         uiOutput(ns("sched_calendar_modal_ui"))
       ))
     })
@@ -3194,7 +3194,16 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         "saturday",
         "sunday"
       )
-      day_abbrs <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+      day_ids <- c("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+      day_abbrs <- c(
+        tr("day_mon", lang()),
+        tr("day_tue", lang()),
+        tr("day_wed", lang()),
+        tr("day_thu", lang()),
+        tr("day_fri", lang()),
+        tr("day_sat", lang()),
+        tr("day_sun", lang())
+      )
 
       cal_rows <- list()
 
@@ -3206,18 +3215,19 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           if (is_editing_this) {
             # Inline edit form
             day_checkboxes <- mapply(
-              function(col, abbr) {
+              function(col, day_id, abbr) {
                 checked <- if (cal[[col]][r] == 1) "checked" else NULL
                 tags$label(
                   tags$input(
                     type = "checkbox",
-                    id = ns(paste0("sched_cal_", tolower(substr(abbr, 1, 3)))),
+                    id = ns(paste0("sched_cal_", day_id)),
                     checked = checked
                   ),
                   abbr
                 )
               },
               day_cols,
+              day_ids,
               day_abbrs,
               SIMPLIFY = FALSE
             )
@@ -3230,7 +3240,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   class = "sched-cal-edit-form",
                   div(
                     style = "margin-bottom: 6px;",
-                    tags$label("Service ID"),
+                    tags$label(tr("lbl_service_id", lang())),
                     tags$input(
                       type = "text",
                       id = ns("sched_cal_edit_service_id"),
@@ -3238,7 +3248,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                       style = "width: 120px;"
                     )
                   ),
-                  tags$label("Days of operation"),
+                  tags$label(tr("lbl_days_of_operation", lang())),
                   div(
                     class = "day-checkboxes",
                     do.call(tagList, day_checkboxes)
@@ -3246,7 +3256,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   div(
                     class = "date-fields",
                     div(
-                      tags$label("Start date"),
+                      tags$label(tr("lbl_start_date", lang())),
                       tags$input(
                         type = "date",
                         id = ns("sched_cal_start_date"),
@@ -3254,7 +3264,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                       )
                     ),
                     div(
-                      tags$label("End date"),
+                      tags$label(tr("lbl_end_date", lang())),
                       tags$input(
                         type = "date",
                         id = ns("sched_cal_end_date"),
@@ -3267,12 +3277,15 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     tags$button(
                       class = "btn-save",
                       onclick = "schedSaveCalendarEdit()",
-                      htmltools::HTML("&#10003; Save")
+                      htmltools::HTML(paste0(
+                        "&#10003; ",
+                        tr("btn_save", lang())
+                      ))
                     ),
                     tags$button(
                       class = "btn-cancel",
                       onclick = "schedCancelCalendarEdit()",
-                      "Cancel"
+                      tr("btn_cancel", lang())
                     )
                   )
                 )
@@ -3309,7 +3322,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     "event.stopPropagation(); schedEditCalendarRow('%s')",
                     sid
                   ),
-                  title = "Edit service",
+                  title = tr("sched_cal_edit_title", lang()),
                   htmltools::HTML("&#9998;")
                 ),
                 tags$button(
@@ -3318,7 +3331,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     "event.stopPropagation(); schedDeleteCalendarRow('%s')",
                     sid
                   ),
-                  title = "Delete service",
+                  title = tr("sched_cal_delete_title", lang()),
                   htmltools::HTML('<i class="fa-solid fa-trash"></i>')
                 )
               )
@@ -3347,20 +3360,21 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         }
 
         day_checkboxes_new <- mapply(
-          function(col, abbr) {
+          function(col, day_id, abbr) {
             # Default: check Mon-Fri
             default_checked <- col %in%
               c("monday", "tuesday", "wednesday", "thursday", "friday")
             tags$label(
               tags$input(
                 type = "checkbox",
-                id = ns(paste0("sched_cal_", tolower(substr(abbr, 1, 3)))),
+                id = ns(paste0("sched_cal_", day_id)),
                 checked = if (default_checked) "checked" else NULL
               ),
               abbr
             )
           },
           day_cols,
+          day_ids,
           day_abbrs,
           SIMPLIFY = FALSE
         )
@@ -3373,7 +3387,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               class = "sched-cal-edit-form",
               div(
                 style = "margin-bottom: 6px;",
-                tags$label("Service ID"),
+                tags$label(tr("lbl_service_id", lang())),
                 tags$input(
                   type = "text",
                   id = ns("sched_cal_edit_service_id"),
@@ -3381,7 +3395,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   style = "width: 120px;"
                 )
               ),
-              tags$label("Days of operation"),
+              tags$label(tr("lbl_days_of_operation", lang())),
               div(
                 class = "day-checkboxes",
                 do.call(tagList, day_checkboxes_new)
@@ -3389,7 +3403,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               div(
                 class = "date-fields",
                 div(
-                  tags$label("Start date"),
+                  tags$label(tr("lbl_start_date", lang())),
                   tags$input(
                     type = "date",
                     id = ns("sched_cal_start_date"),
@@ -3397,7 +3411,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   )
                 ),
                 div(
-                  tags$label("End date"),
+                  tags$label(tr("lbl_end_date", lang())),
                   tags$input(
                     type = "date",
                     id = ns("sched_cal_end_date"),
@@ -3410,12 +3424,12 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                 tags$button(
                   class = "btn-save",
                   onclick = "schedSaveCalendarEdit()",
-                  "Create"
+                  tr("btn_create", lang())
                 ),
                 tags$button(
                   class = "btn-cancel",
                   onclick = "schedCancelCalendarEdit()",
-                  "Cancel"
+                  tr("btn_cancel", lang())
                 )
               )
             )
@@ -3437,16 +3451,16 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           class = "sched-cal-table",
           tags$thead(
             tags$tr(
-              tags$th("Service ID"),
-              tags$th("Mon"),
-              tags$th("Tue"),
-              tags$th("Wed"),
-              tags$th("Thu"),
-              tags$th("Fri"),
-              tags$th("Sat"),
-              tags$th("Sun"),
-              tags$th("Start date"),
-              tags$th("End date"),
+              tags$th(tr("lbl_service_id", lang())),
+              tags$th(tr("day_mon", lang())),
+              tags$th(tr("day_tue", lang())),
+              tags$th(tr("day_wed", lang())),
+              tags$th(tr("day_thu", lang())),
+              tags$th(tr("day_fri", lang())),
+              tags$th(tr("day_sat", lang())),
+              tags$th(tr("day_sun", lang())),
+              tags$th(tr("lbl_start_date", lang())),
+              tags$th(tr("lbl_end_date", lang())),
               tags$th(style = "width: 60px;", "")
             )
           ),
@@ -3461,19 +3475,19 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             tags$button(
               class = "stop-action-btn add-btn",
               onclick = "event.stopPropagation(); schedAddCalendarRow()",
-              title = "Add new service",
+              title = tr("sched_cal_add", lang()),
               htmltools::HTML("+")
             ),
-            span(style = "margin-left: 8px;", "Add new service")
+            span(style = "margin-left: 8px;", tr("sched_cal_add", lang()))
           )
         },
 
         # Total daily service cost calculator
         hr(),
-        h5("Total daily service cost"),
+        h5(tr("sched_cal_cost_title", lang())),
         tags$small(
           style = "color: #888; display: block; margin-bottom: 10px;",
-          "Calculate total daily vehicle-km and vehicle-hours for all routes and itineraries on a selected service. This may take several minutes for larger networks."
+          tr("sched_cal_cost_desc", lang())
         ),
         if (length(cost_service_choices) > 0) {
           div(
@@ -3494,13 +3508,13 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                 "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
                 ns("sched_cal_calculate_cost")
               ),
-              "Calculate"
+              tr("btn_calculate", lang())
             )
           )
         } else {
           tags$em(
             style = "color: grey;",
-            "Add a service above to calculate costs."
+            tr("sched_cal_cost_empty", lang())
           )
         },
         uiOutput(ns("sched_cal_cost_result_ui"))
@@ -3741,7 +3755,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       if (nrow(result) > 1) {
         result_rows[[length(result_rows) + 1]] <- tags$tr(
           style = "font-weight: bold; border-top: 2px solid var(--border-color);",
-          tags$td("Total"),
+          tags$td(tr("lbl_total", lang())),
           tags$td(
             style = "text-align: right;",
             round(sum(result$total_km, na.rm = TRUE), 1)
@@ -3760,9 +3774,15 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           style = "width: auto;",
           tags$thead(
             tags$tr(
-              tags$th(style = "text-align: left;", "Agency"),
-              tags$th(style = "text-align: right;", "Vehicle-km"),
-              tags$th(style = "text-align: right;", "Vehicle-hours")
+              tags$th(style = "text-align: left;", tr("lbl_agency", lang())),
+              tags$th(
+                style = "text-align: right;",
+                tr("lbl_vehicle_km", lang())
+              ),
+              tags$th(
+                style = "text-align: right;",
+                tr("lbl_vehicle_hours", lang())
+              )
             )
           ),
           tags$tbody(
@@ -3781,10 +3801,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_preset_hour_editing(NULL)
       sched_preset_hour_adding(FALSE)
       showModal(modalDialog(
-        title = "Service Level Presets",
+        title = tr("sched_presets_title", lang()),
         size = "m",
         easyClose = TRUE,
-        footer = modalButton("Close"),
+        footer = modalButton(tr("btn_close", lang())),
         uiOutput(ns("sched_presets_modal_ui"))
       ))
     })
@@ -3827,7 +3847,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   "event.stopPropagation(); schedEditPreset('%s')",
                   pid
                 ),
-                title = "Edit preset",
+                title = tr("sched_preset_edit_title", lang()),
                 htmltools::HTML("&#9998;")
               ),
               tags$button(
@@ -3836,7 +3856,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   "event.stopPropagation(); schedDeletePreset('%s')",
                   pid
                 ),
-                title = "Delete preset",
+                title = tr("sched_preset_delete_title", lang()),
                 htmltools::HTML('<i class="fa-solid fa-trash"></i>')
               )
             )
@@ -3852,10 +3872,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           tags$button(
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); schedAddPreset()",
-            title = "Add new service level preset",
+            title = tr("sched_preset_add", lang()),
             htmltools::HTML("+")
           ),
-          span(style = "margin-left: 8px;", "Add new service level preset")
+          span(style = "margin-left: 8px;", tr("sched_preset_add", lang()))
         )
       }
 
@@ -3872,7 +3892,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             div(
               style = "display: flex; gap: 8px; align-items: flex-end;",
               div(
-                tags$label("Hour"),
+                tags$label(tr("sched_lbl_hour", lang())),
                 tags$select(
                   id = ns("sched_preset_hour_new_hour"),
                   lapply(all_hours, function(h) {
@@ -3881,7 +3901,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                 )
               ),
               div(
-                tags$label("Headway (min)"),
+                tags$label(tr("lbl_headway_min", lang())),
                 tags$input(
                   type = "number",
                   id = ns("sched_preset_hour_edit_headway"),
@@ -3912,30 +3932,30 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
         detail_ui <- div(
           class = "sched-preset-detail",
-          tags$label("Preset name"),
+          tags$label(tr("lbl_preset_name", lang())),
           tags$input(
             type = "text",
             id = ns("sched_preset_name_input"),
             class = "sched-preset-name-input",
             value = "",
-            placeholder = "e.g. Peak Frequent"
+            placeholder = tr("sched_preset_ph_name", lang())
           ),
           tags$button(
             class = "btn-save",
             style = "margin-bottom: 10px;",
             onclick = "schedSavePresetName()",
-            "Save preset"
+            tr("btn_save_preset", lang())
           ),
           tags$button(
             class = "btn-cancel",
             style = "margin-bottom: 10px; margin-left: 6px;",
             onclick = "schedCancelPresetHourEdit()",
-            "Cancel"
+            tr("btn_cancel", lang())
           ),
-          h5("Hours"),
+          h5(tr("lbl_hours", lang())),
           tags$em(
             style = "color: grey; font-size: 11px;",
-            "Add hours to build the preset."
+            tr("sched_preset_hint", lang())
           ),
           add_form,
           if (!hour_adding) {
@@ -3947,7 +3967,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                 onclick = "event.stopPropagation(); schedAddPresetHour()",
                 htmltools::HTML("+")
               ),
-              span(style = "margin-left: 8px;", "Add new hour")
+              span(
+                style = "margin-left: 8px;",
+                tr("sched_preset_add_hour", lang())
+              )
             )
           }
         )
@@ -3980,7 +4003,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     div(
                       style = "display: flex; gap: 8px; align-items: flex-end;",
                       div(
-                        tags$label("Hour"),
+                        tags$label(tr("sched_lbl_hour", lang())),
                         tags$input(
                           type = "text",
                           value = hour_val,
@@ -3989,7 +4012,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                         )
                       ),
                       div(
-                        tags$label("Headway (min)"),
+                        tags$label(tr("lbl_headway_min", lang())),
                         tags$input(
                           type = "number",
                           id = ns("sched_preset_hour_edit_headway"),
@@ -4005,12 +4028,15 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                       tags$button(
                         class = "btn-save",
                         onclick = "schedSavePresetHourEdit()",
-                        htmltools::HTML("&#10003; Save")
+                        htmltools::HTML(paste0(
+                          "&#10003; ",
+                          tr("btn_save", lang())
+                        ))
                       ),
                       tags$button(
                         class = "btn-cancel",
                         onclick = "schedCancelPresetHourEdit()",
-                        "Cancel"
+                        tr("btn_cancel", lang())
                       )
                     )
                   )
@@ -4100,7 +4126,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   div(
                     style = "display: flex; gap: 8px; align-items: flex-end;",
                     div(
-                      tags$label("Hour"),
+                      tags$label(tr("sched_lbl_hour", lang())),
                       tags$select(
                         id = ns("sched_preset_hour_new_hour"),
                         lapply(available, function(hh) {
@@ -4109,7 +4135,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                       )
                     ),
                     div(
-                      tags$label("Headway (min)"),
+                      tags$label(tr("lbl_headway_min", lang())),
                       tags$input(
                         type = "number",
                         id = ns("sched_preset_hour_edit_headway"),
@@ -4125,12 +4151,12 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     tags$button(
                       class = "btn-save",
                       onclick = "schedSavePresetNewHour()",
-                      "Create"
+                      tr("btn_create", lang())
                     ),
                     tags$button(
                       class = "btn-cancel",
                       onclick = "schedCancelPresetHourEdit()",
-                      "Cancel"
+                      tr("btn_cancel", lang())
                     )
                   )
                 )
@@ -4147,7 +4173,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                   div(
                     style = "display: flex; gap: 8px; align-items: flex-end;",
                     div(
-                      tags$label("Hour"),
+                      tags$label(tr("sched_lbl_hour", lang())),
                       tags$input(
                         type = "text",
                         id = ns("sched_preset_hour_new_hour"),
@@ -4157,7 +4183,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                       )
                     ),
                     div(
-                      tags$label("Headway (min)"),
+                      tags$label(tr("lbl_headway_min", lang())),
                       tags$input(
                         type = "number",
                         id = ns("sched_preset_hour_edit_headway"),
@@ -4173,12 +4199,12 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                     tags$button(
                       class = "btn-save",
                       onclick = "schedSavePresetNewHour()",
-                      "Create"
+                      tr("btn_create", lang())
                     ),
                     tags$button(
                       class = "btn-cancel",
                       onclick = "schedCancelPresetHourEdit()",
-                      "Cancel"
+                      tr("btn_cancel", lang())
                     )
                   )
                 )
@@ -4194,8 +4220,8 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           class = "sched-preset-hour-table",
           tags$thead(
             tags$tr(
-              tags$th("Hour"),
-              tags$th("Headway (min)"),
+              tags$th(tr("sched_lbl_hour", lang())),
+              tags$th(tr("lbl_headway_min", lang())),
               tags$th(style = "width: 60px;", "")
             )
           ),
@@ -4214,7 +4240,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               onclick = "event.stopPropagation(); schedAddPresetHour()",
               htmltools::HTML("+")
             ),
-            span(style = "margin-left: 8px;", "Add new hour")
+            span(
+              style = "margin-left: 8px;",
+              tr("sched_preset_add_hour", lang())
+            )
           )
         } else {
           NULL
@@ -4222,7 +4251,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
         detail_ui <- div(
           class = "sched-preset-detail",
-          tags$label("Preset name"),
+          tags$label(tr("lbl_preset_name", lang())),
           div(
             style = "display: flex; gap: 6px; align-items: flex-end; margin-bottom: 10px;",
             tags$input(
@@ -4235,10 +4264,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             tags$button(
               class = "btn-save",
               onclick = "schedSavePresetName()",
-              "Rename"
+              tr("btn_rename", lang())
             )
           ),
-          h5("Hours"),
+          h5(tr("lbl_hours", lang())),
           hour_table,
           add_hour_btn
         )
