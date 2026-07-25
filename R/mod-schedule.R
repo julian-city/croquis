@@ -665,7 +665,9 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               htmltools::htmlEscape(sid),
               "</b> - ",
               htmltools::htmlEscape(sname),
-              "<br>Itineraries: ",
+              "<br>",
+              tr("sched_hover_itins", lang()),
+              "",
               htmltools::htmlEscape(itin_text),
               "</span>"
             ))
@@ -825,7 +827,9 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       totals_html <- paste0(
         "<tr class='totals-row'>",
-        "<td colspan='2'><b>Total</b></td>",
+        "<td colspan='2'><b>",
+        tr("lbl_total", lang),
+        "</b></td>",
         "<td style='text-align:center;'>",
         total_hdwy,
         "</td>",
@@ -840,9 +844,18 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         if (!is.null(header)) header else "",
         "<table class='sched-popup-table'>",
         "<thead><tr>",
-        "<th>Route</th><th>Itinerary</th>",
-        "<th style='text-align:center;'>Headway</th>",
-        "<th style='text-align:center;'>Trips/h</th>",
+        "<th>",
+        tr("sched_popup_route", lang),
+        "</th>",
+        "<th>",
+        tr("sched_popup_itin", lang),
+        "</th>",
+        "<th style='text-align:center;'>",
+        tr("sched_popup_headway", lang),
+        "</th>",
+        "<th style='text-align:center;'>",
+        tr("sched_popup_trips", lang),
+        "</th>",
         "</tr></thead>",
         "<tbody>",
         body_html,
@@ -904,7 +917,8 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             current_data,
             service_id,
             hour,
-            header = header
+            header = header,
+            lang = lang()
           )
 
           leaflet::leafletProxy("sched_map") |>
@@ -951,7 +965,8 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         nearby_itin_ids,
         current_data,
         service_id,
-        hour
+        hour,
+        lang = lang()
       )
 
       leaflet::leafletProxy("sched_map") |>
@@ -1580,7 +1595,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
           div(
             class = "sched-speed-profile-controls",
-            h4(paste0("Speed profile: ", itin_display)),
+            h4(sprintf(tr("sched_sp_prefix", lang()), itin_display)),
             tags$label(tr("sched_lbl_hour", lang())),
             selectInput(
               ns("sched_sp_hour"),
@@ -1590,9 +1605,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             ),
             div(
               class = "info-text",
-              "Speed factors are defined once per itinerary ",
-              "and apply to all services and hours. Changing ",
-              "hour only changes the displayed speeds (km/h)"
+              tr("sched_sp_info", lang())
             )
           ),
 
@@ -1619,7 +1632,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               ),
               htmltools::HTML("&#9654;")
             ),
-            "Adjust speed factors"
+            tr("sched_sp_toggle", lang())
           ),
           div(
             id = ns("sched_sf_content"),
@@ -4646,6 +4659,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
     # -- Render plotly graph --
 
     output$sched_sp_plot <- plotly::renderPlotly({
+      lang()
       req(sched_sp_speed_factors(), sched_sp_stop_data())
 
       stop_data <- sched_sp_stop_data()
@@ -4673,16 +4687,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         plot_data,
         x = ~stop_seq,
         y = ~speed,
-        text = ~ paste0(
-          "Stop: ",
+        text = ~ sprintf(
+          tr("sched_sp_hover", lang()),
           stop_name,
-          " (seq ",
           stop_seq,
-          ")",
-          "\nSpeed: ",
           speed,
-          " km/h",
-          "\nFactor: ",
           speed_factor
         ),
         hoverinfo = "text",
@@ -4693,7 +4702,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ) |>
         plotly::layout(
           xaxis = list(
-            title = "Stop sequence",
+            title = tr("sched_sp_axis_seq", lang()),
             fixedrange = TRUE,
             dtick = 1,
             range = c(
@@ -4702,7 +4711,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             )
           ),
           yaxis = list(
-            title = "Speed (km/h)",
+            title = tr("lbl_speed_kmh", lang()),
             range = c(0, max(actual_speeds) * 1.3),
             fixedrange = TRUE
           ),
@@ -4766,17 +4775,20 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           class = "sched-sf-table",
           tags$thead(
             tags$tr(
-              tags$th("From stop", style = "width: 30%;"),
-              tags$th("Sequence", style = "width: 10%; text-align: center;"),
+              tags$th(tr("sched_sp_from_stop", lang()), style = "width: 30%;"),
               tags$th(
-                "Speed factor",
+                tr("sched_sp_sequence", lang()),
+                style = "width: 10%; text-align: center;"
+              ),
+              tags$th(
+                tr("sched_sp_factor", lang()),
                 style = "width: 15%; text-align: center;"
               ),
               tags$th(
-                "Speed (km/h)",
+                tr("lbl_speed_kmh", lang()),
                 style = "width: 15%; text-align: center;"
               ),
-              tags$th("Adjust", style = "width: 15%;")
+              tags$th(tr("sched_sp_adjust", lang()), style = "width: 15%;")
             )
           ),
           tags$tbody(table_rows)
@@ -4789,7 +4801,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               "Shiny.setInputValue('%s', Math.random(), {priority:'event'})",
               ns("sched_sp_reset")
             ),
-            "Reset all to 1.0"
+            tr("sched_sp_reset", lang())
           )
         )
       )

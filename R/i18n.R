@@ -1708,6 +1708,88 @@ i18n_dict <- list(
     en = "e.g. Peak Frequent",
     fr = "p. ex. Fr\u00e9quente en pointe",
     es = "p. ej. Frecuente en hora punta"
+  ),
+
+  # ── Schedule module — speed profile + map popup ────────────────────────
+
+  sched_sp_prefix = c(
+    en = "Speed profile: %s",
+    fr = "Profil de vitesse\u00a0: %s",
+    es = "Perfil de velocidad: %s"
+  ),
+  sched_sp_info = c(
+    en = "Speed factors are defined once per itinerary and apply to all services and hours. Changing hour only changes the displayed speeds (km/h)",
+    fr = "Les facteurs de vitesse sont d\u00e9finis une seule fois par parcours type et s'appliquent \u00e0 tous les services et heures. Changer l'heure ne modifie que les vitesses affich\u00e9es (km/h)",
+    es = "Los factores de velocidad se definen una sola vez por itinerario y se aplican a todos los servicios y horas. Cambiar la hora solo cambia las velocidades mostradas (km/h)"
+  ),
+  sched_sp_toggle = c(
+    en = "Adjust speed factors",
+    fr = "Ajuster les facteurs de vitesse",
+    es = "Ajustar los factores de velocidad"
+  ),
+  sched_sp_from_stop = c(
+    en = "From stop",
+    fr = "Depuis l'arr\u00eat",
+    es = "Desde la parada"
+  ),
+  sched_sp_sequence = c(
+    en = "Sequence",
+    fr = "S\u00e9quence",
+    es = "Secuencia"
+  ),
+  sched_sp_factor = c(
+    en = "Speed factor",
+    fr = "Facteur de vitesse",
+    es = "Factor de velocidad"
+  ),
+  sched_sp_adjust = c(
+    en = "Adjust",
+    fr = "Ajuster",
+    es = "Ajustar"
+  ),
+  sched_sp_reset = c(
+    en = "Reset all to 1.0",
+    fr = "R\u00e9initialiser tout \u00e0 1,0",
+    es = "Restablecer todo a 1,0"
+  ),
+  sched_sp_axis_seq = c(
+    en = "Stop sequence",
+    fr = "S\u00e9quence d'arr\u00eats",
+    es = "Secuencia de paradas"
+  ),
+  sched_sp_hover = c(
+    en = "Stop: %s (seq %s)\nSpeed: %s km/h\nFactor: %s",
+    fr = "Arr\u00eat\u00a0: %s (s\u00e9q. %s)\nVitesse\u00a0: %s km/h\nFacteur\u00a0: %s",
+    es = "Parada: %s (sec. %s)\nVelocidad: %s km/h\nFactor: %s"
+  ),
+
+  # Map popup
+  sched_popup_route = c(
+    en = "Route",
+    fr = "Ligne",
+    es = "Ruta"
+  ),
+  sched_popup_itin = c(
+    en = "Itinerary",
+    fr = "Parcours type",
+    es = "Itinerario"
+  ),
+  sched_popup_headway = c(
+    en = "Headway",
+    fr = "Intervalle",
+    es = "Intervalo"
+  ),
+  sched_popup_trips = c(
+    en = "Trips/h",
+    fr = "Voyages/h",
+    es = "Viajes/h"
+  ),
+
+  # Stop hover label
+  sched_hover_itins = c(
+    en = "Itineraries: ",
+    fr = "Parcours types\u00a0: ",
+    es = "Itinerarios: "
   )
 )
 
