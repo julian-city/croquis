@@ -2239,16 +2239,13 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       last_dep <- sched_format_time(input$sched_batch_last_dep)
 
       if (is.null(first_dep) || is.null(last_dep)) {
-        showNotification(
-          "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
-          type = "error"
-        )
+        showNotification(tr("notif_sched_invalid_time", lang()), type = "error")
         return()
       }
 
       if (first_dep >= last_dep) {
         showNotification(
-          "First departure must be before last departure.",
+          tr("notif_sched_first_before_last", lang()),
           type = "warning"
         )
         return()
@@ -2260,7 +2257,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ]
 
       if (length(route_itin_ids) == 0) {
-        showNotification("No itineraries for this route.", type = "warning")
+        showNotification(tr("sched_no_itins", lang()), type = "warning")
         return()
       }
 
@@ -2338,14 +2335,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
 
       showNotification(
-        paste0(
-          "Span ",
+        sprintf(
+          tr("notif_sched_batch_span", lang()),
           first_dep,
-          " - ",
           last_dep,
-          " applied to ",
           length(route_itin_ids),
-          " itinerary(ies) for service ",
           service_id
         ),
         type = "message"
@@ -2368,7 +2362,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sp_data <- service_patterns()
 
       if (!pattern_id %in% names(sp_data$service_patterns)) {
-        showNotification("Selected preset not found.", type = "error")
+        showNotification(
+          tr("notif_sched_preset_not_found", lang()),
+          type = "error"
+        )
         return()
       }
 
@@ -2403,14 +2400,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ]
 
       showNotification(
-        paste0(
-          "Applied '",
+        sprintf(
+          tr("notif_sched_itin_preset", lang()),
           pattern_name,
-          "' to ",
-          length(route_itin_ids),
-          " itinerary(ies). ",
-          updated_count,
-          " hour entries updated."
+          editing_itin,
+          updated_count
         ),
         type = "message"
       )
@@ -2441,10 +2435,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification(
-          "No headway entries found. Define spans first.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -2452,14 +2443,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
 
       showNotification(
-        paste0(
-          "Speed set to ",
+        sprintf(
+          tr("notif_sched_batch_speed", lang()),
           speed_value,
-          " km/h for ",
           length(match_idx),
-          " entries across ",
-          length(route_itin_ids),
-          " itinerary(ies)."
+          length(route_itin_ids)
         ),
         type = "message"
       )
@@ -2490,10 +2478,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification(
-          "No headway entries found. Define spans first.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -2501,14 +2486,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
 
       showNotification(
-        paste0(
-          "Headway set to ",
+        sprintf(
+          tr("notif_sched_batch_hdwy", lang()),
           headway_value,
-          " min for ",
           length(match_idx),
-          " entries across ",
-          length(route_itin_ids),
-          " itinerary(ies)."
+          length(route_itin_ids)
         ),
         type = "message"
       )
@@ -2554,16 +2536,13 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       new_last_dep <- sched_format_time(data$last_dep)
 
       if (is.null(new_first_dep) || is.null(new_last_dep)) {
-        showNotification(
-          "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
-          type = "error"
-        )
+        showNotification(tr("notif_sched_invalid_time", lang()), type = "error")
         return()
       }
 
       if (new_first_dep >= new_last_dep) {
         showNotification(
-          "First departure must be before last departure.",
+          tr("notif_sched_first_before_last", lang()),
           type = "warning"
         )
         return()
@@ -2578,7 +2557,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       itin_spans <- itin_spans[order(itin_spans$service_window), ]
 
       if (idx < 1 || idx > nrow(itin_spans)) {
-        showNotification("Span not found.", type = "error")
+        showNotification(tr("notif_sched_sw_not_found", lang()), type = "error")
         return()
       }
 
@@ -2686,7 +2665,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
       sched_span_editing_idx(NULL)
 
-      showNotification("Service window updated.", type = "message")
+      showNotification(tr("notif_sched_sw_updated", lang()), type = "message")
     })
 
     # Save new span (created on save, not on add click)
@@ -2701,16 +2680,13 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       last_dep <- sched_format_time(data$last_dep)
 
       if (is.null(first_dep) || is.null(last_dep)) {
-        showNotification(
-          "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
-          type = "error"
-        )
+        showNotification(tr("notif_sched_invalid_time", lang()), type = "error")
         return()
       }
 
       if (first_dep >= last_dep) {
         showNotification(
-          "First departure must be before last departure.",
+          tr("notif_sched_first_before_last", lang()),
           type = "warning"
         )
         return()
@@ -2737,14 +2713,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
         if (new_first_sec <= prev_last_sec + 59) {
           showNotification(
-            paste0(
-              "Service window ",
+            sprintf(
+              tr("notif_sched_sw_overlap", lang()),
               new_service_window,
-              " must start after ",
               prev_last,
-              " (the end of service window ",
-              max_window,
-              ")."
+              max_window
             ),
             type = "error"
           )
@@ -2799,16 +2772,12 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_span_adding(FALSE)
 
       showNotification(
-        paste0(
-          "Service window ",
+        sprintf(
+          tr("notif_sched_sw_added", lang()),
           new_service_window,
-          " added (",
           first_dep,
-          " - ",
           last_dep,
-          ") with ",
-          length(hours_to_add),
-          " headway entries created."
+          length(hours_to_add)
         ),
         type = "message"
       )
@@ -2877,7 +2846,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_span_editing_idx(NULL)
 
       showNotification(
-        paste0("Service window ", target_sw, " deleted."),
+        sprintf(tr("notif_sched_sw_deleted", lang()), target_sw),
         type = "message"
       )
     })
@@ -2893,7 +2862,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sp_data <- service_patterns()
 
       if (!pattern_id %in% names(sp_data$service_patterns)) {
-        showNotification("Selected preset not found.", type = "error")
+        showNotification(
+          tr("notif_sched_preset_not_found", lang()),
+          type = "error"
+        )
         return()
       }
 
@@ -2906,10 +2878,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification(
-          "No headway entries found. Define spans first.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -2929,14 +2898,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ]
 
       showNotification(
-        paste0(
-          "Applied '",
+        sprintf(
+          tr("notif_sched_batch_preset", lang()),
           pattern_name,
-          "' to ",
-          editing_itin,
-          ". ",
-          updated_count,
-          " hour entries updated."
+          length(route_itin_ids),
+          updated_count
         ),
         type = "message"
       )
@@ -2957,10 +2923,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification(
-          "No headway entries found. Define spans first.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -2968,14 +2931,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
 
       showNotification(
-        paste0(
-          "Speed set to ",
+        sprintf(
+          tr("notif_sched_itin_speed", lang()),
           speed_value,
-          " km/h for ",
           length(match_idx),
-          " entries on ",
-          editing_itin,
-          "."
+          editing_itin
         ),
         type = "message"
       )
@@ -2997,10 +2957,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification(
-          "No headway entries found. Define spans first.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -3008,14 +2965,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
 
       showNotification(
-        paste0(
-          "Headway set to ",
+        sprintf(
+          tr("notif_sched_itin_hdwy", lang()),
           headway_value,
-          " min for ",
           length(match_idx),
-          " entries on ",
-          editing_itin,
-          "."
+          editing_itin
         ),
         type = "message"
       )
@@ -3044,17 +2998,14 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       new_headway <- suppressWarnings(as.numeric(data$headway))
       if (!is.na(new_headway)) {
         if (new_headway < 1 || new_headway > 119) {
-          showNotification(
-            "Headway must be between 1 and 119 minutes.",
-            type = "error"
-          )
+          showNotification(tr("notif_sched_hdwy_range", lang()), type = "error")
           return()
         }
         new_headway <- as.integer(round(new_headway))
       }
       # If empty string or unparseable, set to NA
       if (is.na(new_headway) && nchar(trimws(data$headway)) > 0) {
-        showNotification("Invalid headway value.", type = "error")
+        showNotification(tr("notif_sched_hdwy_invalid", lang()), type = "error")
         return()
       }
       if (nchar(trimws(data$headway)) == 0) {
@@ -3064,10 +3015,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       # Parse speed
       new_speed <- suppressWarnings(as.numeric(data$speed))
       if (is.na(new_speed) || new_speed < 5 || new_speed > 431) {
-        showNotification(
-          "Speed must be between 5 and 431 km/h.",
-          type = "error"
-        )
+        showNotification(tr("notif_sched_speed_range", lang()), type = "error")
         return()
       }
 
@@ -3080,7 +3028,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       )
 
       if (length(match_idx) == 0) {
-        showNotification("Row not found.", type = "error")
+        showNotification(
+          tr("notif_sched_row_not_found", lang()),
+          type = "error"
+        )
         return()
       }
 
@@ -3090,15 +3041,17 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       ssfs(current_data)
       sched_hsh_editing_hour(NULL)
 
+      hdwy_display <- if (is.na(new_headway)) {
+        "-"
+      } else {
+        paste0(new_headway, " min")
+      }
       showNotification(
-        paste0(
-          "Updated ",
+        sprintf(
+          tr("notif_sched_hsh_updated", lang()),
           editing_hour,
-          ": headway = ",
-          if (is.na(new_headway)) "-" else paste0(new_headway, " min"),
-          ", speed = ",
-          new_speed,
-          " km/h"
+          hdwy_display,
+          new_speed
         ),
         type = "message"
       )
@@ -3113,7 +3066,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       preset_name <- trimws(input$sched_save_as_preset$name)
 
       if (nchar(preset_name) == 0) {
-        showNotification("Preset name cannot be empty.", type = "error")
+        showNotification(
+          tr("notif_sched_preset_name_empty", lang()),
+          type = "error"
+        )
         return()
       }
 
@@ -3123,10 +3079,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         filter(itin_id == editing_itin, service_id == curr_service_id)
 
       if (nrow(itin_hsh) == 0) {
-        showNotification(
-          "No headway values defined. Set headways before saving as preset.",
-          type = "warning"
-        )
+        showNotification(tr("notif_sched_no_hsh", lang()), type = "warning")
         return()
       }
 
@@ -3162,14 +3115,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       service_patterns(sp_data)
 
       showNotification(
-        paste0(
-          "Saved as '",
+        sprintf(
+          tr("notif_sched_saved_preset", lang()),
           new_id,
-          " - ",
           preset_name,
-          "' with ",
-          nrow(itin_hsh),
-          " hours."
+          nrow(itin_hsh)
         ),
         type = "message"
       )
@@ -3562,7 +3512,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       service_id <- trimws(data$service_id)
 
       if (nchar(service_id) == 0) {
-        showNotification("Service ID cannot be empty.", type = "error")
+        showNotification(tr("notif_sched_cal_id_empty", lang()), type = "error")
         return()
       }
 
@@ -3570,13 +3520,16 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       end_date <- data$end_date
 
       if (nchar(start_date) == 0 || nchar(end_date) == 0) {
-        showNotification("Start and end dates are required.", type = "error")
+        showNotification(
+          tr("notif_sched_cal_dates_required", lang()),
+          type = "error"
+        )
         return()
       }
 
       if (start_date > end_date) {
         showNotification(
-          "Start date must be before end date.",
+          tr("notif_sched_cal_date_order", lang()),
           type = "warning"
         )
         return()
@@ -3600,7 +3553,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         # Adding new service
         if (service_id %in% current_data$calendar$service_id) {
           showNotification(
-            "Service ID already exists. Please use a different ID.",
+            tr("notif_sched_cal_id_exists", lang()),
             type = "warning"
           )
           return()
@@ -3609,7 +3562,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         ssfs(current_data)
         sched_cal_adding(FALSE)
         showNotification(
-          paste0("Service '", service_id, "' created."),
+          sprintf(tr("notif_sched_cal_created", lang()), service_id),
           type = "message"
         )
       } else {
@@ -3619,7 +3572,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
         row_idx <- which(current_data$calendar$service_id == editing_id)
         if (length(row_idx) == 0) {
-          showNotification("Service not found.", type = "error")
+          showNotification(
+            tr("notif_sched_cal_not_found", lang()),
+            type = "error"
+          )
           return()
         }
 
@@ -3628,7 +3584,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           # Check uniqueness
           if (service_id %in% current_data$calendar$service_id) {
             showNotification(
-              "Service ID already exists. Please use a different ID.",
+              tr("notif_sched_cal_id_exists", lang()),
               type = "warning"
             )
             return()
@@ -3651,7 +3607,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         ssfs(current_data)
         sched_cal_editing_id(NULL)
         showNotification(
-          paste0("Service '", service_id, "' updated."),
+          sprintf(tr("notif_sched_cal_updated", lang()), service_id),
           type = "message"
         )
       }
@@ -3681,11 +3637,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_cal_editing_id(NULL)
 
       showNotification(
-        paste0(
-          "Service '",
-          service_id,
-          "' deleted with associated spans and headway entries."
-        ),
+        sprintf(tr("notif_sched_cal_deleted", lang()), service_id),
         type = "message"
       )
     })
@@ -3701,7 +3653,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       if (length(all_route_ids) == 0) {
         sched_cal_cost_result(NULL)
-        showNotification("No routes defined.", type = "warning")
+        showNotification(
+          tr("notif_sched_no_routes_defined", lang()),
+          type = "warning"
+        )
         return()
       }
 
@@ -3712,14 +3667,14 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       if (nrow(service_spans) == 0) {
         sched_cal_cost_result(NULL)
         showNotification(
-          paste0("No service windows defined for '", service_id, "'."),
+          sprintf(tr("notif_sched_no_sw_for_service", lang()), service_id),
           type = "warning"
         )
         return()
       }
 
       progress_id <- showNotification(
-        "Calculating service cost...",
+        tr("notif_sched_calculating", lang()),
         duration = NULL,
         type = "message"
       )
@@ -3744,7 +3699,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_cal_cost_result(result)
 
       if (!is.null(result) && nrow(result) > 0) {
-        showNotification("Service cost calculated.", type = "message")
+        showNotification(tr("notif_sched_cost_done", lang()), type = "message")
       }
     })
 
@@ -4325,7 +4280,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       new_name <- trimws(input$sched_preset_save_name$name)
 
       if (nchar(new_name) == 0) {
-        showNotification("Preset name cannot be empty.", type = "error")
+        showNotification(
+          tr("notif_sched_preset_name_empty", lang()),
+          type = "error"
+        )
         return()
       }
 
@@ -4361,7 +4319,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         sched_preset_editing_id(new_id)
 
         showNotification(
-          paste0("Preset '", new_id, " - ", new_name, "' created."),
+          sprintf(tr("notif_sched_preset_created", lang()), new_id, new_name),
           type = "message"
         )
       } else {
@@ -4376,7 +4334,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           sp_data$service_pattern_names$pattern_name[name_idx] <- new_name
           service_patterns(sp_data)
           showNotification(
-            paste0("Preset renamed to '", new_name, "'."),
+            sprintf(tr("notif_sched_preset_renamed", lang()), new_name),
             type = "message"
           )
         }
@@ -4406,7 +4364,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       }
 
       showNotification(
-        paste0("Preset '", pid, "' deleted."),
+        sprintf(tr("notif_sched_preset_deleted", lang()), pid),
         type = "message"
       )
     })
@@ -4450,7 +4408,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         new_headway <- NA_integer_
       } else if (is.na(new_headway) || new_headway < 1 || new_headway > 119) {
         showNotification(
-          "Headway must be between 1 and 119, or left blank.",
+          tr("notif_sched_hdwy_range_blank", lang()),
           type = "error"
         )
         return()
@@ -4469,7 +4427,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       }
 
       sched_preset_hour_editing(NULL)
-      showNotification("Hour updated.", type = "message")
+      showNotification(tr("notif_sched_hour_updated", lang()), type = "message")
     })
 
     # Save new hour
@@ -4482,7 +4440,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       if (is.null(editing_id) && sched_preset_adding()) {
         # Preset not yet created : save name first
         showNotification(
-          "Please save the preset name first.",
+          tr("notif_sched_save_name_first", lang()),
           type = "warning"
         )
         return()
@@ -4491,7 +4449,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       hour_val <- data$hour
       if (nchar(trimws(hour_val)) == 0) {
-        showNotification("Please select an hour.", type = "error")
+        showNotification(tr("notif_sched_select_hour", lang()), type = "error")
         return()
       }
 
@@ -4500,7 +4458,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         new_headway <- NA_integer_
       } else if (is.na(new_headway) || new_headway < 1 || new_headway > 119) {
         showNotification(
-          "Headway must be between 1 and 119, or left blank.",
+          tr("notif_sched_hdwy_range_blank", lang()),
           type = "error"
         )
         return()
@@ -4514,7 +4472,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       # Check for duplicate hour
       if (!is.null(pattern_data) && hour_val %in% pattern_data$hour) {
         showNotification(
-          "This hour already exists in the preset.",
+          tr("notif_sched_hour_exists", lang()),
           type = "warning"
         )
         return()
@@ -4538,7 +4496,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_preset_hour_adding(FALSE)
 
       showNotification(
-        paste0("Hour ", hour_val, " added."),
+        sprintf(tr("notif_sched_hour_added", lang()), hour_val),
         type = "message"
       )
     })
@@ -4559,7 +4517,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_preset_hour_editing(NULL)
 
       showNotification(
-        paste0("Hour ", hour_val, " removed."),
+        sprintf(tr("notif_sched_hour_removed", lang()), hour_val),
         type = "message"
       )
     })

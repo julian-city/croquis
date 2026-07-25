@@ -1790,6 +1790,276 @@ i18n_dict <- list(
     en = "Itineraries: ",
     fr = "Parcours types\u00a0: ",
     es = "Itinerarios: "
+  ),
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Schedule module — notifications
+  # ════════════════════════════════════════════════════════════════════════
+
+  # --- Span CRUD ─------------
+  notif_sched_invalid_time = c(
+    en = "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
+    fr = "Format d'heure invalide. Utilisez HH:MM:SS (00-30:00-59:00-59).",
+    es = "Formato de hora inv\u00e1lido. Use HH:MM:SS (00-30:00-59:00-59)."
+  ),
+  notif_sched_first_before_last = c(
+    en = "First departure must be before last departure.",
+    fr = "Le premier d\u00e9part doit \u00eatre avant le dernier d\u00e9part.",
+    es = "La primera salida debe ser antes de la \u00faltima salida."
+  ),
+  notif_sched_sw_updated = c(
+    en = "Service window updated.",
+    fr = "Plage de service mise \u00e0 jour.",
+    es = "Ventana de servicio actualizada."
+  ),
+  notif_sched_sw_added = c(
+    en = "Service window %s added (%s - %s) with %s headway entries created.",
+    fr = "Plage de service %s ajout\u00e9e (%s - %s) avec %s entr\u00e9es d'intervalle cr\u00e9\u00e9es.",
+    es = "Ventana de servicio %s agregada (%s - %s) con %s entradas de intervalo creadas."
+  ),
+  notif_sched_sw_deleted = c(
+    en = "Service window %s deleted.",
+    fr = "Plage de service %s supprim\u00e9e.",
+    es = "Ventana de servicio %s eliminada."
+  ),
+  notif_sched_sw_not_found = c(
+    en = "Span not found.",
+    fr = "Plage introuvable.",
+    es = "Per\u00edodo no encontrado."
+  ),
+  notif_sched_sw_overlap = c(
+    en = "Service window %s must start after %s (the end of service window %s).",
+    fr = "La plage de service %s doit commencer apr\u00e8s %s (la fin de la plage de service %s).",
+    es = "La ventana de servicio %s debe comenzar despu\u00e9s de %s (el fin de la ventana de servicio %s)."
+  ),
+
+  # ── Batch actions (route-level) ────────────────────────────────────────
+  notif_sched_batch_span = c(
+    en = "Span %s - %s applied to %s itinerary(ies) for service %s",
+    fr = "Plage %s - %s appliqu\u00e9e \u00e0 %s parcours type(s) pour le service %s",
+    es = "Per\u00edodo %s - %s aplicado a %s itinerario(s) para el servicio %s"
+  ),
+  notif_sched_batch_preset = c(
+    en = "Applied '%s' to %s itinerary(ies). %s hour entries updated.",
+    fr = "\u00ab\u00a0%s\u00a0\u00bb appliqu\u00e9 \u00e0 %s parcours type(s). %s entr\u00e9es horaires mises \u00e0 jour.",
+    es = "'%s' aplicado a %s itinerario(s). %s entradas por hora actualizadas."
+  ),
+  notif_sched_no_hsh = c(
+    en = "No headway entries found. Define spans first.",
+    fr = "Aucune entr\u00e9e d'intervalle trouv\u00e9e. D\u00e9finissez d'abord des plages de service.",
+    es = "No se encontraron entradas de intervalo. Defina primero ventanas de servicio."
+  ),
+  notif_sched_batch_hdwy = c(
+    en = "Headway set to %s min for %s entries across %s itinerary(ies).",
+    fr = "Intervalle r\u00e9gl\u00e9 \u00e0 %s min pour %s entr\u00e9es sur %s parcours type(s).",
+    es = "Intervalo establecido a %s min para %s entradas en %s itinerario(s)."
+  ),
+  notif_sched_batch_speed = c(
+    en = "Speed set to %s km/h for %s entries across %s itinerary(ies).",
+    fr = "Vitesse r\u00e9gl\u00e9e \u00e0 %s km/h pour %s entr\u00e9es sur %s parcours type(s).",
+    es = "Velocidad establecida a %s km/h para %s entradas en %s itinerario(s)."
+  ),
+  notif_sched_preset_not_found = c(
+    en = "Selected preset not found.",
+    fr = "Profil s\u00e9lectionn\u00e9 introuvable.",
+    es = "Perfil seleccionado no encontrado."
+  ),
+
+  # ── Itinerary-level actions ────────────────────────────────────────────
+  notif_sched_itin_preset = c(
+    en = "Applied '%s' to %s. %s hour entries updated.",
+    fr = "\u00ab\u00a0%s\u00a0\u00bb appliqu\u00e9 \u00e0 %s. %s entr\u00e9es horaires mises \u00e0 jour.",
+    es = "'%s' aplicado a %s. %s entradas por hora actualizadas."
+  ),
+  notif_sched_itin_hdwy = c(
+    en = "Headway set to %s min for %s entries on %s.",
+    fr = "Intervalle r\u00e9gl\u00e9 \u00e0 %s min pour %s entr\u00e9es sur %s.",
+    es = "Intervalo establecido a %s min para %s entradas en %s."
+  ),
+  notif_sched_itin_speed = c(
+    en = "Speed set to %s km/h for %s entries on %s.",
+    fr = "Vitesse r\u00e9gl\u00e9e \u00e0 %s km/h pour %s entr\u00e9es sur %s.",
+    es = "Velocidad establecida a %s km/h para %s entradas en %s."
+  ),
+
+  # ── HSH editing ────────────────────────────────────────────────────────
+  notif_sched_hdwy_range = c(
+    en = "Headway must be between 1 and 119 minutes.",
+    fr = "L'intervalle doit \u00eatre entre 1 et 119 minutes.",
+    es = "El intervalo debe estar entre 1 y 119 minutos."
+  ),
+  notif_sched_hdwy_invalid = c(
+    en = "Invalid headway value.",
+    fr = "Valeur d'intervalle invalide.",
+    es = "Valor de intervalo inv\u00e1lido."
+  ),
+  notif_sched_speed_range = c(
+    en = "Speed must be between 5 and 431 km/h.",
+    fr = "La vitesse doit \u00eatre entre 5 et 431 km/h.",
+    es = "La velocidad debe estar entre 5 y 431 km/h."
+  ),
+  notif_sched_row_not_found = c(
+    en = "Row not found.",
+    fr = "Ligne introuvable.",
+    es = "Fila no encontrada."
+  ),
+  notif_sched_hsh_updated = c(
+    en = "Updated %s: headway = %s, speed = %s km/h",
+    fr = "Mise \u00e0 jour %s\u00a0: intervalle = %s, vitesse = %s km/h",
+    es = "Actualizado %s: intervalo = %s, velocidad = %s km/h"
+  ),
+
+  # ── Save as preset ────────────────────────────────────────────────────
+  notif_sched_preset_name_empty = c(
+    en = "Preset name cannot be empty.",
+    fr = "Le nom du profil ne peut pas \u00eatre vide.",
+    es = "El nombre del perfil no puede estar vac\u00edo."
+  ),
+  notif_sched_no_hdwy_for_preset = c(
+    en = "No headway values defined. Set headways before saving as preset.",
+    fr = "Aucune valeur d'intervalle d\u00e9finie. D\u00e9finissez des intervalles avant d'enregistrer comme profil.",
+    es = "No hay valores de intervalo definidos. Establezca intervalos antes de guardar como perfil."
+  ),
+  notif_sched_saved_preset = c(
+    en = "Saved as '%s - %s' with %s hours.",
+    fr = "Enregistr\u00e9 sous \u00ab\u00a0%s - %s\u00a0\u00bb avec %s heures.",
+    es = "Guardado como '%s - %s' con %s horas."
+  ),
+
+  # ── Calendar CRUD ──────────────────────────────────────────────────────
+  notif_sched_cal_id_empty = c(
+    en = "Service ID cannot be empty.",
+    fr = "L'ID de service ne peut pas \u00eatre vide.",
+    es = "El ID de servicio no puede estar vac\u00edo."
+  ),
+  notif_sched_cal_dates_required = c(
+    en = "Start and end dates are required.",
+    fr = "Les dates de d\u00e9but et de fin sont obligatoires.",
+    es = "Las fechas de inicio y fin son obligatorias."
+  ),
+  notif_sched_cal_date_order = c(
+    en = "Start date must be before end date.",
+    fr = "La date de d\u00e9but doit \u00eatre avant la date de fin.",
+    es = "La fecha de inicio debe ser antes de la fecha de fin."
+  ),
+  notif_sched_cal_id_exists = c(
+    en = "Service ID already exists. Please use a different ID.",
+    fr = "Cet ID de service existe d\u00e9j\u00e0. Veuillez utiliser un autre ID.",
+    es = "Este ID de servicio ya existe. Use un ID diferente."
+  ),
+  notif_sched_cal_created = c(
+    en = "Service '%s' created.",
+    fr = "Service \u00ab\u00a0%s\u00a0\u00bb cr\u00e9\u00e9.",
+    es = "Servicio '%s' creado."
+  ),
+  notif_sched_cal_not_found = c(
+    en = "Service not found.",
+    fr = "Service introuvable.",
+    es = "Servicio no encontrado."
+  ),
+  notif_sched_cal_updated = c(
+    en = "Service '%s' updated.",
+    fr = "Service \u00ab\u00a0%s\u00a0\u00bb mis \u00e0 jour.",
+    es = "Servicio '%s' actualizado."
+  ),
+  notif_sched_cal_deleted = c(
+    en = "Service '%s' deleted with associated spans and headway entries.",
+    fr = "Service \u00ab\u00a0%s\u00a0\u00bb supprim\u00e9 avec les plages et entr\u00e9es d'intervalle associ\u00e9es.",
+    es = "Servicio '%s' eliminado con las ventanas y entradas de intervalo asociadas."
+  ),
+  notif_sched_no_routes_defined = c(
+    en = "No routes defined.",
+    fr = "Aucune ligne d\u00e9finie.",
+    es = "No hay rutas definidas."
+  ),
+  notif_sched_no_sw_for_service = c(
+    en = "No service windows defined for '%s'.",
+    fr = "Aucune plage de service d\u00e9finie pour \u00ab\u00a0%s\u00a0\u00bb.",
+    es = "No hay ventanas de servicio definidas para '%s'."
+  ),
+  notif_sched_calculating = c(
+    en = "Calculating service cost...",
+    fr = "Calcul du co\u00fbt de service en cours\u2026",
+    es = "Calculando costo de servicio\u2026"
+  ),
+  notif_sched_cost_done = c(
+    en = "Service cost calculated.",
+    fr = "Co\u00fbt de service calcul\u00e9.",
+    es = "Costo de servicio calculado."
+  ),
+  notif_sched_error = c(
+    en = "Error: %s",
+    fr = "Erreur\u00a0: %s",
+    es = "Error: %s"
+  ),
+
+  # ── Preset CRUD ────────────────────────────────────────────────────────
+  notif_sched_preset_created = c(
+    en = "Preset '%s - %s' created.",
+    fr = "Profil \u00ab\u00a0%s - %s\u00a0\u00bb cr\u00e9\u00e9.",
+    es = "Perfil '%s - %s' creado."
+  ),
+  notif_sched_preset_renamed = c(
+    en = "Preset renamed to '%s'.",
+    fr = "Profil renomm\u00e9 \u00ab\u00a0%s\u00a0\u00bb.",
+    es = "Perfil renombrado a '%s'."
+  ),
+  notif_sched_preset_deleted = c(
+    en = "Preset '%s' deleted.",
+    fr = "Profil \u00ab\u00a0%s\u00a0\u00bb supprim\u00e9.",
+    es = "Perfil '%s' eliminado."
+  ),
+  notif_sched_save_name_first = c(
+    en = "Please save the preset name first.",
+    fr = "Veuillez d'abord enregistrer le nom du profil.",
+    es = "Guarde primero el nombre del perfil."
+  ),
+  notif_sched_select_hour = c(
+    en = "Please select an hour.",
+    fr = "Veuillez s\u00e9lectionner une heure.",
+    es = "Seleccione una hora."
+  ),
+  notif_sched_hdwy_range_blank = c(
+    en = "Headway must be between 1 and 119, or left blank.",
+    fr = "L'intervalle doit \u00eatre entre 1 et 119, ou laiss\u00e9 vide.",
+    es = "El intervalo debe estar entre 1 y 119, o dejarse en blanco."
+  ),
+  notif_sched_hour_exists = c(
+    en = "This hour already exists in the preset.",
+    fr = "Cette heure existe d\u00e9j\u00e0 dans le profil.",
+    es = "Esta hora ya existe en el perfil."
+  ),
+  notif_sched_hour_added = c(
+    en = "Hour %s added.",
+    fr = "Heure %s ajout\u00e9e.",
+    es = "Hora %s agregada."
+  ),
+  notif_sched_hour_updated = c(
+    en = "Hour updated.",
+    fr = "Heure mise \u00e0 jour.",
+    es = "Hora actualizada."
+  ),
+  notif_sched_hour_removed = c(
+    en = "Hour %s removed.",
+    fr = "Heure %s supprim\u00e9e.",
+    es = "Hora %s eliminada."
+  ),
+
+  # ── JS confirm dialogs (mirrored in i18n.js) ──────────────────────────
+  confirm_delete_sw = c(
+    en = "Delete this service window and associated headway by hour entries?",
+    fr = "Supprimer cette plage de service et les entr\u00e9es d'intervalle par heure associ\u00e9es\u00a0?",
+    es = "\u00bfEliminar esta ventana de servicio y las entradas de intervalo por hora asociadas?"
+  ),
+  confirm_delete_cal_service = c(
+    en = "Delete service \"{id}\"? This will remove all schedule data associated with this route.",
+    fr = "Supprimer le service \u00ab\u00a0{id}\u00a0\u00bb\u00a0? Cela supprimera toutes les donn\u00e9es d'horaire associ\u00e9es \u00e0 cette ligne.",
+    es = "\u00bfEliminar el servicio \"{id}\"? Esto eliminar\u00e1 todos los datos de horario asociados a esta ruta."
+  ),
+  confirm_delete_sched_preset = c(
+    en = "Delete preset \"{id}\"?",
+    fr = "Supprimer le profil \u00ab\u00a0{id}\u00a0\u00bb\u00a0?",
+    es = "\u00bfEliminar el perfil \"{id}\"?"
   )
 )
 

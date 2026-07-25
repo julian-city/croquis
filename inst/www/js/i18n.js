@@ -237,6 +237,22 @@ en: 'Automatically generate stops within a drawn zone. Stops are placed at inter
   sched_btn_calendar: { en: 'Configure service calendar', fr: 'Configurer le calendrier de service', es: 'Configurar el calendario de servicio' },
   sched_btn_presets:  { en: 'Manage service level presets', fr: 'G\u00e9rer les niveaux de service pr\u00e9d\u00e9finis', es: 'Gestionar niveles de servicio predefinidos' },
 
+  // -- Schedule module: JS confirm dialogs --
+  confirm_delete_sw: {
+    en: 'Delete this service window and associated headway by hour entries?',
+    fr: 'Supprimer cette plage de service et les entr\u00e9es d\u2019intervalle par heure associ\u00e9es\u00a0?',
+    es: '\u00bfEliminar esta ventana de servicio y las entradas de intervalo por hora asociadas?'
+  },
+  confirm_delete_cal_service: {
+    en: 'Delete service "{id}"? This will remove all schedule data associated with this route.',
+    fr: 'Supprimer le service \u00ab\u00a0{id}\u00a0\u00bb\u00a0? Cela supprimera toutes les donn\u00e9es d\u2019horaire associ\u00e9es \u00e0 cette ligne.',
+    es: '\u00bfEliminar el servicio "{id}"? Esto eliminar\u00e1 todos los datos de horario asociados a esta ruta.'
+  },
+  confirm_delete_sched_preset: {
+    en: 'Delete preset "{id}"?',
+    fr: 'Supprimer le profil \u00ab\u00a0{id}\u00a0\u00bb\u00a0?',
+    es: '\u00bfEliminar el perfil "{id}"?'
+  }
   // -- Add keys for other modules here as they are migrated --
 };
 

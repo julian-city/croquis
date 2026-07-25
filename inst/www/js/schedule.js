@@ -35,7 +35,7 @@ function schedEditItin(itinId) {
  }
 
  function schedDeleteSpan(idx) {
-   if (confirm('Delete this service window and associated headway by hour entries?')) {
+if (confirm(jsTr('confirm_delete_sw'))) {
      Shiny.setInputValue(schedNs + 'sched_span_delete_click',
        {idx: idx, ts: Math.random()}, {priority: 'event'});
    }
@@ -101,7 +101,7 @@ function schedEditItin(itinId) {
  }
 
  function schedDeleteCalendarRow(serviceId) {
-   if (confirm('Delete service "' + serviceId + '"? This will remove all schedule data associated with this route.')) {
+if (confirm(jsTr('confirm_delete_cal_service', {id: serviceId}))) {
      Shiny.setInputValue(schedNs + 'sched_cal_delete_click',
        {id: serviceId, ts: Math.random()}, {priority: 'event'});
    }
@@ -151,7 +151,7 @@ function schedEditItin(itinId) {
  }
 
  function schedDeletePreset(patternId) {
-   if (confirm('Delete preset "' + patternId + '"?')) {
+if (confirm(jsTr('confirm_delete_sched_preset', {id: patternId}))) {
      Shiny.setInputValue(schedNs + 'sched_preset_delete_click',
        {id: patternId, ts: Math.random()}, {priority: 'event'});
    }
