@@ -252,7 +252,42 @@ en: 'Automatically generate stops within a drawn zone. Stops are placed at inter
     en: 'Delete preset "{id}"?',
     fr: 'Supprimer le profil \u00ab\u00a0{id}\u00a0\u00bb\u00a0?',
     es: '\u00bfEliminar el perfil "{id}"?'
-  }
+  },
+
+  // -- Save / Export tab --
+  export_title:           { en: 'export or save your project', fr: 'exporter ou sauvegarder votre projet', es: 'exportar o guardar su proyecto' },
+  export_gtfs_title:      { en: 'Export GTFS', fr: 'Exporter le GTFS', es: 'Exportar GTFS' },
+  lbl_filename:           { en: 'Filename:', fr: 'Nom du fichier\u00a0:', es: 'Nombre del archivo:' },
+  export_dist_traveled:   { en: 'Include shape_dist_traveled', fr: 'Inclure shape_dist_traveled', es: 'Incluir shape_dist_traveled' },
+  export_dist_desc:       { en: 'When checked, adds shape_dist_traveled to shapes and stop_times tables. This increases export time.', fr: 'Lorsque coch\u00e9, ajoute shape_dist_traveled aux tables shapes et stop_times. Cela augmente le temps d\u2019exportation.', es: 'Cuando est\u00e1 marcado, agrega shape_dist_traveled a las tablas shapes y stop_times. Esto aumenta el tiempo de exportaci\u00f3n.' },
+  export_download_gtfs:   { en: 'Download GTFS', fr: 'T\u00e9l\u00e9charger le GTFS', es: 'Descargar GTFS' },
+  export_save_title:      { en: 'Save your project to work on it later', fr: 'Sauvegardez votre projet pour y travailler plus tard', es: 'Guarde su proyecto para trabajar en \u00e9l m\u00e1s tarde' },
+  export_save_desc:       { en: 'This saves the raw Croquis (SSFS) file as a .rds:', fr: 'Ceci sauvegarde le fichier brut Croquis (SSFS) au format .rds\u00a0:', es: 'Esto guarda el archivo bruto Croquis (SSFS) como .rds:' },
+  export_download_croquis:{ en: 'Download Croquis file', fr: 'T\u00e9l\u00e9charger le fichier Croquis', es: 'Descargar archivo Croquis' },
+  export_save_note:       { en: 'Your transit system will be saved as an .rds file that you can reload later.', fr: 'Votre r\u00e9seau de transport sera sauvegard\u00e9 sous forme de fichier .rds que vous pourrez recharger plus tard.', es: 'Su red de transporte se guardar\u00e1 como un archivo .rds que puede recargar m\u00e1s tarde.' },
+
+  // -- Settings tab --
+  settings_title:         { en: 'settings', fr: 'param\u00e8tres', es: 'configuraci\u00f3n' },
+  settings_feed_info:     { en: 'Feed info', fr: 'Informations du flux', es: 'Informaci\u00f3n del feed' },
+  lbl_publisher_name:     { en: 'Publisher name', fr: 'Nom de l\u2019\u00e9diteur', es: 'Nombre del editor' },
+  pop_publisher_name:     { en: 'Full name of the organization that publishes the feed.', fr: 'Nom complet de l\u2019organisme qui publie le flux.', es: 'Nombre completo de la organizaci\u00f3n que publica el feed.' },
+  lbl_publisher_url:      { en: 'Publisher URL', fr: 'URL de l\u2019\u00e9diteur', es: 'URL del editor' },
+  pop_publisher_url:      { en: 'URL of the feed publishing organization\u2019s website.', fr: 'URL du site web de l\u2019organisme publiant le flux.', es: 'URL del sitio web de la organizaci\u00f3n que publica el feed.' },
+  lbl_feed_lang:          { en: 'Feed language', fr: 'Langue du flux', es: 'Idioma del feed' },
+  pop_feed_lang:          { en: 'Default language used for text in this dataset (IETF BCP 47 language code).', fr: 'Langue par d\u00e9faut utilis\u00e9e pour le texte dans ce jeu de donn\u00e9es (code IETF BCP 47).', es: 'Idioma predeterminado usado para el texto en este conjunto de datos (c\u00f3digo de idioma IETF BCP 47).' },
+  lbl_contact_email:      { en: 'Contact email', fr: 'Courriel de contact', es: 'Correo de contacto' },
+  pop_contact_email:      { en: 'Email address for communication regarding the GTFS dataset and data publishing practices.', fr: 'Adresse courriel pour les communications concernant le jeu de donn\u00e9es GTFS et les pratiques de publication.', es: 'Direcci\u00f3n de correo para comunicaciones sobre el conjunto de datos GTFS y las pr\u00e1cticas de publicaci\u00f3n.' },
+  lbl_feed_version:       { en: 'Version', fr: 'Version', es: 'Versi\u00f3n' },
+  pop_feed_version:       { en: 'String that indicates the current version of their GTFS dataset.', fr: 'Cha\u00eene indiquant la version actuelle du jeu de donn\u00e9es GTFS.', es: 'Cadena que indica la versi\u00f3n actual del conjunto de datos GTFS.' },
+  settings_advanced:      { en: 'Advanced settings', fr: 'Param\u00e8tres avanc\u00e9s', es: 'Configuraci\u00f3n avanzada' },
+  lbl_routing_server:     { en: 'Default routing server', fr: 'Serveur de routage par d\u00e9faut', es: 'Servidor de rutas por defecto' },
+  pop_routing_server:     { en: 'Routing server used to draw segments along the road network between stops and waypoints in the routes module.', fr: 'Serveur de routage utilis\u00e9 pour tracer les segments le long du r\u00e9seau routier entre les arr\u00eats et les points de passage dans le module Lignes.', es: 'Servidor de rutas utilizado para trazar segmentos a lo largo de la red vial entre paradas y puntos de paso en el m\u00f3dulo Rutas.' },
+  lbl_gtfs_workers:       { en: 'GTFS import workers', fr: 'Processus d\u2019importation GTFS', es: 'Procesos de importaci\u00f3n GTFS' },
+  pop_gtfs_workers:       { en: 'Number of worker processes to use during GTFS to SSFS conversion. Values above 1 speed up imports on Linux servers; Windows falls back to a single worker.', fr: 'Nombre de processus \u00e0 utiliser lors de la conversion GTFS vers SSFS. Les valeurs sup\u00e9rieures \u00e0 1 acc\u00e9l\u00e8rent l\u2019importation sur les serveurs Linux\u00a0; Windows utilise un seul processus.', es: 'N\u00famero de procesos a usar durante la conversi\u00f3n de GTFS a SSFS. Valores mayores a 1 aceleran la importaci\u00f3n en servidores Linux; Windows usa un solo proceso.' },
+  lbl_min_stop_dist:      { en: 'Minimum stop spacing (m)', fr: 'Espacement minimal des arr\u00eats (m)', es: 'Espaciamiento m\u00ednimo de paradas (m)' },
+  pop_min_stop_dist:      { en: 'Minimum distance in metres between auto-generated stops. Also used as the buffer distance around existing stops when determining eligible locations for new stops.', fr: 'Distance minimale en m\u00e8tres entre les arr\u00eats g\u00e9n\u00e9r\u00e9s automatiquement. \u00c9galement utilis\u00e9e comme distance tampon autour des arr\u00eats existants pour d\u00e9terminer les emplacements admissibles.', es: 'Distancia m\u00ednima en metros entre paradas generadas autom\u00e1ticamente. Tambi\u00e9n se usa como distancia de amortiguamiento alrededor de las paradas existentes para determinar ubicaciones elegibles.' },
+  lbl_osm_provider:       { en: 'OSM data provider', fr: 'Fournisseur de donn\u00e9es OSM', es: 'Proveedor de datos OSM' },
+  pop_osm_provider:       { en: 'OpenStreetMap data provider used when generating stops from road network data. Different providers have different regional coverage.', fr: 'Fournisseur de donn\u00e9es OpenStreetMap utilis\u00e9 lors de la g\u00e9n\u00e9ration d\u2019arr\u00eats \u00e0 partir des donn\u00e9es du r\u00e9seau routier. Les fournisseurs offrent des couvertures r\u00e9gionales diff\u00e9rentes.', es: 'Proveedor de datos OpenStreetMap usado al generar paradas a partir de datos de la red vial. Diferentes proveedores tienen diferente cobertura regional.' }
   // -- Add keys for other modules here as they are migrated --
 };
 

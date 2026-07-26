@@ -478,50 +478,81 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$span(icon("floppy-disk", class = "fa-solid")),
         value = "export",
         fluidPage(
-          titlePanel("export or save your project"),
+          tags$h2(span(
+            tr("export_title", lang_init),
+            `data-i18n` = "export_title"
+          )),
 
           # Export gtfs
           wellPanel(
-            h3("Export GTFS"),
-            textInput("exportgtfs_filename", "Filename:", value = "gtfs.zip"),
+            h3(span(
+              tr("export_gtfs_title", lang_init),
+              `data-i18n` = "export_gtfs_title"
+            )),
+            textInput(
+              "exportgtfs_filename",
+              label = span(
+                tr("lbl_filename", lang_init),
+                `data-i18n` = "lbl_filename"
+              ),
+              value = "gtfs.zip"
+            ),
             checkboxInput(
               "include_dist_traveled",
-              "Include shape_dist_traveled",
+              label = span(
+                tr("export_dist_traveled", lang_init),
+                `data-i18n` = "export_dist_traveled"
+              ),
               value = FALSE
             ),
-            tags$small(
-              "When checked, adds shape_dist_traveled to shapes and stop_times tables. This increases export time."
-            ),
+            tags$small(span(
+              tr("export_dist_desc", lang_init),
+              `data-i18n` = "export_dist_desc"
+            )),
             tags$br(),
             tags$br(),
             downloadButton(
               "download_gtfs",
-              "Download GTFS",
+              span(
+                tr("export_download_gtfs", lang_init),
+                `data-i18n` = "export_download_gtfs"
+              ),
               class = "btn-primary"
             )
           ),
 
           # Export raw ssfs
           wellPanel(
-            h3("Save your project to work on it later"),
-            p(
-              "This saves the raw Croquis (SSFS) file as a .rds:"
-            ),
+            h3(span(
+              tr("export_save_title", lang_init),
+              `data-i18n` = "export_save_title"
+            )),
+            p(span(
+              tr("export_save_desc", lang_init),
+              `data-i18n` = "export_save_desc"
+            )),
             textInput(
               "exportssfs_filename",
-              "Filename:",
+              label = span(
+                tr("lbl_filename", lang_init),
+                `data-i18n` = "lbl_filename"
+              ),
               value = "croquis.rds"
             ),
             downloadButton(
               "download_ssfs",
-              "Download Croquis file",
+              span(
+                tr("export_download_croquis", lang_init),
+                `data-i18n` = "export_download_croquis"
+              ),
               class = "btn-primary"
             ),
             tags$br(),
             tags$br(),
-            tags$small(
-              "Your transit system will be saved as an .rds file that you can reload later."
-            )
+            tags$small(span(
+              tr("export_save_note", lang_init),
+              `data-i18n` = "export_save_note"
+            ))
           )
         )
       ),
@@ -531,17 +562,27 @@ croquis <- function(ssfs = NULL, lang = "en") {
         tags$span(icon("gear")),
         value = "settings",
         fluidPage(
-          titlePanel("settings"),
-
+          tags$h2(span(
+            tr("settings_title", lang_init),
+            `data-i18n` = "settings_title"
+          )),
           wellPanel(
-            h3("Feed info"),
+            h3(span(
+              tr("settings_feed_info", lang_init),
+              `data-i18n` = "settings_feed_info"
+            )),
             textInput(
               "fi_feed_publisher_name",
               label = tagList(
-                "Publisher name",
+                span(
+                  tr("lbl_publisher_name", lang_init),
+                  `data-i18n` = "lbl_publisher_name"
+                ),
                 info_popover(
-                  "Full name of the organization that publishes the feed.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_publisher_name", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_publisher_name",
+                  lang = lang_init
                 )
               ),
               value = "Comotive"
@@ -549,10 +590,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
             textInput(
               "fi_feed_publisher_url",
               label = tagList(
-                "Publisher URL",
+                span(
+                  tr("lbl_publisher_url", lang_init),
+                  `data-i18n` = "lbl_publisher_url"
+                ),
                 info_popover(
-                  "URL of the feed publishing organization's website.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_publisher_url", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_publisher_url",
+                  lang = lang_init
                 )
               ),
               value = "https://www.comotive.net"
@@ -560,10 +606,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
             selectInput(
               "fi_feed_lang",
               label = tagList(
-                "Feed language",
+                span(
+                  tr("lbl_feed_lang", lang_init),
+                  `data-i18n` = "lbl_feed_lang"
+                ),
                 info_popover(
-                  "Default language used for text in this dataset (IETF BCP 47 language code).",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_feed_lang", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_feed_lang",
+                  lang = lang_init
                 )
               ),
               choices = local({
@@ -579,10 +630,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
             textInput(
               "fi_feed_contact_email",
               label = tagList(
-                "Contact email",
+                span(
+                  tr("lbl_contact_email", lang_init),
+                  `data-i18n` = "lbl_contact_email"
+                ),
                 info_popover(
-                  "Email address for communication regarding the GTFS dataset and data publishing practices.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_contact_email", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_contact_email",
+                  lang = lang_init
                 )
               ),
               value = "julian@comotive.net"
@@ -590,10 +646,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
             textInput(
               "fi_feed_version",
               label = tagList(
-                "Version",
+                span(
+                  tr("lbl_feed_version", lang_init),
+                  `data-i18n` = "lbl_feed_version"
+                ),
                 info_popover(
-                  "String that indicates the current version of their GTFS dataset.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_feed_version", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_feed_version",
+                  lang = lang_init
                 )
               ),
               value = paste0("v", Sys.Date())
@@ -602,13 +663,21 @@ croquis <- function(ssfs = NULL, lang = "en") {
 
           # Advanced settings panel
           wellPanel(
-            h3("Advanced settings"),
+            h3(span(
+              tr("settings_advanced", lang_init),
+              `data-i18n` = "settings_advanced"
+            )),
             selectInput(
               "settings_routing_server",
               label = tagList(
-                "Default routing server",
+                span(
+                  tr("lbl_routing_server", lang_init),
+                  `data-i18n` = "lbl_routing_server"
+                ),
                 info_popover(
-                  "Routing server used to draw segments along the road network between stops and waypoints in the routes module."
+                  tr("pop_routing_server", lang_init),
+                  key = "pop_routing_server",
+                  lang = lang_init
                 )
               ),
               choices = c("OSRM", "Valhalla"),
@@ -617,9 +686,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
             numericInput(
               "settings_gtfs_workers",
               label = tagList(
-                "GTFS import workers",
+                span(
+                  tr("lbl_gtfs_workers", lang_init),
+                  `data-i18n` = "lbl_gtfs_workers"
+                ),
                 info_popover(
-                  "Number of worker processes to use during GTFS to SSFS conversion. Values above 1 speed up imports on Linux servers; Windows falls back to a single worker."
+                  tr("pop_gtfs_workers", lang_init),
+                  key = "pop_gtfs_workers",
+                  lang = lang_init
                 )
               ),
               value = default_gtfs_workers,
@@ -635,9 +709,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
             numericInput(
               "settings_min_stop_dist",
               label = tagList(
-                "Minimum stop spacing (m)",
+                span(
+                  tr("lbl_min_stop_dist", lang_init),
+                  `data-i18n` = "lbl_min_stop_dist"
+                ),
                 info_popover(
-                  "Minimum distance in metres between auto-generated stops. Also used as the buffer distance around existing stops when determining eligible locations for new stops."
+                  tr("pop_min_stop_dist", lang_init),
+                  key = "pop_min_stop_dist",
+                  lang = lang_init
                 )
               ),
               value = 200,
@@ -648,9 +727,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
             selectInput(
               "settings_osm_provider",
               label = tagList(
-                "OSM extract provider",
+                span(
+                  tr("lbl_osm_provider", lang_init),
+                  `data-i18n` = "lbl_osm_provider"
+                ),
                 info_popover(
-                  "OpenStreetMap data provider used when generating stops from road network data. Different providers have different regional coverage."
+                  tr("pop_osm_provider", lang_init),
+                  key = "pop_osm_provider",
+                  lang = lang_init
                 )
               ),
               choices = suppressMessages(

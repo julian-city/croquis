@@ -2571,11 +2571,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         new_first_sec <- sched_parse_time_to_seconds(new_first_dep)
         if (new_first_sec <= prev_last_sec + 59) {
           showNotification(
-            paste0(
-              "Must start after ",
-              prev_last,
-              " (end of previous window)."
-            ),
+            sprintf(tr("notif_sched_sw_start_after", lang()), prev_last),
             type = "error"
           )
           return()
@@ -2588,7 +2584,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         new_last_sec <- sched_parse_time_to_seconds(new_last_dep)
         if (new_last_sec >= next_first_sec - 59) {
           showNotification(
-            paste0("Must end before ", next_first, " (start of next window)."),
+            sprintf(tr("notif_sched_sw_end_before", lang()), next_first),
             type = "error"
           )
           return()
@@ -2799,7 +2795,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       itin_spans <- itin_spans[order(itin_spans$service_window), ]
 
       if (idx < 1 || idx > nrow(itin_spans)) {
-        showNotification("Span not found.", type = "error")
+        showNotification(tr("notif_sched_sw_not_found", lang()), type = "error")
         return()
       }
 
@@ -3688,7 +3684,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         ),
         error = function(e) {
           showNotification(
-            paste0("Error: ", e$message),
+            sprintf(tr("notif_sched_error", lang()), e$message),
             type = "error"
           )
           NULL
