@@ -3,7 +3,7 @@
 #' Launches the Croquis Shiny app
 #'
 #' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
-#' #' @param lang UI language code: `"en"` (English, default), `"fr"` (French),
+#' @param lang UI language code: `"en"` (English, default), `"fr"` (French),
 #'   or `"es"` (Spanish).  Sets the initial language for all interface elements.
 #'   The language can also be changed mid-session via the selector in the
 #'   top-right corner.  Additional languages can be registered in

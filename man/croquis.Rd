@@ -4,10 +4,16 @@
 \alias{croquis}
 \title{Croquis: transit sketch planning Shiny app}
 \usage{
-croquis(ssfs = NULL)
+croquis(ssfs = NULL, lang = "en")
 }
 \arguments{
 \item{ssfs}{an optional SSFS to load into the app on launch. Defaults to NULL.}
+
+\item{lang}{UI language code: \code{"en"} (English, default), \code{"fr"} (French),
+or \code{"es"} (Spanish).  Sets the initial language for all interface elements.
+The language can also be changed mid-session via the selector in the
+top-right corner.  Additional languages can be registered in
+\code{SUPPORTED_LANGS} (see \code{R/i18n.R}).}
 }
 \value{
 Does not inherently return anything
@@ -22,5 +28,8 @@ croquis()
 
 #Launch the app with a SSFS project pre-loaded
 croquis(stm_metro)
+
+#Launch the app in French
+croquis(lang = "fr")
 }
 }

@@ -1,11 +1,11 @@
-# ── Croquis i18n infrastructure ─────────────────────────────────────────
+# == Croquis i18n infrastructure ===================================
 #
 # Custom dictionary-based internationalisation for the Croquis Shiny app.
 # Each translatable string is stored as a named character vector keyed by
 # ISO 639-1 language code (en / fr / es / ...).  The helper `tr()` performs
 # the lookup at render time.
 #
-# ── Adding a new language ──
+# -- Adding a new language --
 #
 #   1. Add the language code and display label to `SUPPORTED_LANGS` below.
 #   2. Add a new element to every vector in `i18n_dict` with the translated
@@ -13,34 +13,34 @@
 #      language fall back to English automatically.
 #   3. Mirror the new entries in `inst/www/js/i18n.js` (only the keys used
 #      in static UI and JS confirm dialogs need to be mirrored).
-#   4. No other code changes are needed — the language selector, `match.arg`
+#   4. No other code changes are needed - the language selector, `match.arg`
 #      validation, and JS sync all derive from `SUPPORTED_LANGS`.
 #
-# ── Adding a new translatable string ──
+# -- Adding a new translatable string --
 #
 #   1. Pick a snake_case key.
 #   2. Add it to `i18n_dict` with at least an `en` entry.
 #   3. Use `tr("key", lang)` in R code or `jsTr("key")` in JS code.
-#   4. Untranslated keys render as [key] — easy to spot during development.
+#   4. Untranslated keys render as [key] - easy to spot during development.
 #
-# ── R package notes (per https://r-pkgs.org/code.html) ──
+# --- R package notes (per https://r-pkgs.org/code.html) ---
 #
-#   • All non-ASCII characters use \uXXXX escapes for CRAN portability.
-#   • `i18n_dict` and `SUPPORTED_LANGS` are top-level objects evaluated at
+#   * All non-ASCII characters use \uXXXX escapes for CRAN portability.
+#   * `i18n_dict` and `SUPPORTED_LANGS` are top-level objects evaluated at
 #     build time.  This is intentional and correct: the dictionary is static
 #     data that does not depend on the user's system.
-#   • `tr()` is a function and executes at run time, which is the correct
+#   * `tr()` is a function and executes at run time, which is the correct
 #     pattern for code that reads from the dictionary.
-#   • Neither `i18n_dict`, `SUPPORTED_LANGS`, nor `tr()` are exported.
+#   * Neither `i18n_dict`, `SUPPORTED_LANGS`, nor `tr()` are exported.
 #     They are package-internal, used only by the Shiny UI layer.
 #
 
-# ── Supported languages ─────────────────────────────────────────────────
+# --- Supported languages --------------
 #
 # Central registry of supported languages.  Used by:
-#   • `croquis(lang = ...)` — `match.arg()` validation
-#   • The language `<select>` in the navbar — option generation
-#   • JS `croquisLang` initialisation
+#   * `croquis(lang = ...)` - `match.arg()` validation
+#   * The language `<select>` in the navbar - option generation
+#   * JS `croquisLang` initialisation
 #
 # To add a language, add one entry here (code = "LABEL") and translations
 # to `i18n_dict`.  Everything else adapts automatically.
@@ -58,7 +58,7 @@ SUPPORTED_LANGS <- c(
   es = "ES"
 )
 
-# ── Translation dictionary ──────────────────────────────────────────────
+# --- Translation dictionary --------------------------------
 
 #' i18n translation dictionary
 #'
@@ -68,16 +68,16 @@ SUPPORTED_LANGS <- c(
 #' @keywords internal
 #' @noRd
 i18n_dict <- list(
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # Navigation tabs
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   tab_stops = c(en = "stops", fr = "arr\u00eats", es = "paradas"),
   tab_routes = c(en = "routes", fr = "lignes", es = "rutas"),
   tab_schedule = c(en = "schedule", fr = "horaires", es = "horarios"),
 
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # Shared / common
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   btn_save = c(en = "Save", fr = "Enregistrer", es = "Guardar"),
   btn_cancel = c(en = "Cancel", fr = "Annuler", es = "Cancelar"),
   btn_create = c(en = "Create", fr = "Cr\u00e9er", es = "Crear"),
@@ -99,9 +99,9 @@ i18n_dict <- list(
     es = "Itinerarios"
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # home module (static UI, translated JS updateI18n)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
 
   home_title = c(en = "Home", fr = "Accueil", es = "Inicio"),
 
@@ -163,7 +163,7 @@ i18n_dict <- list(
     es = "Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo Ligne Jaune es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis."
   ),
 
-  # ── Project Location panel ─────────────────────────────────────────────
+  # -- Project Location panel --------------
   loc_title = c(
     en = "Project Location",
     fr = "Emplacement du projet",
@@ -240,7 +240,7 @@ i18n_dict <- list(
     es = "La latitud debe estar entre -90 y 90, la longitud entre -180 y 180"
   ),
 
-  # ── Popover content ────────────────────────────────────────────────────
+  # -- Popover content ------------------------------------------------
   # lbl_read_more is shared app-wide (used inside info_popover for the
   # link line); mirrored in inst/www/js/i18n.js.
   lbl_read_more = c(
@@ -311,7 +311,7 @@ i18n_dict <- list(
     es = "Error al cargar %s: %s"
   ),
 
-  # ── Agencies panel ─────────────────────────────────────────────────────
+  # -- Agencies panel -----------------------------------------------
   # Static header (data-i18n + JS mirror)
   agencies_title = c(en = "Agencies", fr = "Agences", es = "Agencias"),
 
@@ -379,7 +379,7 @@ i18n_dict <- list(
     es = "\u00bfEliminar esta agencia? Las rutas que la referencian deben eliminarse primero."
   ),
 
-  # Notifications — Agencies
+  # Notifications - Agencies
   notif_agency_id_empty = c(
     en = "Agency ID cannot be empty.",
     fr = "L'ID de l'agence ne peut pas \u00eatre vide.",
@@ -416,7 +416,7 @@ i18n_dict <- list(
     es = "No se puede eliminar la agencia '%s'. Una o m\u00e1s rutas la referencian. Elimine o reasigne las rutas primero."
   ),
 
-  # ── Instructions panel ─────────────────────────────────────────────────
+  # -- Instructions panel -------------------------------------------------
   # Rendered fully server-side (output$home_instructions_ui) via the
   # reactive tr(lang()) pattern; R-only, no JS mirror. Bullet keys follow
   # the strict naming scheme instr_s{step}_li{n} consumed programmatically
@@ -560,9 +560,9 @@ i18n_dict <- list(
     es = "para exportar un GTFS o guardar su croquis en formato .rds para trabajar en \u00e9l m\u00e1s tarde"
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # Stops module - panel chrome (static UI, translated via JS updateI18n)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   stops_title = c(en = "stops", fr = "arr\u00eats", es = "paradas"),
   stops_panel_title = c(en = "Stops", fr = "Arr\u00eats", es = "Paradas"),
   stops_search = c(
@@ -599,9 +599,9 @@ i18n_dict <- list(
     es = "Genere autom\u00e1ticamente paradas dentro de una zona dibujada. Las paradas se colocan en las intersecciones seg\u00fan el espaciamiento m\u00ednimo definido en la {icon} configuraci\u00f3n."
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
-  # Stops module — dynamic content (translated via tr() in renderUI)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
+  # Stops module - dynamic content (translated via tr() in renderUI)
+  # ========================================================================
 
   # Stop list
   stops_add_new = c(
@@ -692,7 +692,7 @@ i18n_dict <- list(
   ),
 
   # =============
-  # Descriptive text — Intro panel
+  # Descriptive text - Intro panel
   # ========
   intro_tagline = c(
     en = "Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator.",
@@ -852,9 +852,9 @@ i18n_dict <- list(
     es = "Error al exportar el archivo: %s"
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
-  # Routes module — panel chrome (static UI, translated via JS updateI18n)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
+  # Routes module - panel chrome (static UI, translated via JS updateI18n)
+  # ========================================================================
   routes_title = c(
     en = "routes",
     fr = "lignes",
@@ -881,9 +881,9 @@ i18n_dict <- list(
     es = "El modo red traza la ruta a lo largo de las calles. El modo libre dibuja l\u00edneas rectas entre paradas y puntos de paso."
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
-  # Routes module — dynamic content (translated via tr() in renderUI)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
+  # Routes module - dynamic content (translated via tr() in renderUI)
+  # ========================================================================
 
   # Route list
   routes_add_new = c(
@@ -966,7 +966,7 @@ i18n_dict <- list(
     es = "Dibujo libre"
   ),
 
-  # ── Route form labels ──────────────────────────────────────────────────
+  # -- Route form labels --------------------------------------------------
   lbl_route_id = c(
     en = "Route ID",
     fr = "ID de la ligne",
@@ -1003,7 +1003,7 @@ i18n_dict <- list(
     es = "Color del texto"
   ),
 
-  # ── Route form popovers ────────────────────────────────────────────────
+  # -- Route form popovers ------------------------------------------------
   pop_route_id = c(
     en = "Unique identifier for route.",
     fr = "Identifiant unique de la ligne.",
@@ -1040,7 +1040,7 @@ i18n_dict <- list(
     es = "Color legible para el texto presentado sobre un fondo del color de la ruta."
   ),
 
-  # ── Route form placeholders ────────────────────────────────────────────
+  # -- Route form placeholders --------------------------------------------
   route_ph_id = c(
     en = "e.g., 14",
     fr = "p.\u00a0ex. 18",
@@ -1057,7 +1057,7 @@ i18n_dict <- list(
     es = "p.\u00a0ej. Hastings / UBC"
   ),
 
-  # ── Route type options ─────────────────────────────────────────────────
+  # -- Route type options -------------------------------------------------
   route_type_bus = c(
     en = "Bus",
     fr = "Bus",
@@ -1109,7 +1109,7 @@ i18n_dict <- list(
     es = "Monorriel"
   ),
 
-  # ── Itinerary form labels ──────────────────────────────────────────────
+  # -- Itinerary form labels ----------------------------------------------
   lbl_itin_id = c(
     en = "Itinerary ID",
     fr = "ID du parcours type",
@@ -1126,7 +1126,7 @@ i18n_dict <- list(
     es = "Letrero de destino"
   ),
 
-  # ── Itinerary form popovers ───────────────────────────────────────────
+  # -- Itinerary form popovers -------------------------------------------
   pop_itin_id = c(
     en = "Unique ID for this itinerary or variant of the route. Will be used as the trip_id prefix in exported GTFS for trips of this itinerary.",
     fr = "Identifiant unique de ce parcours type ou variante de la ligne. Sera utilis\u00e9 comme pr\u00e9fixe de trip_id dans le GTFS export\u00e9 pour les voyages de ce parcours type.",
@@ -1143,7 +1143,7 @@ i18n_dict <- list(
     es = "Texto que aparece en la se\u00f1alizaci\u00f3n identificando el destino del viaje para los usuarios."
   ),
 
-  # ── Direction options ──────────────────────────────────────────────────
+  # -- Direction options --------------------------------------------------
   lbl_outbound = c(
     en = "Outbound",
     fr = "Aller",
@@ -1157,7 +1157,7 @@ i18n_dict <- list(
   lbl_dir_out = c(en = "Out", fr = "Aller", es = "Ida"),
   lbl_dir_in = c(en = "In", fr = "Retour", es = "Vuelta"),
 
-  # ── Itinerary placeholder ──────────────────────────────────────────────
+  # -- Itinerary placeholder ----------------------------------------------
   itin_ph_headsign = c(
     en = "e.g., Eastbound",
     fr = "p.\u00a0ex. Est",
@@ -1177,7 +1177,7 @@ i18n_dict <- list(
     es = "No hay datos disponibles en la tabla"
   ),
 
-  # ── JS confirm dialogs (mirrored in inst/www/js/i18n.js) ───────────────
+  # -- JS confirm dialogs (mirrored in inst/www/js/i18n.js) ---------------
   confirm_delete_route = c(
     en = "Delete this route? Itineraries must be deleted first.",
     fr = "Supprimer cette ligne\u00a0? Les parcours types doivent d'abord \u00eatre supprim\u00e9s.",
@@ -1189,7 +1189,7 @@ i18n_dict <- list(
     es = "\u00bfEliminar este itinerario y sus datos asociados?"
   ),
 
-  # ── Notifications — Routes ─────────────────────────────────────────────
+  # -- Notifications - Routes ---------------------------------------------
   notif_route_id_empty = c(
     en = "Route ID cannot be empty.",
     fr = "L'ID de la ligne ne peut pas \u00eatre vide.",
@@ -1236,7 +1236,7 @@ i18n_dict <- list(
     es = "Ruta duplicada como: %s"
   ),
 
-  # ── Notifications — Itineraries ─────────────────────────────────────────
+  # -- Notifications - Itineraries -----------------------------------------
   notif_itin_id_empty = c(
     en = "Itinerary ID cannot be empty.",
     fr = "L'ID du parcours type ne peut pas \u00eatre vide.",
@@ -1293,7 +1293,7 @@ i18n_dict <- list(
     es = "\u00daltimo nodo eliminado"
   ),
 
-  # ── Notifications — Waypoints ───────────────────────────────────────────
+  # -- Notifications - Waypoints -------------------------------------------
   notif_wp_gone = c(
     en = "Selected waypoint no longer exists.",
     fr = "Le point de passage s\u00e9lectionn\u00e9 n'existe plus.",
@@ -1320,7 +1320,7 @@ i18n_dict <- list(
     es = "Punto de paso movido a la parada y propiedades de parada adoptadas."
   ),
 
-  # ── Notifications — Stop interaction (routes context) ───────────────────
+  # -- Notifications - Stop interaction (routes context) -------------------
   notif_stop_in_seq = c(
     en = "Stop already in route stop sequence. Cannot add stop again.",
     fr = "L'arr\u00eat est d\u00e9j\u00e0 dans la s\u00e9quence d'arr\u00eats de la ligne. Impossible de l'ajouter \u00e0 nouveau.",
@@ -1332,9 +1332,9 @@ i18n_dict <- list(
     es = "Editando itinerario: %s"
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
-  # Schedule module — panel chrome (static UI, translated via JS updateI18n)
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
+  # Schedule module - panel chrome (static UI, translated via JS updateI18n)
+  # ========================================================================
   sched_title = c(
     en = "schedule",
     fr = "horaires",
@@ -1453,7 +1453,7 @@ i18n_dict <- list(
     fr = "V\u00e9hicules-km quotidiens (en service)\u00a0: %s",
     es = "Veh\u00edculos-km diarios (en servicio): %s"
   ),
-  # ── Schedule module — itinerary-level editing panel ────────────────────
+  # -- Schedule module - itinerary-level editing panel --------------------
 
   sched_empty_itin_editing = c(
     en = "Click on an itinerary to edit its headways and speeds.",
@@ -1507,7 +1507,7 @@ i18n_dict <- list(
   ),
   pop_sched_itin_preset = c(
     en = "A service level preset defines a headway pattern by hour of day, reusable across itineraries. Applying one here will overwrite the hourly headways of this itinerary for the selected service. The presets manager is at the bottom right of this module.",
-    fr = "Un niveau de service prédéfini s'agit d'une combinaison d'intervalles par heure de la journ\u00e9e, r\u00e9utilisable entre les parcours types. Son application ici \u00e9crasera les intervalles horaires de ce parcours type pour le service s\u00e9lectionn\u00e9. Le gestionnaire de niveaux de service pr\u00e9d\u00e9finis se trouve en bas \u00e0 droite de ce module.",
+    fr = "Un niveau de service pr\u00e9d\u00e9fini s'agit d'une combinaison d'intervalles par heure de la journ\u00e9e, r\u00e9utilisable entre les parcours types. Son application ici \u00e9crasera les intervalles horaires de ce parcours type pour le service s\u00e9lectionn\u00e9. Le gestionnaire de niveaux de service pr\u00e9d\u00e9finis se trouve en bas \u00e0 droite de ce module.",
     es = "Un nivel de servicio predefinido es un patr\u00f3n de intervalos por hora del d\u00eda, reutilizable entre itinerarios. Aplicarlo aqu\u00ed sobrescribir\u00e1 los intervalos por hora de este itinerario para el servicio seleccionado. El gestor de niveles de servicio predefinidos se encuentra abajo a la derecha de este m\u00f3dulo."
   ),
   sched_apply_hdwy_label = c(
@@ -1560,7 +1560,7 @@ i18n_dict <- list(
     fr = "Enregistrer comme profil",
     es = "Guardar como perfil"
   ),
-  # ── Schedule module — Calendar and Presets modals ──────────────────────
+  # -- Schedule module - Calendar and Presets modals ----------------------
 
   # Day abbreviations (used in calendar table headers and checkbox labels)
   day_mon = c(en = "Mon", fr = "Lun", es = "Lun"),
@@ -1710,7 +1710,7 @@ i18n_dict <- list(
     es = "p. ej. Frecuente en hora punta"
   ),
 
-  # ── Schedule module — speed profile + map popup ────────────────────────
+  # -- Schedule module - speed profile + map popup ------------------------
 
   sched_sp_prefix = c(
     en = "Speed profile: %s",
@@ -1792,11 +1792,11 @@ i18n_dict <- list(
     es = "Itinerarios: "
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
-  # Schedule module — notifications
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
+  # Schedule module - notifications
+  # ========================================================================
 
-  # --- Span CRUD ─------------
+  # --- Span CRUD -------------
   notif_sched_invalid_time = c(
     en = "Invalid time format. Use HH:MM:SS (00-30:00-59:00-59).",
     fr = "Format d'heure invalide. Utilisez HH:MM:SS (00-30:00-59:00-59).",
@@ -1843,7 +1843,7 @@ i18n_dict <- list(
     es = "Debe terminar antes de %s (inicio de la ventana siguiente)."
   ),
 
-  # ── Batch actions (route-level) ────────────────────────────────────────
+  # -- Batch actions (route-level) ----------------------------------------
   notif_sched_batch_span = c(
     en = "Span %s - %s applied to %s itinerary(ies) for service %s",
     fr = "Plage %s - %s appliqu\u00e9e \u00e0 %s parcours type(s) pour le service %s",
@@ -1875,7 +1875,7 @@ i18n_dict <- list(
     es = "Perfil seleccionado no encontrado."
   ),
 
-  # ── Itinerary-level actions ────────────────────────────────────────────
+  # -- Itinerary-level actions --------------------------------------------
   notif_sched_itin_preset = c(
     en = "Applied '%s' to %s. %s hour entries updated.",
     fr = "\u00ab\u00a0%s\u00a0\u00bb appliqu\u00e9 \u00e0 %s. %s entr\u00e9es horaires mises \u00e0 jour.",
@@ -1892,7 +1892,7 @@ i18n_dict <- list(
     es = "Velocidad establecida a %s km/h para %s entradas en %s."
   ),
 
-  # ── HSH editing ────────────────────────────────────────────────────────
+  # -- HSH editing --------------------------------------------------------
   notif_sched_hdwy_range = c(
     en = "Headway must be between 1 and 119 minutes.",
     fr = "L'intervalle doit \u00eatre entre 1 et 119 minutes.",
@@ -1919,7 +1919,7 @@ i18n_dict <- list(
     es = "Actualizado %s: intervalo = %s, velocidad = %s km/h"
   ),
 
-  # ── Save as preset ────────────────────────────────────────────────────
+  # -- Save as preset ----------------------------------------------------
   notif_sched_preset_name_empty = c(
     en = "Preset name cannot be empty.",
     fr = "Le nom du profil ne peut pas \u00eatre vide.",
@@ -1936,7 +1936,7 @@ i18n_dict <- list(
     es = "Guardado como '%s - %s' con %s horas."
   ),
 
-  # ── Calendar CRUD ──────────────────────────────────────────────────────
+  # -- Calendar CRUD ------------------------------------------------------
   notif_sched_cal_id_empty = c(
     en = "Service ID cannot be empty.",
     fr = "L'ID de service ne peut pas \u00eatre vide.",
@@ -2003,7 +2003,7 @@ i18n_dict <- list(
     es = "Error: %s"
   ),
 
-  # ── Preset CRUD ────────────────────────────────────────────────────────
+  # -- Preset CRUD --------------------------------------------------------
   notif_sched_preset_created = c(
     en = "Preset '%s - %s' created.",
     fr = "Profil \u00ab\u00a0%s - %s\u00a0\u00bb cr\u00e9\u00e9.",
@@ -2055,7 +2055,7 @@ i18n_dict <- list(
     es = "Hora %s eliminada."
   ),
 
-  # ── JS confirm dialogs (mirrored in i18n.js) ──────────────────────────
+  # -- JS confirm dialogs (mirrored in i18n.js) --------------------------
   confirm_delete_sw = c(
     en = "Delete this service window and associated headway by hour entries?",
     fr = "Supprimer cette plage de service et les entr\u00e9es d'intervalle par heure associ\u00e9es\u00a0?",
@@ -2071,9 +2071,9 @@ i18n_dict <- list(
     fr = "Supprimer le profil \u00ab\u00a0{id}\u00a0\u00bb\u00a0?",
     es = "\u00bfEliminar el perfil \"{id}\"?"
   ),
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # Save / Export tab
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   export_title = c(
     en = "export or save your project",
     fr = "exporter ou sauvegarder votre projet",
@@ -2125,16 +2125,16 @@ i18n_dict <- list(
     es = "Su red de transporte se guardar\u00e1 como un archivo .rds que puede recargar m\u00e1s tarde."
   ),
 
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   # Settings tab
-  # ════════════════════════════════════════════════════════════════════════
+  # ========================================================================
   settings_title = c(
     en = "settings",
     fr = "param\u00e8tres",
     es = "configuraci\u00f3n"
   ),
 
-  # ── Feed info ──────────────────────────────────────────────────────────
+  # -- Feed info ----------------------------------------------------------
   settings_feed_info = c(
     en = "Feed info",
     fr = "Informations du flux",
@@ -2191,7 +2191,7 @@ i18n_dict <- list(
     es = "Cadena que indica la versi\u00f3n actual del conjunto de datos GTFS."
   ),
 
-  # ── Advanced settings ──────────────────────────────────────────────────
+  # -- Advanced settings --------------------------------------------------
   settings_advanced = c(
     en = "Advanced settings",
     fr = "Param\u00e8tres avanc\u00e9s",
@@ -2265,7 +2265,7 @@ build_lang_options <- function(selected = "en") {
 
 #' Translate a UI string
 #'
-#' Looks up `key` in [i18n_dict] and returns the value for `lang`,
+#' Looks up `key` in `i18n_dict` and returns the value for `lang`,
 #' falling back to English if the requested language is missing.
 #' Returns `[key]` when the key itself is not found, making
 #' untranslated strings visually obvious during development.
