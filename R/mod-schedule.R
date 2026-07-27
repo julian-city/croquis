@@ -2401,9 +2401,9 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       showNotification(
         sprintf(
-          tr("notif_sched_itin_preset", lang()),
+          tr("notif_sched_batch_preset", lang()),
           pattern_name,
-          editing_itin,
+          length(route_itin_ids),
           updated_count
         ),
         type = "message"
@@ -2895,9 +2895,9 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       showNotification(
         sprintf(
-          tr("notif_sched_batch_preset", lang()),
+          tr("notif_sched_itin_preset", lang()),
           pattern_name,
-          length(route_itin_ids),
+          editing_itin,
           updated_count
         ),
         type = "message"

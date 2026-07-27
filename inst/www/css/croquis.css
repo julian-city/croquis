@@ -116,6 +116,19 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* Notification panel position */
+#shiny-notification-panel {
+  position: fixed;
+  top: 65px;      /* see navbar note below */
+  bottom: auto;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 450px;
+}
+
 /* Floating panel styles for map-centric modules */
 .map-container {
   position: relative;
