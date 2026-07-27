@@ -1,11 +1,16 @@
 # UI
-stopsUI <- function(id) {
+stopsUI <- function(id, lang = "en") {
   ns <- NS(id)
 
   tabPanel(
-    "stops",
+    title = tags$span(
+      #icon("map-marker-alt"),
+      #" ",
+      span(tr("tab_stops", lang), `data-i18n` = "tab_stops")
+    ),
+    value = "stops",
     fluidPage(
-      titlePanel("stops"),
+      tags$h2(span(tr("stops_title", lang), `data-i18n` = "stops_title")),
       # Map container with floating panels
       div(
         class = "map-container",
@@ -23,7 +28,7 @@ stopsUI <- function(id) {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('stops-control-panel')",
-            h4("Stops"),
+            h4(span("Stops", `data-i18n` = "stops_panel_title")),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -37,7 +42,8 @@ stopsUI <- function(id) {
               tags$input(
                 type = "text",
                 id = "stop_search",
-                placeholder = "Search stops..."
+                placeholder = "Search stops...",
+                `data-i18n-placeholder` = "stops_search"
               )
             ),
 
@@ -56,7 +62,10 @@ stopsUI <- function(id) {
           div(
             class = "floating-panel-header",
             onclick = "togglePanel('stops-import-export-panel')",
-            h4("Import / Export / Generate"),
+            h4(span(
+              "Import / Export / Generate",
+              `data-i18n` = "stops_ie_title"
+            )),
             tags$button(
               class = "floating-panel-toggle",
               htmltools::HTML("&minus;")
@@ -64,20 +73,27 @@ stopsUI <- function(id) {
           ),
           div(
             class = "floating-panel-content",
-            h5("Import Stops"),
-            fileInput(
-              ns("stops_import_file"),
-              label = NULL,
-              accept = c(".geojson", ".kml"),
-              placeholder = "GeoJSON or KML file"
+            h5(span("Import Stops", `data-i18n` = "stops_import_title")),
+            i18n_placeholder(
+              fileInput(
+                ns("stops_import_file"),
+                label = NULL,
+                accept = c(".geojson", ".kml"),
+                buttonLabel = span(
+                  tr("btn_browse", lang),
+                  `data-i18n` = "btn_browse"
+                ),
+                placeholder = tr("stops_import_ph", lang)
+              ),
+              "stops_import_ph"
             ),
             actionButton(
               ns("stops_import_confirm"),
-              "Import",
+              span(tr("btn_import", lang), `data-i18n` = "btn_import"),
               class = "btn-success btn-sm"
             ),
             hr(),
-            h5("Export Stops"),
+            h5(span("Export Stops", `data-i18n` = "stops_export_title")),
             selectInput(
               ns("stops_export_format"),
               label = NULL,
@@ -90,21 +106,17 @@ stopsUI <- function(id) {
             ),
             downloadButton(
               ns("stops_export_download"),
-              "Download",
+              span(tr("btn_download", lang), `data-i18n` = "btn_download"),
               class = "btn-primary btn-sm"
             ),
             hr(),
             h5(tagList(
-              "Auto-generate stops",
+              span("Auto-generate stops", `data-i18n` = "stops_autogen_title"),
               info_popover(
-                paste(
-                  "Automatically generate stops at road intersections",
-                  "within a drawn zone using OpenStreetMap data.",
-                  "Stops are placed at intersections based on minimum",
-                  "stop spacing set in",
-                  icon("gear"),
-                  "Settings."
-                )
+                tr("stops_autogen_pop", lang),
+                key = "stops_autogen_pop",
+                lang = lang,
+                tokens = list(icon = as.character(icon("gear")))
               )
             )),
             uiOutput(ns("stops_generate_ui"))
@@ -122,7 +134,8 @@ stopsServer <- function(
   map_center,
   current_zoom,
   min_stop_dist,
-  osm_provider
+  osm_provider,
+  lang
 ) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -338,13 +351,16 @@ stopsServer <- function(
             stops_df$itin_ids
           )
 
+          itin_label <- tr("stops_hover_itins", isolate(lang()))
           hover_labels <- lapply(
             paste0(
               "<span style='font-size:11px;'><b>",
               htmltools::htmlEscape(stops_df$stop_id),
               "</b> \u2014 ",
               htmltools::htmlEscape(stops_df$stop_name),
-              "<br>Itineraries: ",
+              "<br>",
+              htmltools::htmlEscape(itin_label),
+              ": ",
               htmltools::htmlEscape(itin_text),
               "</span>"
             ),
@@ -467,18 +483,19 @@ stopsServer <- function(
       }
     })
 
-    # Render editing instruction
+    # Render stops editing instructions
     output$stops_editing_instruction <- renderUI({
+      current_lang <- lang()
       if (!is.null(stops_editing_id()) || stops_adding_new()) {
         if (is.null(stops_temp_point())) {
           div(
             class = "editing-instruction",
-            "Click on the map to place the stop"
+            tr("stops_click_to_place", current_lang)
           )
         } else {
           div(
             class = "editing-instruction",
-            "Drag the marker to adjust position"
+            tr("stops_drag_to_adjust", current_lang)
           )
         }
       } else {
@@ -494,11 +511,16 @@ stopsServer <- function(
       edit_id_val <- stops_edit_stop_id()
       edit_name_val <- stops_edit_stop_name()
       search_term <- stops_search_term()
+      current_lang <- lang()
 
       rows <- list()
 
       if (adding_new) {
-        rows[[length(rows) + 1]] <- build_stop_form(edit_id_val, edit_name_val)
+        rows[[length(rows) + 1]] <- build_stop_form(
+          edit_id_val,
+          edit_name_val,
+          lang = current_lang
+        )
       } else {
         rows[[length(rows) + 1]] <- div(
           class = "stop-list-row add-row",
@@ -506,10 +528,10 @@ stopsServer <- function(
           tags$button(
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingStop()",
-            title = "Add new stop",
+            title = tr("stops_add_new", current_lang),
             htmltools::HTML("+")
           ),
-          span(style = "margin-left: 8px;", "Add new stop")
+          span(style = "margin-left: 8px;", tr("stops_add_new", current_lang))
         )
       }
 
@@ -517,7 +539,8 @@ stopsServer <- function(
         rows[[length(rows) + 1]] <- build_stop_form(
           edit_id_val,
           edit_name_val,
-          is_new = FALSE
+          is_new = FALSE,
+          lang = current_lang
         )
       }
 
@@ -538,6 +561,11 @@ stopsServer <- function(
         }
 
         if (nrow(stops_df) > 0) {
+          edit_title <- htmltools::htmlEscape(tr("lbl_edit", current_lang))
+          delete_title <- htmltools::htmlEscape(tr(
+            "stops_delete_title",
+            current_lang
+          ))
           rows_html <- paste0(
             "<div class='stop-list-row' onclick=\"viewStopFromList('",
             htmltools::htmlEscape(stops_df$stop_id),
@@ -553,10 +581,14 @@ stopsServer <- function(
             "<div class='stop-actions'>",
             "<button class='stop-action-btn edit-btn' onclick=\"event.stopPropagation(); editStopFromList('",
             htmltools::htmlEscape(stops_df$stop_id),
-            "')\" title='Edit'>&#9998;</button>",
+            "')\" title='",
+            edit_title,
+            "'>&#9998;</button>",
             "<button class='stop-action-btn delete-btn' onclick=\"event.stopPropagation(); deleteStopFromList('",
             htmltools::htmlEscape(stops_df$stop_id),
-            "')\" title='Delete stop'><i class='fa-solid fa-trash'></i></button>",
+            "')\" title='",
+            delete_title,
+            "'><i class='fa-solid fa-trash'></i></button>",
             "</div>",
             "</div>",
             collapse = ""
@@ -568,7 +600,7 @@ stopsServer <- function(
           rows[[length(rows) + 1]] <- div(
             class = "stop-list-row",
             style = "justify-content: center; color: #888; font-style: italic;",
-            "No stops match your search"
+            tr("stops_no_match", current_lang)
           )
         }
       }
@@ -730,7 +762,10 @@ stopsServer <- function(
 
       if (adding_new) {
         current_data$stops <- rbind(current_data$stops, new_stop)
-        showNotification(paste("Stop", stop_id_val, "added"), type = "message")
+        showNotification(
+          sprintf(tr("notif_stop_added", lang()), stop_id_val),
+          type = "message"
+        )
       } else if (!is.null(editing_id)) {
         current_data$stops <- current_data$stops[
           current_data$stops$stop_id != editing_id,
@@ -753,7 +788,7 @@ stopsServer <- function(
         }
 
         showNotification(
-          paste("Stop", stop_id_val, "updated"),
+          sprintf(tr("notif_stop_updated", lang()), stop_id_val),
           type = "message"
         )
       }
@@ -791,12 +826,10 @@ stopsServer <- function(
           collapse = ", "
         )
         showNotification(
-          paste0(
-            "Cannot delete stop '",
+          sprintf(
+            tr("notif_stop_cant_delete", lang()),
             stop_to_delete,
-            "'. It is used in itineraries: ",
-            associated_itins,
-            ". Remove it from those itineraries first."
+            associated_itins
           ),
           type = "error",
           duration = 5
@@ -818,7 +851,7 @@ stopsServer <- function(
         stops_edit_stop_name("")
       }
 
-      showNotification("Stop deleted successfully", type = "message")
+      showNotification(tr("notif_stop_deleted", lang()), type = "message")
     })
 
     ### STOPS GENERATION FUNCTIONALITY ----
@@ -828,27 +861,36 @@ stopsServer <- function(
       drawing <- stops_generate_mode()
       polygon <- stops_generate_polygon()
       verts <- stops_draw_vertices()
+      current_lang <- lang()
 
       if (drawing) {
+        v_label <- if (length(verts) == 1) {
+          tr("stops_gen_vertex", current_lang)
+        } else {
+          tr("stops_gen_vertices", current_lang)
+        }
         tagList(
           div(
             class = "editing-instruction",
             paste0(
-              "Click on the map to draw the zone (",
+              tr("stops_gen_drawing", current_lang),
+              " (",
               length(verts),
-              if (length(verts) == 1) " vertex)" else " vertices)"
+              " ",
+              v_label,
+              ")"
             )
           ),
           div(
             style = "display: flex; gap: 5px; margin-top: 8px;",
             actionButton(
               ns("stops_generate_complete"),
-              "Complete",
+              tr("btn_complete", current_lang),
               class = "btn-success btn-sm"
             ),
             actionButton(
               ns("stops_generate_cancel"),
-              "Cancel",
+              tr("btn_cancel", current_lang),
               class = "btn-outline-secondary btn-sm"
             )
           )
@@ -859,18 +901,18 @@ stopsServer <- function(
             class = "editing-instruction",
             style = "background-color: #D1E5F0; border-color: #2166AC; color: #2166AC",
             icon("check-circle", style = "color: #2166AC;"),
-            " Zone drawn. Click Generate below to confirm"
+            paste0(" ", tr("stops_gen_zone_drawn", current_lang))
           ),
           div(
             style = "display: flex; gap: 5px; margin-top: 8px;",
             actionButton(
               ns("stops_generate_run"),
-              "Generate",
+              tr("btn_generate", current_lang),
               class = "btn-success btn-sm"
             ),
             actionButton(
               ns("stops_generate_clear"),
-              "Clear zone",
+              tr("stops_gen_clear", current_lang),
               class = "btn-outline-secondary btn-sm"
             )
           )
@@ -878,7 +920,7 @@ stopsServer <- function(
       } else {
         actionButton(
           ns("stops_generate_draw"),
-          "Draw zone on map",
+          tr("stops_gen_draw_btn", current_lang),
           class = "btn-info btn-sm"
         )
       }
@@ -951,7 +993,7 @@ stopsServer <- function(
 
       if (length(verts) < 3) {
         showNotification(
-          "Draw at least 3 points to define a zone.",
+          tr("notif_draw_3pts", lang()),
           type = "warning"
         )
         return()
@@ -1009,7 +1051,7 @@ stopsServer <- function(
 
       if (is.null(polygon)) {
         showNotification(
-          "Draw a zone on the map first.",
+          tr("notif_draw_zone_first", lang()),
           type = "warning"
         )
         return()
@@ -1020,7 +1062,7 @@ stopsServer <- function(
       provider_val <- osm_provider()
 
       showNotification(
-        "Downloading OSM data and generating stops. This may take a while depending on region and OSM provider (manage in Settings).",
+        tr("notif_gen_progress", lang()),
         id = "gen_progress",
         duration = NULL,
         type = "message"
@@ -1040,7 +1082,7 @@ stopsServer <- function(
 
           if (is.null(result) || nrow(result$new_stops) == 0) {
             showNotification(
-              "No eligible stop locations found in this zone.",
+              tr("notif_gen_none", lang()),
               type = "warning"
             )
             return()
@@ -1056,18 +1098,14 @@ stopsServer <- function(
           stops_generate_polygon(NULL)
 
           showNotification(
-            paste(nrow(result$new_stops), "stops generated and added."),
+            sprintf(tr("notif_gen_added", lang()), nrow(result$new_stops)),
             type = "message"
           )
         },
         error = function(e) {
           removeNotification("gen_progress")
           showNotification(
-            paste(
-              "Stop generation failed,",
-              e$message,
-              "...Try changing OSM Provider in Settings."
-            ),
+            sprintf(tr("notif_gen_failed", lang()), e$message),
             type = "error"
           )
         }
@@ -1086,7 +1124,7 @@ stopsServer <- function(
 
       if (!file_ext %in% c("geojson", "kml")) {
         showNotification(
-          "Invalid file format. Please upload a GeoJSON or KML file.",
+          tr("notif_import_bad_format", lang()),
           type = "error"
         )
         return()
@@ -1100,7 +1138,7 @@ stopsServer <- function(
           geom_types <- unique(st_geometry_type(imported_sf))
           if (!all(geom_types %in% c("POINT", "MULTIPOINT"))) {
             showNotification(
-              "Only point geometries can be imported.",
+              tr("notif_import_pts_only", lang()),
               type = "error"
             )
             return()
@@ -1112,7 +1150,7 @@ stopsServer <- function(
 
           if (nrow(imported_sf) > 99999) {
             showNotification(
-              "File contains more than 99,999 features. Please reduce the file size.",
+              tr("notif_import_too_many", lang()),
               type = "error"
             )
             return()
@@ -1180,20 +1218,16 @@ stopsServer <- function(
 
             if (nrow(imported_stops) == 0) {
               showNotification(
-                paste(
-                  "All",
-                  length(duplicate_ids),
-                  "stops have duplicate IDs and were not imported."
-                ),
+                tr("notif_import_all_dup", lang()),
                 type = "warning"
               )
               return()
             }
 
             showNotification(
-              paste(
-                length(duplicate_ids),
-                "stops with duplicate IDs were skipped."
+              sprintf(
+                tr("notif_import_dup_skip", lang()),
+                length(duplicate_ids)
               ),
               type = "warning"
             )
@@ -1203,13 +1237,13 @@ stopsServer <- function(
           ssfs(current_data)
 
           showNotification(
-            paste("Successfully imported", nrow(imported_stops), "stops."),
+            sprintf(tr("notif_import_success", lang()), nrow(imported_stops)),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error importing file:", e$message),
+            sprintf(tr("notif_import_error", lang()), e$message),
             type = "error"
           )
         }
@@ -1233,7 +1267,7 @@ stopsServer <- function(
         current_data <- ssfs()
 
         if (nrow(current_data$stops) == 0) {
-          showNotification("No stops to export.", type = "warning")
+          showNotification(tr("notif_export_empty", lang()), type = "warning")
           return()
         }
 
@@ -1286,7 +1320,7 @@ stopsServer <- function(
           },
           error = function(e) {
             showNotification(
-              paste("Error exporting file:", e$message),
+              sprintf(tr("notif_export_error", lang()), e$message),
               type = "error"
             )
           }

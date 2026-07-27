@@ -10,7 +10,7 @@ function editItinFromList(itinId) {
 
 // Delete itinerary (trash icon)
 function deleteItinFromList(itinId) {
-  if (confirm('Delete this itinerary and its associated data?')) {
+  if (confirm(jsTr('confirm_delete_itin'))) {
     Shiny.setInputValue(routesNs + 'itin_list_delete_click', {id: itinId, ts: Math.random()}, {priority: 'event'});
   }
 }

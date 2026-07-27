@@ -29,7 +29,7 @@ function copyRouteFromList(routeId) {
 
 // Delete route (trash icon on route row)
 function deleteRouteFromList(routeId) {
-  if (confirm('Delete this route? Itineraries must be deleted first.')) {
+  if (confirm(jsTr('confirm_delete_route'))) {
     Shiny.setInputValue(routesNs + 'route_list_delete_click', {id: routeId, ts: Math.random()}, {priority: 'event'});
   }
 }

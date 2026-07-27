@@ -3,6 +3,11 @@
 #' Launches the Croquis Shiny app
 #'
 #' @param ssfs an optional SSFS to load into the app on launch. Defaults to NULL.
+#' #' @param lang UI language code: `"en"` (English, default), `"fr"` (French),
+#'   or `"es"` (Spanish).  Sets the initial language for all interface elements.
+#'   The language can also be changed mid-session via the selector in the
+#'   top-right corner.  Additional languages can be registered in
+#'   `SUPPORTED_LANGS` (see `R/i18n.R`).
 #'
 #' @returns Does not inherently return anything
 #'
@@ -14,11 +19,17 @@
 #'
 #' #Launch the app with a SSFS project pre-loaded
 #' croquis(stm_metro)
+#'
+#' #Launch the app in French
+#' croquis(lang = "fr")
 #' }
-croquis <- function(ssfs = NULL) {
+croquis <- function(ssfs = NULL, lang = "en") {
   # Validate input ssfs (and change name to avoid name collision in the server)
 
   input_ssfs <- NULL
+
+  # Validate language parameter
+  lang_init <- match.arg(lang, names(SUPPORTED_LANGS))
 
   if (!is.null(ssfs)) {
     validate_ssfs(ssfs, verbose = FALSE) # throws informative error if invalid
@@ -68,6 +79,9 @@ croquis <- function(ssfs = NULL) {
       ),
 
       tags$script(src = "www/js/theme.js"),
+      tags$script(src = "www/js/i18n.js"),
+      tags$script(htmltools::HTML(sprintf("croquisLang = '%s';", lang_init))),
+      tags$script(src = "www/js/theme.js"),
       tags$script(src = "www/js/loading.js"),
       tags$script(src = "www/js/agency.js"),
       tags$script(src = "www/js/stops.js"),
@@ -88,6 +102,18 @@ croquis <- function(ssfs = NULL) {
       header = tagList(
         div(
           style = "position: absolute; right: 10px; top: 10px; z-index: 1000; display: flex; gap: 4px; align-items: center;",
+          do.call(
+            tags$select,
+            c(
+              list(
+                id = "lang_select",
+                class = "btn btn-default btn-sm",
+                style = "padding: 2px 6px; font-size: 12px; cursor: pointer;",
+                onchange = "Shiny.setInputValue('app_lang', this.value, {priority: 'event'})"
+              ),
+              build_lang_options(lang_init)
+            )
+          ),
           tags$button(
             id = "undo_btn",
             onclick = "Shiny.setInputValue('undo_click', Math.random(), {priority:'event'})",
@@ -117,23 +143,48 @@ croquis <- function(ssfs = NULL) {
       tabPanel(
         tags$span(icon("house")),
         #unicode house emoji
+        value = "home",
         fluidPage(
-          titlePanel("Home"),
+          tags$h2(span(
+            tr("home_title", lang_init),
+            `data-i18n` = "home_title"
+          )),
 
           wellPanel(
             style = "font-size: 14px; margin-bottom: 12px; line-height: 1.5; color: var(--text-color);",
             p(
               tags$strong(
-                "Croquis (crow-KEY) is a transit sketch planning tool and GTFS creator."
+                span(
+                  tr("intro_tagline", lang_init),
+                  `data-i18n` = "intro_tagline"
+                )
               ),
-              "The stops, routes and schedule tabs above allow you to manage all these aspects of your transit network model.",
-              "Get started on this page by loading an existing network, or by creating the agency details and projet location if starting from scratch.",
-              "This open-source software was developed in R Shiny. It is in active development.  Save your work often by clicking the Save",
+              span(
+                tr("intro_tabs", lang_init),
+                `data-i18n` = "intro_tabs"
+              ),
+              span(
+                tr("intro_get_started", lang_init),
+                `data-i18n` = "intro_get_started"
+              ),
+              span(
+                tr("intro_save_pre", lang_init),
+                `data-i18n` = "intro_save_pre"
+              ),
               icon("floppy-disk", class = "fa-solid"),
-              "icon above and exporting your project file.",
-              "Please report any bugs and provide your ideas for improvement by submitting an",
+              span(
+                tr("intro_save_post", lang_init),
+                `data-i18n` = "intro_save_post"
+              ),
+              span(
+                tr("intro_report_pre", lang_init),
+                `data-i18n` = "intro_report_pre"
+              ),
               tags$a(
-                "issue on GitHub",
+                span(
+                  tr("intro_report_link", lang_init),
+                  `data-i18n` = "intro_report_link"
+                ),
                 href = "https://github.com/julian-city/croquis/issues/new",
                 target = "_blank"
               ),
@@ -148,7 +199,10 @@ croquis <- function(ssfs = NULL) {
             div(
               class = "collapsible-section-header",
               onclick = "togglePanel('load-network-panel')",
-              h4("Load Network"),
+              h4(span(
+                tr("load_network", lang_init),
+                `data-i18n` = "load_network"
+              )),
               tags$button(
                 class = "floating-panel-toggle",
                 htmltools::HTML("+")
@@ -161,58 +215,92 @@ croquis <- function(ssfs = NULL) {
                 column(
                   6,
                   wellPanel(
-                    h4("Load a GTFS"),
+                    h4(span(
+                      tr("load_gtfs", lang_init),
+                      `data-i18n` = "load_gtfs"
+                    )),
                     p(
-                      "You can load an existing GTFS here.",
+                      span(
+                        tr("load_gtfs_desc", lang_init),
+                        `data-i18n` = "load_gtfs_desc"
+                      ),
                       tags$br(),
                       tags$small(
-                        "Larger files may take several minutes",
-                        "(maximum size: 100MB)."
+                        span(
+                          tr("load_gtfs_size", lang_init),
+                          `data-i18n` = "load_gtfs_size"
+                        )
                       )
                     ),
-                    fileInput(
-                      "load_gtfs",
-                      "",
-                      multiple = FALSE,
-                      accept = ".zip",
-                      placeholder = "Drag and drop or click to select file"
+                    i18n_placeholder(
+                      fileInput(
+                        "load_gtfs",
+                        "",
+                        multiple = FALSE,
+                        accept = ".zip",
+                        buttonLabel = span(
+                          tr("btn_browse", lang_init),
+                          `data-i18n` = "btn_browse"
+                        ),
+                        placeholder = tr("file_placeholder", lang_init)
+                      ),
+                      "file_placeholder"
                     ),
                     tags$small(
-                      "Uploading a GTFS here will convert it to an",
-                      "editable format in Croquis"
+                      span(
+                        tr("load_gtfs_note", lang_init),
+                        `data-i18n` = "load_gtfs_note"
+                      )
                     )
                   )
                 ),
                 column(
                   6,
                   wellPanel(
-                    h4("Load your croquis"),
+                    h4(span(
+                      tr("load_croquis", lang_init),
+                      `data-i18n` = "load_croquis"
+                    )),
                     p(
-                      "To continue working on a previous croquis,",
-                      "upload your .rds file:"
+                      span(
+                        tr("load_croquis_desc", lang_init),
+                        `data-i18n` = "load_croquis_desc"
+                      )
                     ),
-                    fileInput(
-                      "load_ssfs",
-                      "",
-                      multiple = FALSE,
-                      accept = ".rds",
-                      placeholder = "Drag and drop or click to select file"
+                    i18n_placeholder(
+                      fileInput(
+                        "load_ssfs",
+                        "",
+                        multiple = FALSE,
+                        accept = ".rds",
+                        buttonLabel = span(
+                          tr("btn_browse", lang_init),
+                          `data-i18n` = "btn_browse"
+                        ),
+                        placeholder = tr("file_placeholder", lang_init)
+                      ),
+                      "file_placeholder"
                     ),
                     tags$small(
-                      "Upload a transit model .rds file previously",
-                      "created with Croquis"
+                      span(
+                        tr("load_croquis_note", lang_init),
+                        `data-i18n` = "load_croquis_note"
+                      )
                     )
                   )
                 )
               ),
               # Bottom row: Sample networks
               wellPanel(
-                h4("Load a sample transit network"),
+                h4(span(
+                  tr("load_sample", lang_init),
+                  `data-i18n` = "load_sample"
+                )),
                 p(
-                  "To explore this tool, you can get started by",
-                  "loading a sample network. The Ligne Jaune model",
-                  "is the simplest and will help you familiarize",
-                  "yourself with how Croquis works."
+                  span(
+                    tr("load_sample_desc", lang_init),
+                    `data-i18n` = "load_sample_desc"
+                  )
                 ),
                 actionButton(
                   "load_yellowline_ssfs",
@@ -226,7 +314,7 @@ croquis <- function(ssfs = NULL) {
                 ),
                 actionButton(
                   "load_mileend_ssfs",
-                  "STM Mile-End bus network",
+                  "STM Mile-End bus",
                   class = "btn-success"
                 ),
                 actionButton(
@@ -253,21 +341,32 @@ croquis <- function(ssfs = NULL) {
                 #  "height: 30vh; min-height: 200px; ",
                 #  "overflow-y: auto; margin-bottom: 15px;"
                 #),
-                h4("Project Location"),
+                h4(span(
+                  tr("loc_title", lang_init),
+                  `data-i18n` = "loc_title"
+                )),
                 div(
                   style = "display: flex; align-items: flex-end; gap: 8px;",
                   div(
                     style = "position: relative; flex: 1;",
-                    textInput(
-                      "city_search",
-                      tags$label(
-                        "Search for a city",
-                        info_popover(
-                          "Start typing a city name and select city, if starting project from scratch. If you are not able to find your city, you made need to set coordinates manually below.",
-                        )
+                    i18n_placeholder(
+                      textInput(
+                        "city_search",
+                        tags$label(
+                          span(
+                            tr("loc_search_label", lang_init),
+                            `data-i18n` = "loc_search_label"
+                          ),
+                          info_popover(
+                            tr("pop_city_search", lang_init),
+                            key = "pop_city_search",
+                            lang = lang_init
+                          )
+                        ),
+                        placeholder = tr("loc_search_ph", lang_init),
+                        width = "100%"
                       ),
-                      placeholder = "Type city name...",
-                      width = "100%"
+                      "loc_search_ph"
                     ),
                     div(
                       id = "city_suggestions",
@@ -278,19 +377,31 @@ croquis <- function(ssfs = NULL) {
                     style = "margin-bottom: 15px;",
                     actionButton(
                       "select_city",
-                      "Select City",
+                      span(
+                        tr("btn_select_city", lang_init),
+                        `data-i18n` = "btn_select_city"
+                      ),
                       class = "btn-info"
                     )
                   )
                 ),
-                tags$small("Updates the map center and fetches timezone"),
-                h5("...Or set project coordinates manually"),
+                tags$small(span(
+                  tr("loc_updates_note", lang_init),
+                  `data-i18n` = "loc_updates_note"
+                )),
+                h5(span(
+                  tr("loc_manual_title", lang_init),
+                  `data-i18n` = "loc_manual_title"
+                )),
                 fluidRow(
                   column(
                     6,
                     numericInput(
                       "manual_lat",
-                      "Latitude",
+                      span(
+                        tr("lbl_latitude", lang_init),
+                        `data-i18n` = "lbl_latitude"
+                      ),
                       value = NA,
                       min = -90,
                       max = 90,
@@ -301,7 +412,10 @@ croquis <- function(ssfs = NULL) {
                     6,
                     numericInput(
                       "manual_lng",
-                      "Longitude",
+                      span(
+                        tr("lbl_longitude", lang_init),
+                        `data-i18n` = "lbl_longitude"
+                      ),
                       value = NA,
                       min = -180,
                       max = 180,
@@ -333,7 +447,10 @@ croquis <- function(ssfs = NULL) {
           # -- Agency list --
           wellPanel(
             style = "overflow-y: auto; max-height: 60vh;",
-            h4("Agencies"),
+            h4(span(
+              tr("agencies_title", lang_init),
+              `data-i18n` = "agencies_title"
+            )),
             div(
               class = "agency-list-container",
               uiOutput("agency_list_ui")
@@ -342,160 +459,100 @@ croquis <- function(ssfs = NULL) {
 
           # -- Instructions --
           wellPanel(
-            h3("Instructions"),
-            p(
-              "Build your transit system model by following these steps:"
-            ),
-
-            h4(
-              "1. Get started here by loading an existing network or specifying agency details for a new one"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Load a GTFS or a network that you've previously worked on in Croquis"
-                ),
-                tags$li(
-                  "Set the location of your network, if you're starting a network from scratch"
-                ),
-                tags$li("View and edit agency details.")
-              )
-            ),
-
-            h4("2. Create and edit stops in the stops module"),
-            p(
-              tags$ul(
-                tags$li("Manage and create stops using the left-hand panel"),
-                tags$li(
-                  "When creating or editing a stop, click on the map or drag the stop to set its location."
-                ),
-                tags$li(
-                  "Provide unique stop IDs and stop names for each stop"
-                ),
-              )
-            ),
-
-            h4(
-              "3. Create your routes and route itineraries in the routes module"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Create routes with their details (mode, colours) and define route itineraries within each route."
-                ),
-                tags$li(
-                  "A route itinerary corresponds to a unique stop pattern for trips. Each itinerary is associated with a stop sequence and a shape."
-                ),
-                tags$li(
-                  "Create and edit route geometries by selecting stops in the desired order and by creating waypoints by clicking on the map and along the route. You may delete waypoints or remove stops from a route itinerary by right-clicking."
-                ),
-                tags$li(
-                  "Move a waypoint by clicking on it and activating editing mode. Click on the desired location on the map or on a stop to move the waypoint there. If clicked on a stop, it will be added to the sequence."
-                ),
-                tags$li(
-                  "Toggle between network and simple drawing modes. Network drawing mode calculates the path along the Open Street Maps road network between stops and waypoints."
-                ),
-                tags$li(
-                  "Toggle between prepending and appending stops when drawing a route itinerary. Prepend mode adds stops clicked to the beginning of the stop sequence (the default is that stops clicks are added to the end)."
-                )
-              )
-            ),
-
-            h4(
-              "4. Define and edit service levels and speeds for routes in the schedule module"
-            ),
-            p(
-              tags$ul(
-                tags$li(
-                  "Bulk apply preset service levels (e.g. all-day frequent or peak frequent), speeds and operating hours to routes by service."
-                ),
-                tags$li(
-                  "View cumulative service-level by route segment by hour by clicking on the map."
-                ),
-                tags$li(
-                  "Apply preset service levels, speeds and operating hours for individual route itineraries."
-                ),
-                tags$li(
-                  "Define and edit headways and speeds by hour in detail for individual route itineraries, if desired."
-                ),
-                tags$li(
-                  "View and toggle interstop speeds at the route itinerary level, if desired."
-                ),
-                tags$li(
-                  "Manage service level presets, create them from scratch, or create them based on the service level of an existing route itinerary."
-                ),
-                tags$li(
-                  "Manage service calendar, including start and end dates for services defined by day of the week active (e.g. weekday vs. weekend service)."
-                )
-              )
-            ),
-
-            h4(
-              "5. Click the save",
-              icon("floppy-disk", class = "fa-solid"),
-              "icon to export a GTFS or save your croquis in .rds format to work on it later"
-            )
+            uiOutput("home_instructions_ui")
           )
         )
       ),
 
       #stops tab
-      stopsUI("stops"),
+      stopsUI("stops", lang = lang_init),
 
       #routes tab
-      routesUI("routes"),
+      routesUI("routes", lang = lang_init),
 
       # Schedule tab
-      scheduleUI("schedule"),
+      scheduleUI("schedule", lang = lang_init),
 
       #export tab
       tabPanel(
         tags$span(icon("floppy-disk", class = "fa-solid")),
+        value = "export",
         fluidPage(
-          titlePanel("export or save your project"),
+          tags$h2(span(
+            tr("export_title", lang_init),
+            `data-i18n` = "export_title"
+          )),
 
           # Export gtfs
           wellPanel(
-            h3("Export GTFS"),
-            textInput("exportgtfs_filename", "Filename:", value = "gtfs.zip"),
+            h3(span(
+              tr("export_gtfs_title", lang_init),
+              `data-i18n` = "export_gtfs_title"
+            )),
+            textInput(
+              "exportgtfs_filename",
+              label = span(
+                tr("lbl_filename", lang_init),
+                `data-i18n` = "lbl_filename"
+              ),
+              value = "gtfs.zip"
+            ),
             checkboxInput(
               "include_dist_traveled",
-              "Include shape_dist_traveled",
+              label = span(
+                tr("export_dist_traveled", lang_init),
+                `data-i18n` = "export_dist_traveled"
+              ),
               value = FALSE
             ),
-            tags$small(
-              "When checked, adds shape_dist_traveled to shapes and stop_times tables. This increases export time."
-            ),
+            tags$small(span(
+              tr("export_dist_desc", lang_init),
+              `data-i18n` = "export_dist_desc"
+            )),
             tags$br(),
             tags$br(),
             downloadButton(
               "download_gtfs",
-              "Download GTFS",
+              span(
+                tr("export_download_gtfs", lang_init),
+                `data-i18n` = "export_download_gtfs"
+              ),
               class = "btn-primary"
             )
           ),
 
           # Export raw ssfs
           wellPanel(
-            h3("Save your project to work on it later"),
-            p(
-              "This saves the raw Croquis (SSFS) file as a .rds:"
-            ),
+            h3(span(
+              tr("export_save_title", lang_init),
+              `data-i18n` = "export_save_title"
+            )),
+            p(span(
+              tr("export_save_desc", lang_init),
+              `data-i18n` = "export_save_desc"
+            )),
             textInput(
               "exportssfs_filename",
-              "Filename:",
+              label = span(
+                tr("lbl_filename", lang_init),
+                `data-i18n` = "lbl_filename"
+              ),
               value = "croquis.rds"
             ),
             downloadButton(
               "download_ssfs",
-              "Download Croquis file",
+              span(
+                tr("export_download_croquis", lang_init),
+                `data-i18n` = "export_download_croquis"
+              ),
               class = "btn-primary"
             ),
             tags$br(),
             tags$br(),
-            tags$small(
-              "Your transit system will be saved as an .rds file that you can reload later."
-            )
+            tags$small(span(
+              tr("export_save_note", lang_init),
+              `data-i18n` = "export_save_note"
+            ))
           )
         )
       ),
@@ -503,18 +560,29 @@ croquis <- function(ssfs = NULL) {
       #settings tab
       tabPanel(
         tags$span(icon("gear")),
+        value = "settings",
         fluidPage(
-          titlePanel("settings"),
-
+          tags$h2(span(
+            tr("settings_title", lang_init),
+            `data-i18n` = "settings_title"
+          )),
           wellPanel(
-            h3("Feed info"),
+            h3(span(
+              tr("settings_feed_info", lang_init),
+              `data-i18n` = "settings_feed_info"
+            )),
             textInput(
               "fi_feed_publisher_name",
               label = tagList(
-                "Publisher name",
+                span(
+                  tr("lbl_publisher_name", lang_init),
+                  `data-i18n` = "lbl_publisher_name"
+                ),
                 info_popover(
-                  "Full name of the organization that publishes the feed.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_publisher_name", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_publisher_name",
+                  lang = lang_init
                 )
               ),
               value = "Comotive"
@@ -522,10 +590,15 @@ croquis <- function(ssfs = NULL) {
             textInput(
               "fi_feed_publisher_url",
               label = tagList(
-                "Publisher URL",
+                span(
+                  tr("lbl_publisher_url", lang_init),
+                  `data-i18n` = "lbl_publisher_url"
+                ),
                 info_popover(
-                  "URL of the feed publishing organization's website.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_publisher_url", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_publisher_url",
+                  lang = lang_init
                 )
               ),
               value = "https://www.comotive.net"
@@ -533,10 +606,15 @@ croquis <- function(ssfs = NULL) {
             selectInput(
               "fi_feed_lang",
               label = tagList(
-                "Feed language",
+                span(
+                  tr("lbl_feed_lang", lang_init),
+                  `data-i18n` = "lbl_feed_lang"
+                ),
                 info_popover(
-                  "Default language used for text in this dataset (IETF BCP 47 language code).",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_feed_lang", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_feed_lang",
+                  lang = lang_init
                 )
               ),
               choices = local({
@@ -552,10 +630,15 @@ croquis <- function(ssfs = NULL) {
             textInput(
               "fi_feed_contact_email",
               label = tagList(
-                "Contact email",
+                span(
+                  tr("lbl_contact_email", lang_init),
+                  `data-i18n` = "lbl_contact_email"
+                ),
                 info_popover(
-                  "Email address for communication regarding the GTFS dataset and data publishing practices.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_contact_email", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_contact_email",
+                  lang = lang_init
                 )
               ),
               value = "julian@comotive.net"
@@ -563,10 +646,15 @@ croquis <- function(ssfs = NULL) {
             textInput(
               "fi_feed_version",
               label = tagList(
-                "Version",
+                span(
+                  tr("lbl_feed_version", lang_init),
+                  `data-i18n` = "lbl_feed_version"
+                ),
                 info_popover(
-                  "String that indicates the current version of their GTFS dataset.",
-                  "https://gtfs.org/schedule/reference/#feed_infotxt"
+                  tr("pop_feed_version", lang_init),
+                  "https://gtfs.org/schedule/reference/#feed_infotxt",
+                  key = "pop_feed_version",
+                  lang = lang_init
                 )
               ),
               value = paste0("v", Sys.Date())
@@ -575,13 +663,21 @@ croquis <- function(ssfs = NULL) {
 
           # Advanced settings panel
           wellPanel(
-            h3("Advanced settings"),
+            h3(span(
+              tr("settings_advanced", lang_init),
+              `data-i18n` = "settings_advanced"
+            )),
             selectInput(
               "settings_routing_server",
               label = tagList(
-                "Default routing server",
+                span(
+                  tr("lbl_routing_server", lang_init),
+                  `data-i18n` = "lbl_routing_server"
+                ),
                 info_popover(
-                  "Routing server used to draw segments along the road network between stops and waypoints in the routes module."
+                  tr("pop_routing_server", lang_init),
+                  key = "pop_routing_server",
+                  lang = lang_init
                 )
               ),
               choices = c("OSRM", "Valhalla"),
@@ -590,9 +686,14 @@ croquis <- function(ssfs = NULL) {
             numericInput(
               "settings_gtfs_workers",
               label = tagList(
-                "GTFS import workers",
+                span(
+                  tr("lbl_gtfs_workers", lang_init),
+                  `data-i18n` = "lbl_gtfs_workers"
+                ),
                 info_popover(
-                  "Number of worker processes to use during GTFS to SSFS conversion. Values above 1 speed up imports on Linux servers; Windows falls back to a single worker."
+                  tr("pop_gtfs_workers", lang_init),
+                  key = "pop_gtfs_workers",
+                  lang = lang_init
                 )
               ),
               value = default_gtfs_workers,
@@ -608,9 +709,14 @@ croquis <- function(ssfs = NULL) {
             numericInput(
               "settings_min_stop_dist",
               label = tagList(
-                "Minimum stop spacing (m)",
+                span(
+                  tr("lbl_min_stop_dist", lang_init),
+                  `data-i18n` = "lbl_min_stop_dist"
+                ),
                 info_popover(
-                  "Minimum distance in metres between auto-generated stops. Also used as the buffer distance around existing stops when determining eligible locations for new stops."
+                  tr("pop_min_stop_dist", lang_init),
+                  key = "pop_min_stop_dist",
+                  lang = lang_init
                 )
               ),
               value = 200,
@@ -621,9 +727,14 @@ croquis <- function(ssfs = NULL) {
             selectInput(
               "settings_osm_provider",
               label = tagList(
-                "OSM extract provider",
+                span(
+                  tr("lbl_osm_provider", lang_init),
+                  `data-i18n` = "lbl_osm_provider"
+                ),
                 info_popover(
-                  "OpenStreetMap data provider used when generating stops from road network data. Different providers have different regional coverage."
+                  tr("pop_osm_provider", lang_init),
+                  key = "pop_osm_provider",
+                  lang = lang_init
                 )
               ),
               choices = suppressMessages(
@@ -809,6 +920,18 @@ croquis <- function(ssfs = NULL) {
       )
     })
 
+    # ── i18n language state ──
+    lang <- reactiveVal(lang_init)
+
+    observeEvent(input$app_lang, {
+      lang(input$app_lang)
+    })
+
+    # Sync language to JS and re-translate static DOM elements
+    observeEvent(lang(), {
+      shinyjs::runjs(sprintf("croquisLang = '%s'; updateI18n();", lang()))
+    })
+
     #reactive values for cities db and agency info on home page / in gtfs
 
     # Reactive values for map center and agency info
@@ -888,13 +1011,13 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "Transit system loaded successfully",
+            tr("notif_project_loaded", lang()),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading file:", e$message),
+            sprintf(tr("notif_load_file_error", lang()), e$message),
             type = "error"
           )
         }
@@ -943,11 +1066,11 @@ croquis <- function(ssfs = NULL) {
 
           map_center(center)
 
-          showNotification("GTFS loaded successfully", type = "message")
+          showNotification(tr("notif_gtfs_loaded", lang()), type = "message")
         },
         error = function(e) {
           showNotification(
-            paste("Error loading file:", e$message),
+            sprintf(tr("notif_load_file_error", lang()), e$message),
             type = "error"
           )
         }
@@ -983,13 +1106,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM Ligne Jaune loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Ligne Jaune"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM Ligne Jaune:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Ligne Jaune",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1022,13 +1149,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM metro network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Metro"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM metro network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Metro",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1061,13 +1192,17 @@ croquis <- function(ssfs = NULL) {
           map_center(list(lng = -73.567, lat = 45.5017))
 
           showNotification(
-            "STM Mile-End bus network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "STM Mile-End"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading STM Mile-End bus network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "STM Mile-End",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1105,13 +1240,17 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "TTC subway network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "TTC Subway"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading TTC subway network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "TTC Subway",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1149,13 +1288,17 @@ croquis <- function(ssfs = NULL) {
           map_center(center)
 
           showNotification(
-            "TransLink network loaded successfully",
+            sprintf(tr("notif_sample_loaded", lang()), "TransLink Vancouver"),
             type = "message"
           )
         },
         error = function(e) {
           showNotification(
-            paste("Error loading TransLink network:", e$message),
+            sprintf(
+              tr("notif_load_sample_error", lang()),
+              "TransLink Vancouver",
+              e$message
+            ),
             type = "error"
           )
         }
@@ -1222,10 +1365,7 @@ croquis <- function(ssfs = NULL) {
     observeEvent(input$select_city, {
       if (network_has_stops()) {
         showNotification(
-          paste(
-            "The map center is set from the loaded network's stops.",
-            "Remove all stops to set a city manually."
-          ),
+          tr("notif_center_from_stops", lang()),
           type = "warning"
         )
         return()
@@ -1234,7 +1374,7 @@ croquis <- function(ssfs = NULL) {
       search_term <- input$city_search
 
       if (is.null(search_term) || search_term == "") {
-        showNotification("Please enter a city name", type = "warning")
+        showNotification(tr("notif_city_empty", lang()), type = "warning")
         return()
       }
 
@@ -1245,13 +1385,14 @@ croquis <- function(ssfs = NULL) {
 
       if (nrow(exact_matches) == 0) {
         showNotification(
-          "City not found. Please select from the suggestions.",
+          tr("notif_city_not_found", lang()),
           type = "warning"
         )
         return()
       } else if (nrow(exact_matches) > 1) {
+        #flag : text for this notification could be changed. Verify that the case is real
         showNotification(
-          "Multiple cities found with that name. Please be more specific.",
+          tr("notif_city_multiple", lang()),
           type = "warning"
         )
         return()
@@ -1272,7 +1413,7 @@ croquis <- function(ssfs = NULL) {
         session$sendCustomMessage("hideSuggestions", "")
 
         showNotification(
-          paste("City set to:", selected_city$name),
+          sprintf(tr("notif_city_set", lang()), selected_city$name),
           type = "message"
         )
       }
@@ -1344,7 +1485,7 @@ croquis <- function(ssfs = NULL) {
             coords$lng > 180
         ) {
           showNotification(
-            "Latitude must be between -90 and 90, longitude between -180 and 180",
+            tr("notif_coords_range", lang()),
             type = "warning"
           )
           return()
@@ -1375,7 +1516,7 @@ croquis <- function(ssfs = NULL) {
     ag_last_tz <- reactiveVal(NULL) # timezone associated with selected city
 
     # -- Helper: build an agency display row --
-    build_agency_row <- function(agency) {
+    build_agency_row <- function(agency, lang) {
       div(
         class = "agency-list-row",
         div(
@@ -1402,7 +1543,7 @@ croquis <- function(ssfs = NULL) {
               "event.stopPropagation(); editAgencyFromList('%s')",
               agency$agency_id
             ),
-            title = "Edit agency",
+            title = tr("agency_edit_title", lang),
             htmltools::HTML("&#9998;")
           ),
           tags$button(
@@ -1411,7 +1552,7 @@ croquis <- function(ssfs = NULL) {
               "event.stopPropagation(); deleteAgencyFromList('%s')",
               agency$agency_id
             ),
-            title = "Delete agency",
+            title = tr("agency_delete_title", lang),
             htmltools::HTML('<i class="fa-solid fa-trash"></i>')
           )
         )
@@ -1419,28 +1560,30 @@ croquis <- function(ssfs = NULL) {
     }
 
     # -- Helper: build the inline agency edit/add form --
-    build_agency_form <- function(agency = NULL, default_tz = NULL) {
+    build_agency_form <- function(agency = NULL, default_tz = NULL, lang) {
       is_new <- is.null(agency)
       div(
         class = "agency-edit-form",
         tags$label(
-          "Agency ID",
+          tr("lbl_agency_id", lang),
           info_popover(
-            "Identifies a unique transit agency or transit brand.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_id", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
           type = "text",
           id = "inline_ag_agency_id",
           value = if (!is_new) agency$agency_id else NULL,
-          placeholder = if (is_new) "e.g., STM" else NULL
+          placeholder = if (is_new) tr("agency_ph_id", lang) else NULL
         ),
         tags$label(
-          "Agency name",
+          tr("lbl_agency_name", lang),
           info_popover(
-            "Full name of the transit agency.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_name", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
@@ -1448,48 +1591,54 @@ croquis <- function(ssfs = NULL) {
           id = "inline_ag_agency_name",
           value = if (!is_new) agency$agency_name else NULL,
           placeholder = if (is_new) {
-            "e.g., Soci\u00e9t\u00e9 de transport de Montr\u00e9al"
+            tr("agency_ph_name", lang)
           } else {
             NULL
           }
         ),
         tags$label(
-          "Agency URL",
+          tr("lbl_agency_url", lang),
           info_popover(
-            "URL of the transit agency.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_url", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
           type = "text",
           id = "inline_ag_agency_url",
           value = if (!is_new) agency$agency_url else NULL,
-          placeholder = if (is_new) "e.g., http://www.stm.info" else NULL
+          placeholder = if (is_new) tr("agency_ph_url", lang) else NULL
         ),
         tags$label(
-          "Agency timezone",
+          tr("lbl_agency_tz", lang),
           info_popover(
-            "Timezone in IANA tz database format.",
-            "https://gtfs.org/schedule/reference/#agencytxt"
+            tr("pop_agency_tz", lang),
+            "https://gtfs.org/schedule/reference/#agencytxt",
+            lang = lang
           )
         ),
         tags$input(
           type = "text",
           id = "inline_ag_agency_timezone",
           value = if (!is_new) agency$agency_timezone else default_tz,
-          placeholder = if (is_new) "e.g., America/Montreal" else NULL
+          placeholder = if (is_new) tr("agency_ph_tz", lang) else NULL
         ),
         div(
           class = "btn-row",
           tags$button(
             class = "btn-save",
             onclick = "saveAgencyFromForm()",
-            if (is_new) "Create" else htmltools::HTML("&#10003; Save")
+            if (is_new) {
+              tr("btn_create", lang)
+            } else {
+              tagList(htmltools::HTML("&#10003;"), tr("btn_save", lang))
+            }
           ),
           tags$button(
             class = "btn-cancel",
             onclick = "cancelAgencyEdit()",
-            "Cancel"
+            tr("btn_cancel", lang)
           )
         )
       )
@@ -1498,6 +1647,7 @@ croquis <- function(ssfs = NULL) {
     # -- Render the agency list UI --
     output$agency_list_ui <- renderUI({
       current_data <- ssfs()
+      current_lang <- lang()
       editing_id <- ag_editing_id()
       is_adding <- ag_adding()
 
@@ -1511,11 +1661,14 @@ croquis <- function(ssfs = NULL) {
             editing_id == ag$agency_id
 
           # Always show the display row
-          rows[[length(rows) + 1]] <- build_agency_row(ag)
+          rows[[length(rows) + 1]] <- build_agency_row(ag, current_lang)
 
           # If editing this row, show form directly below
           if (is_editing_this) {
-            rows[[length(rows) + 1]] <- build_agency_form(ag)
+            rows[[length(rows) + 1]] <- build_agency_form(
+              ag,
+              lang = current_lang
+            )
           }
         }
       }
@@ -1523,7 +1676,8 @@ croquis <- function(ssfs = NULL) {
       # "Add new agency" row or add form
       if (is_adding) {
         rows[[length(rows) + 1]] <- build_agency_form(
-          default_tz = isolate(ag_last_tz())
+          default_tz = isolate(ag_last_tz()),
+          lang = current_lang
         )
       } else {
         rows[[length(rows) + 1]] <- div(
@@ -1532,10 +1686,13 @@ croquis <- function(ssfs = NULL) {
           tags$button(
             class = "stop-action-btn add-btn",
             onclick = "event.stopPropagation(); startAddingAgency()",
-            title = "Add new agency",
+            title = tr("agency_add_new", current_lang),
             htmltools::HTML("+")
           ),
-          span(style = "margin-left: 8px;", "Add new agency")
+          span(
+            style = "margin-left: 8px;",
+            tr("agency_add_new", current_lang)
+          )
         )
       }
 
@@ -1572,7 +1729,7 @@ croquis <- function(ssfs = NULL) {
       new_agency_id <- trimws(data$agency_id)
 
       if (nchar(new_agency_id) == 0) {
-        showNotification("Agency ID cannot be empty.", type = "warning")
+        showNotification(tr("notif_agency_id_empty", lang()), type = "warning")
         return()
       }
 
@@ -1582,7 +1739,7 @@ croquis <- function(ssfs = NULL) {
         # -- Adding a new agency --
         if (new_agency_id %in% current_data$agency$agency_id) {
           showNotification(
-            "This agency ID already exists. Please use a different ID.",
+            tr("notif_agency_id_exists", lang()),
             type = "warning"
           )
           return()
@@ -1600,14 +1757,14 @@ croquis <- function(ssfs = NULL) {
         ssfs(current_data)
         ag_adding(FALSE)
 
-        showNotification("Agency added successfully", type = "message")
+        showNotification(tr("notif_agency_added", lang()), type = "message")
       } else if (!is.null(ag_editing_id())) {
         # ── Editing an existing agency ──
         old_agency_id <- ag_editing_id()
         idx <- which(current_data$agency$agency_id == old_agency_id)
 
         if (length(idx) == 0) {
-          showNotification("Agency not found.", type = "error")
+          showNotification(tr("notif_agency_not_found", lang()), type = "error")
           return()
         }
 
@@ -1616,7 +1773,7 @@ croquis <- function(ssfs = NULL) {
           other_ids <- current_data$agency$agency_id[-idx]
           if (new_agency_id %in% other_ids) {
             showNotification(
-              "This agency ID already exists. Please use a different ID.",
+              tr("notif_agency_id_exists", lang()),
               type = "warning"
             )
             return()
@@ -1639,7 +1796,7 @@ croquis <- function(ssfs = NULL) {
         ssfs(current_data)
         ag_editing_id(NULL)
 
-        showNotification("Agency updated successfully", type = "message")
+        showNotification(tr("notif_agency_updated", lang()), type = "message")
       }
     })
 
@@ -1654,12 +1811,7 @@ croquis <- function(ssfs = NULL) {
           agency_to_delete %in% current_data$routes$agency_id
       ) {
         showNotification(
-          paste0(
-            "Cannot delete agency '",
-            agency_to_delete,
-            "'. It is referenced by one or more routes. ",
-            "Delete or reassign the routes first."
-          ),
+          sprintf(tr("notif_agency_cant_delete", lang()), agency_to_delete),
           type = "error",
           duration = 5
         )
@@ -1676,7 +1828,38 @@ croquis <- function(ssfs = NULL) {
         ag_editing_id(NULL)
       }
 
-      showNotification("Agency deleted successfully", type = "message")
+      showNotification(tr("notif_agency_deleted", lang()), type = "message")
+    })
+
+    # -- Helper: build a translated instructions bullet list --
+    build_instr_list <- function(step, n_items, lang) {
+      items <- lapply(seq_len(n_items), function(i) {
+        tags$li(tr(sprintf("instr_s%d_li%d", step, i), lang))
+      })
+      p(tags$ul(items))
+    }
+
+    # -- Render the instructions panel (server-side for i18n) --
+    output$home_instructions_ui <- renderUI({
+      current_lang <- lang()
+
+      tagList(
+        h3(tr("instr_title", current_lang)),
+        p(tr("instr_intro", current_lang)),
+        h4(tr("instr_s1", current_lang)),
+        build_instr_list(1, 3, current_lang),
+        h4(tr("instr_s2", current_lang)),
+        build_instr_list(2, 3, current_lang),
+        h4(tr("instr_s3", current_lang)),
+        build_instr_list(3, 6, current_lang),
+        h4(tr("instr_s4", current_lang)),
+        build_instr_list(4, 7, current_lang),
+        h4(
+          tr("instr_s5_pre", current_lang),
+          icon("floppy-disk", class = "fa-solid"),
+          tr("instr_s5_post", current_lang)
+        )
+      )
     })
 
     # Agency map initialization
@@ -1767,7 +1950,8 @@ croquis <- function(ssfs = NULL) {
       map_center,
       current_zoom,
       reactive(input$settings_min_stop_dist),
-      reactive(input$settings_osm_provider)
+      reactive(input$settings_osm_provider),
+      lang
     )
 
     #   #   #
@@ -1781,7 +1965,8 @@ croquis <- function(ssfs = NULL) {
       ssfs,
       map_center,
       current_zoom,
-      reactive(input$settings_routing_server)
+      reactive(input$settings_routing_server),
+      lang
     )
 
     #   #   #
@@ -1790,7 +1975,7 @@ croquis <- function(ssfs = NULL) {
     #
     #   #   #
 
-    scheduleServer("schedule", ssfs, map_center)
+    scheduleServer("schedule", ssfs, map_center, lang)
 
     ###
     #
