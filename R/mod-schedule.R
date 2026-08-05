@@ -161,6 +161,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
     # (separate from the map filter panel's sched_service_id)
     sched_edit_service_id <- reactiveVal(NULL)
 
+    # Sort mode for itinerary list in route-level panel
+    # default by default but can sort by departing or arriving stops
+    sched_itin_sort <- reactiveVal("default")
+
     # span editing
     sched_span_editing_idx <- reactiveVal(NULL)
     sched_span_adding <- reactiveVal(FALSE)
@@ -1081,6 +1085,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       sched_clear_itin_subedits()
       sched_editing_route_id(route_id)
       sched_editing_itin_id(NULL)
+      sched_itin_sort("default")
 
       sched_highlighted_route(route_id)
       sched_highlighted_itin_ids(route_itin_ids)
@@ -1168,6 +1173,10 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
     observeEvent(input$sched_edit_service_select, {
       sched_edit_service_id(input$sched_edit_service_select)
+    })
+
+    observeEvent(input$sched_itin_sort_select, {
+      sched_itin_sort(input$sched_itin_sort_select)
     })
 
     # Route-level schedule editing UI renderer
@@ -1462,17 +1471,157 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       editing_itin <- sched_editing_itin_id()
 
+      ns <- session$ns
+      sort_mode <- sched_itin_sort()
+
       route_itins <- current_data$itin[
         current_data$itin$route_id == editing_route,
       ]
 
       itin_rows <- list()
+      sort_control <- NULL
 
       if (nrow(route_itins) > 0) {
+        # ---- Pre-compute stop metadata for all itineraries ----
+        route_stop_seq <- current_data$stop_seq[
+          current_data$stop_seq$itin_id %in% route_itins$itin_id,
+        ]
+
+        itin_stop_meta <- list()
+        for (iid in route_itins$itin_id) {
+          ss <- route_stop_seq[route_stop_seq$itin_id == iid, ]
+          if (nrow(ss) > 0) {
+            ss <- ss[order(ss$stop_sequence), ]
+            s_name <- if (
+              "stop_name" %in% names(ss) && !is.na(ss$stop_name[1])
+            ) {
+              ss$stop_name[1]
+            } else {
+              ss$stop_id[1]
+            }
+            e_name <- if (
+              "stop_name" %in% names(ss) && !is.na(ss$stop_name[nrow(ss)])
+            ) {
+              ss$stop_name[nrow(ss)]
+            } else {
+              ss$stop_id[nrow(ss)]
+            }
+            itin_stop_meta[[iid]] <- list(
+              start_stop = s_name,
+              end_stop = e_name,
+              n_stops = nrow(ss)
+            )
+          } else {
+            itin_stop_meta[[iid]] <- list(
+              start_stop = "-",
+              end_stop = "-",
+              n_stops = 0L
+            )
+          }
+        }
+
+        # ---- Pre-compute trip counts via trip_dep_generator() ----
+        route_spans <- current_data$span[
+          current_data$span$itin_id %in%
+            route_itins$itin_id &
+            current_data$span$service_id == selected_service,
+        ]
+
+        trips_by_itin <- list()
+        if (nrow(route_spans) > 0) {
+          for (s in seq_len(nrow(route_spans))) {
+            n <- length(tryCatch(
+              trip_dep_generator(
+                ssfs = current_data,
+                first_dep = route_spans$first_dep[s],
+                last_dep = route_spans$last_dep[s],
+                itin_id_i = route_spans$itin_id[s],
+                service_id_i = route_spans$service_id[s]
+              ),
+              error = function(e) character(0)
+            ))
+            iid <- route_spans$itin_id[s]
+            prev <- if (!is.null(trips_by_itin[[iid]])) {
+              trips_by_itin[[iid]]
+            } else {
+              0L
+            }
+            trips_by_itin[[iid]] <- prev + n
+          }
+        }
+
+        # ---- Apply sort ----
+        if (sort_mode == "start_stop") {
+          sort_keys <- vapply(
+            route_itins$itin_id,
+            function(id) {
+              itin_stop_meta[[id]]$start_stop
+            },
+            character(1)
+          )
+          route_itins <- route_itins[order(sort_keys), ]
+        } else if (sort_mode == "end_stop") {
+          sort_keys <- vapply(
+            route_itins$itin_id,
+            function(id) {
+              itin_stop_meta[[id]]$end_stop
+            },
+            character(1)
+          )
+          route_itins <- route_itins[order(sort_keys), ]
+        }
+
+        # ---- Sort control ----
+        sort_control <- div(
+          class = "sched-itin-sort-bar",
+          tags$label(
+            `for` = ns("sched_itin_sort_select"),
+            tr("sched_itin_sort_label", lang())
+          ),
+          tags$select(
+            id = ns("sched_itin_sort_select"),
+            class = "sched-itin-sort-select",
+            onchange = sprintf(
+              "Shiny.setInputValue('%s', this.value, {priority:'event'})",
+              ns("sched_itin_sort_select")
+            ),
+            tags$option(
+              value = "default",
+              selected = if (sort_mode == "default") "selected" else NULL,
+              tr("sched_itin_sort_default", lang())
+            ),
+            tags$option(
+              value = "start_stop",
+              selected = if (sort_mode == "start_stop") "selected" else NULL,
+              tr("sched_itin_sort_start", lang())
+            ),
+            tags$option(
+              value = "end_stop",
+              selected = if (sort_mode == "end_stop") "selected" else NULL,
+              tr("sched_itin_sort_end", lang())
+            )
+          )
+        )
+
+        # ---- Build itinerary rows ----
         for (i in seq_len(nrow(route_itins))) {
           itin <- route_itins[i, ]
           itin_id <- itin$itin_id
           itin_length <- round(as.numeric(st_length(itin$geometry)) / 1000, 1)
+
+          meta <- itin_stop_meta[[itin_id]]
+          n_trips <- if (!is.null(trips_by_itin[[itin_id]])) {
+            trips_by_itin[[itin_id]]
+          } else {
+            0L
+          }
+
+          # Detail line: start > end | N stops | N trips
+          detail_text <- paste0(
+            meta$start_stop,
+            " -> ",
+            meta$end_stop
+          )
 
           itin_spans <- current_data$span[
             current_data$span$itin_id == itin_id &
@@ -1497,6 +1646,16 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               current_data$hsh$service_id == selected_service,
           ]
 
+          stops_trips_text <- paste0(
+            meta$n_stops,
+            " ",
+            tr("sched_itin_stops_lbl", lang()),
+            " | ",
+            n_trips,
+            " ",
+            tr("sched_itin_trips_lbl", lang())
+          )
+
           len_avg_speed <- if (
             nrow(itin_hsh) > 0 &&
               any(!is.na(itin_hsh$speed))
@@ -1505,10 +1664,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
               itin_length,
               " km | ",
               round(mean(itin_hsh$speed, na.rm = TRUE), 1),
-              " km/h"
+              " km/h | ",
+              stops_trips_text
             )
           } else {
-            NULL
+            stops_trips_text
           }
 
           is_active_itin <- !is.null(editing_itin) && editing_itin == itin_id
@@ -1544,6 +1704,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
                 span(class = "itin-headsign", itin$trip_headsign),
                 span(class = "itin-id-display", paste0("(", itin_id, ")"))
               ),
+              div(class = "sched-itin-detail", detail_text),
               if (!is.null(span_text)) {
                 div(class = "sched-itin-spans", span_text)
               },
@@ -1560,7 +1721,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         )
       }
 
-      do.call(tagList, itin_rows)
+      tagList(sort_control, do.call(tagList, itin_rows))
     })
 
     output$sched_speed_profile_ui <- renderUI({

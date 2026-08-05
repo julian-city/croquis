@@ -1453,6 +1453,36 @@ i18n_dict <- list(
     fr = "V\u00e9hicules-km quotidiens (en service)\u00a0: %s",
     es = "Veh\u00edculos-km diarios (en servicio): %s"
   ),
+  sched_itin_stops_lbl = c(
+    en = "stops",
+    fr = "arr\u00eats",
+    es = "paradas"
+  ),
+  sched_itin_trips_lbl = c(
+    en = "trips",
+    fr = "voyages",
+    es = "viajes"
+  ),
+  sched_itin_sort_label = c(
+    en = "Sort:",
+    fr = "Trier\u00a0:",
+    es = "Ordenar:"
+  ),
+  sched_itin_sort_default = c(
+    en = "Default",
+    fr = "Par d\u00e9faut",
+    es = "Predeterminado"
+  ),
+  sched_itin_sort_start = c(
+    en = "Start stop",
+    fr = "Arr\u00eat de d\u00e9part",
+    es = "Parada de inicio"
+  ),
+  sched_itin_sort_end = c(
+    en = "End stop",
+    fr = "Arr\u00eat d'arriv\u00e9e",
+    es = "Parada final"
+  ),
   # -- Schedule module - itinerary-level editing panel --------------------
 
   sched_empty_itin_editing = c(

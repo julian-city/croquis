@@ -1136,11 +1136,51 @@ body {
    margin-top: 1px;
  }
 
- .sched-itin-speed {
+.sched-itin-speed {
    font-size: 11px;
    color: #666;
    margin-top: 1px;
    font-style: italic;
+ }
+
+ .sched-itin-detail {
+   font-size: 11px;
+   color: #555;
+   margin-top: 1px;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+ }
+
+ .sched-itin-sort-bar {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   margin-bottom: 8px;
+   padding-bottom: 6px;
+   border-bottom: 1px solid var(--border-color);
+ }
+
+ .sched-itin-sort-bar label {
+   font-size: 11px;
+   font-weight: 500;
+   color: var(--text-color);
+   margin: 0;
+ }
+
+ .sched-itin-sort-select {
+   padding: 2px 6px;
+   border: 1px solid var(--border-color);
+   border-radius: 4px;
+   font-size: 11px;
+   background-color: var(--input-bg);
+   color: var(--text-color);
+   cursor: pointer;
+ }
+
+ .sched-itin-sort-select:focus {
+   outline: none;
+   border-color: #B2182B;
  }
 
  .sched-batch-section {
