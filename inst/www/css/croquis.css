@@ -784,7 +784,7 @@ body {
 
 .itin-list-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 6px 8px;
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
@@ -831,6 +831,23 @@ body {
   background-color: var(--hover-color);
   margin-right: 6px;
   flex-shrink: 0;
+}
+
+/* Itinerary detail sub-rows (routes panel) */
+.itin-detail-endpoints {
+  font-size: 10px;
+  color: #666;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itin-detail-metrics {
+  font-size: 10px;
+  color: #666;
+  margin-top: 1px;
+  font-style: italic;
 }
 
 /* Inline route edit form */

@@ -309,7 +309,47 @@ build_itin_form <- function(
 }
 
 # Build a normal (non-editing) itinerary row
-build_itin_row <- function(itin, is_active, lang = "en") {
+#
+# Optional detail parameters (first_stop_name, last_stop_name,
+# stop_count, distance_km) add endpoint and metrics sub-rows
+# beneath the headsign. When NULL / 0 the sub-rows are omitted,
+# so newly created itineraries with no stops degrade gracefully.
+build_itin_row <- function(
+  itin,
+  is_active,
+  first_stop_name = NULL,
+  last_stop_name = NULL,
+  stop_count = 0L,
+  distance_km = NULL,
+  lang = "en"
+) {
+  # -- detail sub-rows (conditionally built) ------------------------------
+
+  # Origin stop (row 2)
+  endpoint_from <- if (!is.null(first_stop_name)) {
+    div(class = "itin-detail-endpoints", first_stop_name)
+  } else {
+    NULL
+  }
+
+  # Destination stop (row 3, prefixed with ->)
+  endpoint_to <- if (!is.null(last_stop_name)) {
+    div(class = "itin-detail-endpoints", paste0("-> ", last_stop_name))
+  } else {
+    NULL
+  }
+
+  # Metrics (row 4)
+  metrics_row <- if (stop_count > 0 && !is.null(distance_km)) {
+    div(
+      class = "itin-detail-metrics",
+      sprintf(tr("itin_detail_metrics", lang), stop_count, distance_km)
+    )
+  } else {
+    NULL
+  }
+
+  # -- row assembly -------------------------------------------------------
   div(
     class = paste0("itin-list-row", if (is_active) " active-itin" else ""),
     onclick = sprintf("viewItinFromList('%s')", itin$itin_id),
@@ -327,7 +367,10 @@ build_itin_row <- function(itin, is_active, lang = "en") {
         class = "itin-info-display",
         span(class = "itin-headsign", itin$trip_headsign),
         span(class = "itin-id-display", paste0("(", itin$itin_id, ")"))
-      )
+      ),
+      endpoint_from,
+      endpoint_to,
+      metrics_row
     ),
     div(
       class = "route-actions",

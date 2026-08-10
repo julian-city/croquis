@@ -931,6 +931,12 @@ i18n_dict <- list(
     fr = "Supprimer le parcours type",
     es = "Eliminar itinerario"
   ),
+  #Itinerary detail preview (routes panel)
+  itin_detail_metrics = c(
+    en = "%s stops - %s km",
+    fr = "%s arr\u00eats - %s km",
+    es = "%s paradas - %s km"
+  ),
 
   # Editing instructions
   routes_editing_itin = c(

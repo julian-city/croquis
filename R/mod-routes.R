@@ -489,9 +489,40 @@ routesServer <- function(
                 is_editing_itin <- !is.null(editing_itin) &&
                   editing_itin == itin$itin_id
 
+                # -- Pre-compute detail data for preview rows --------
+                itin_ss <- current_data$stop_seq[
+                  current_data$stop_seq$itin_id == itin$itin_id,
+                ]
+                itin_ss <- itin_ss[order(itin_ss$stop_sequence), ]
+
+                first_sn <- if (nrow(itin_ss) > 0) {
+                  itin_ss$stop_name[1]
+                } else {
+                  NULL
+                }
+                last_sn <- if (nrow(itin_ss) > 0) {
+                  itin_ss$stop_name[nrow(itin_ss)]
+                } else {
+                  NULL
+                }
+                n_stops <- nrow(itin_ss)
+                dist_km <- round(
+                  as.numeric(st_length(itin$geometry)) / 1000,
+                  1
+                )
+                # ----------------------------------------------------
+
                 if (is_editing_itin) {
                   expanded_children[[length(expanded_children) + 1]] <-
-                    build_itin_row(itin, is_active, lang = lang())
+                    build_itin_row(
+                      itin,
+                      is_active,
+                      first_stop_name = first_sn,
+                      last_stop_name = last_sn,
+                      stop_count = n_stops,
+                      distance_km = dist_km,
+                      lang = lang()
+                    )
                   expanded_children[[length(expanded_children) + 1]] <-
                     build_itin_form(
                       itin$itin_id,
@@ -502,7 +533,15 @@ routesServer <- function(
                     )
                 } else {
                   expanded_children[[length(expanded_children) + 1]] <-
-                    build_itin_row(itin, is_active, lang = lang())
+                    build_itin_row(
+                      itin,
+                      is_active,
+                      first_stop_name = first_sn,
+                      last_stop_name = last_sn,
+                      stop_count = n_stops,
+                      distance_km = dist_km,
+                      lang = lang()
+                    )
                 }
               }
             }
