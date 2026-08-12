@@ -4684,9 +4684,9 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
     #Load speed profile
     observe({
       editing_itin <- sched_editing_itin_id()
-      service_id <- sched_edit_service_id()
+      curr_service_id <- sched_edit_service_id()
 
-      if (is.null(editing_itin) || is.null(service_id)) {
+      if (is.null(editing_itin) || is.null(curr_service_id)) {
         sched_sp_speed_factors(NULL)
         sched_sp_stop_data(NULL)
         return()
@@ -4710,7 +4710,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
 
       # Get available hours for this itin + service
       hour_choices <- current_data$hsh |>
-        filter(itin_id == editing_itin, service_id == service_id) |>
+        filter(itin_id == editing_itin, service_id == curr_service_id) |>
         arrange(hour_dep) |>
         pull(hour_dep) |>
         unique()
@@ -4733,7 +4733,7 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       base_speed <- current_data$hsh |>
         filter(
           itin_id == editing_itin,
-          service_id == service_id,
+          service_id == curr_service_id,
           hour_dep == hour_choices[1]
         ) |>
         pull(speed)
@@ -4751,15 +4751,15 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       input$sched_sp_hour,
       {
         editing_itin <- sched_editing_itin_id()
-        service_id <- sched_edit_service_id()
-        req(editing_itin, service_id, input$sched_sp_hour)
+        curr_service_id <- sched_edit_service_id()
+        req(editing_itin, curr_service_id, input$sched_sp_hour)
 
         current_data <- ssfs()
 
         base_speed <- current_data$hsh |>
           filter(
             itin_id == editing_itin,
-            service_id == service_id,
+            service_id == curr_service_id,
             hour_dep == input$sched_sp_hour
           ) |>
           pull(speed)
