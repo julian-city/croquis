@@ -217,7 +217,7 @@ routesServer <- function(
       selected_point_index(NULL)
       waypoint_temp_point(NULL)
       prepend_mode(FALSE)
-      drawing_mode_reactive("network")
+      #drawing_mode_reactive("network")
     }
 
     # Helper: commit a waypoint move to new coordinates.
@@ -256,6 +256,13 @@ routesServer <- function(
       selected_point_index(NULL)
       waypoint_temp_point(NULL)
       showNotification(tr("notif_wp_moved", lang()), type = "message")
+    }
+
+    # Helper: determine drawing mode from route_type.
+    # Road-surface modes (bus, tram, trolleybus) use network routing;
+    # all others (metro, rail, ferry, cable car, etc.) use free drawing.
+    drawingModeForRouteType <- function(route_type) {
+      if (route_type %in% c(0L, 3L, 11L)) "network" else "free"
     }
 
     # Observer for tracking editing and disabling undo / redo
@@ -588,6 +595,16 @@ routesServer <- function(
               lat2 = bbox[["ymax"]]
             )
         }
+
+        # Auto-set drawing mode based on route_type
+        route_row <- current_data$routes[
+          current_data$routes$route_id == route_id,
+        ]
+        if (nrow(route_row) > 0) {
+          drawing_mode_reactive(
+            drawingModeForRouteType(route_row$route_type[1])
+          )
+        }
       }
     })
 
@@ -903,6 +920,16 @@ routesServer <- function(
 
       routes_expanded_id(selected_itin$route_id)
 
+      # Auto-set drawing mode based on route_type
+      route_row <- current_ssfs_data$routes[
+        current_ssfs_data$routes$route_id == selected_itin$route_id,
+      ]
+      if (nrow(route_row) > 0) {
+        drawing_mode_reactive(
+          drawingModeForRouteType(route_row$route_type[1])
+        )
+      }
+
       # Load stop sequence
       stop_seq <- current_ssfs_data$stop_seq[
         current_ssfs_data$stop_seq$itin_id == itin_id,
@@ -1001,6 +1028,16 @@ routesServer <- function(
       active_trip_headsign("")
       itin_adding_for_route(route_id)
       itin_editing_id(NULL)
+
+      # Auto-set drawing mode based on route_type
+      route_row <- current_data$routes[
+        current_data$routes$route_id == route_id,
+      ]
+      if (nrow(route_row) > 0) {
+        drawing_mode_reactive(
+          drawingModeForRouteType(route_row$route_type[1])
+        )
+      }
 
       current_data <- ssfs()
       direction_id <- 0L
