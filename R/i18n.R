@@ -2253,6 +2253,16 @@ i18n_dict <- list(
     fr = "Nombre de processus \u00e0 utiliser lors de la conversion GTFS vers SSFS. Les valeurs sup\u00e9rieures \u00e0 1 acc\u00e9l\u00e8rent l'importation sur les serveurs Linux\u00a0; Windows utilise un seul processus.",
     es = "N\u00famero de procesos a usar durante la conversi\u00f3n de GTFS a SSFS. Valores mayores a 1 aceleran la importaci\u00f3n en servidores Linux; Windows usa un solo proceso."
   ),
+  lbl_gtfs_max_date = c(
+    en = "Specify GTFS import reference date",
+    fr = "Sp\u00e9cifier une date de r\u00e9f\u00e9rence pour l'importation GTFS",
+    es = "Especificar fecha de referencia para la importaci\u00f3n GTFS"
+  ),
+  pop_gtfs_max_date = c(
+    en = "When checked, the GTFS import will only consider service within the 7 days preceding the specified date. When unchecked, the last 7 days of service defined in the feed are used.",
+    fr = "Lorsque coch\u00e9, l'importation GTFS ne consid\u00e9rera que le service dans les 7 jours pr\u00e9c\u00e9dant la date sp\u00e9cifi\u00e9e. Sinon, les 7 derniers jours de service d\u00e9finis dans le flux sont utilis\u00e9s.",
+    es = "Cuando est\u00e1 marcado, la importaci\u00f3n GTFS solo considerar\u00e1 el servicio dentro de los 7 d\u00edas anteriores a la fecha especificada. Si no, se usan los \u00faltimos 7 d\u00edas de servicio definidos en el feed."
+  ),
   lbl_min_stop_dist = c(
     en = "Minimum stop spacing (m)",
     fr = "Espacement minimal des arr\u00eats (m)",

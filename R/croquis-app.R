@@ -706,6 +706,27 @@ croquis <- function(ssfs = NULL, lang = "en") {
               step = 1,
               width = "240px"
             ),
+            checkboxInput(
+              "settings_gtfs_max_date_enable",
+              label = tagList(
+                span(
+                  tr("lbl_gtfs_max_date", lang_init),
+                  `data-i18n` = "lbl_gtfs_max_date"
+                ),
+                info_popover(
+                  tr("pop_gtfs_max_date", lang_init),
+                  key = "pop_gtfs_max_date",
+                  lang = lang_init
+                )
+              ),
+              value = FALSE
+            ),
+            dateInput(
+              "settings_gtfs_max_date",
+              label = NULL,
+              value = Sys.Date(),
+              width = "240px"
+            ),
             numericInput(
               "settings_min_stop_dist",
               label = tagList(
@@ -1031,8 +1052,15 @@ croquis <- function(ssfs = NULL, lang = "en") {
         {
           loaded_gtfs <- gtfstools::read_gtfs(input$load_gtfs$datapath)
 
+          gtfs_max_date <- if (isTRUE(input$settings_gtfs_max_date_enable)) {
+            input$settings_gtfs_max_date
+          } else {
+            NULL
+          }
+
           loaded_ssfs <- croquis::gtfs_to_ssfs(
             loaded_gtfs,
+            max_date = gtfs_max_date,
             routing_server = input$settings_routing_server,
             workers = input$settings_gtfs_workers
           )
