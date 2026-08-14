@@ -613,7 +613,7 @@ stopsServer <- function(
       stops_editing_id(NULL)
       stops_temp_point(NULL)
       stops_adding_new(TRUE)
-      stops_edit_stop_id("")
+      stops_edit_stop_id(next_stop_id(ssfs()$stops$stop_id))
       stops_edit_stop_name("")
     })
 
@@ -761,7 +761,7 @@ stopsServer <- function(
       )
 
       if (adding_new) {
-        current_data$stops <- rbind(current_data$stops, new_stop)
+        current_data$stops <- rbind(new_stop, current_data$stops)
         showNotification(
           sprintf(tr("notif_stop_added", lang()), stop_id_val),
           type = "message"

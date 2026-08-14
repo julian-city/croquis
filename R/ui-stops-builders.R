@@ -1,3 +1,36 @@
+# Compute the next available numeric stop ID
+#
+# Scans existing stop IDs for purely numeric values and returns the next
+# sequential integer as a character string.
+# Floor is 1000001 (7 digits); if the current maximum is higher, the
+# returned value is max + 1.
+#
+# @param existing_ids Character vector of current stop_id values.
+# @return A single character string, e.g. "1000001" or "1000047".
+next_stop_id <- function(existing_ids) {
+  floor_id <- 1000001L
+
+  if (length(existing_ids) == 0) {
+    return(as.character(floor_id))
+  }
+
+  # Suppress warnings from non-numeric IDs (e.g. "ID_1_12345_3")
+  nums <- suppressWarnings(as.integer(existing_ids))
+  nums <- nums[!is.na(nums)]
+
+  if (length(nums) == 0) {
+    return(as.character(floor_id))
+  }
+
+  max_id <- max(nums)
+
+  if (max_id >= floor_id) {
+    return(as.character(max_id + 1L))
+  }
+
+  as.character(floor_id)
+}
+
 # Build the stop edit/add form
 #
 # @param stop_id_val Current stop ID value (or "" for new)
