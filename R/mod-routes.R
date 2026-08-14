@@ -1029,6 +1029,8 @@ routesServer <- function(
       itin_adding_for_route(route_id)
       itin_editing_id(NULL)
 
+      current_data <- ssfs()
+
       # Auto-set drawing mode based on route_type
       route_row <- current_data$routes[
         current_data$routes$route_id == route_id,
@@ -1039,7 +1041,6 @@ routesServer <- function(
         )
       }
 
-      current_data <- ssfs()
       direction_id <- 0L
       existing_itins <- current_data$itin[
         current_data$itin$route_id == route_id,
