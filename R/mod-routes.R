@@ -963,6 +963,8 @@ routesServer <- function(
         )
 
         if (nrow(stop_seq) > 0) {
+          prev_index <- 0L
+
           for (i in 1:nrow(stop_seq)) {
             stop_id <- stop_seq$stop_id[i]
             stop_data <- current_ssfs_data$stops[
@@ -971,11 +973,20 @@ routesServer <- function(
 
             if (nrow(stop_data) > 0) {
               stop_coords <- st_coordinates(stop_data$geometry)
+
+              # Constrain search to shape points at or after the previous
+              # node's index enforces ascending order on looped shapes
+              search_start <- max(1L, prev_index)
+              search_points <- full_points[search_start:nrow(full_points), ]
+
               distances <- sqrt(
-                (full_points$lng - stop_coords[1, 1])^2 +
-                  (full_points$lat - stop_coords[1, 2])^2
+                (search_points$lng - stop_coords[1, 1])^2 +
+                  (search_points$lat - stop_coords[1, 2])^2
               )
-              closest_idx <- which.min(distances)
+              closest_in_window <- which.min(distances)
+              closest_idx <- search_points$index[closest_in_window]
+
+              prev_index <- closest_idx
 
               nodes_df <- rbind(
                 nodes_df,
@@ -2361,12 +2372,6 @@ routesServer <- function(
       click <- input$routes_map_right_click
       curr_nodes <- route_nodes()
       curr_points <- route_points()
-
-      #DEBUG
-      assign("curr_nodes_i", curr_nodes, envir = .GlobalEnv)
-      assign("curr_points_i", curr_points, envir = .GlobalEnv)
-      assign("click_i", click, envir = .GlobalEnv)
-      assign("current_zoom_i", current_zoom(), envir = .GlobalEnv)
 
       if (nrow(curr_nodes) == 0) {
         return()
