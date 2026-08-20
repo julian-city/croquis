@@ -2167,6 +2167,13 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         )
       }
 
+      # Hour choices for speed recalculator
+      recalc_hour_choices <- if (nrow(itin_hsh) > 0) {
+        sort(unique(itin_hsh$hour_dep))
+      } else {
+        character(0)
+      }
+
       # Default preset name from route, itin, and service context
       route_id_for_itin <- current_data$itin$route_id[
         current_data$itin$itin_id == editing_itin
@@ -2291,6 +2298,111 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
             )
           )
         ),
+
+        # Speed recalculator
+        if (length(recalc_hour_choices) >= 1) {
+          div(
+            style = "margin-top: 10px; margin-bottom: 6px;",
+            tags$label(
+              style = "font-size: 11px; font-weight: 500;",
+              tagList(
+                tr("sched_recalc_title", lang()),
+                info_popover(
+                  tr("pop_sched_recalc", lang()),
+                  lang = lang()
+                )
+              )
+            ),
+            div(
+              style = "display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-size: 12px;",
+              htmltools::HTML(sprintf(
+                '<select id="%s" style="padding:3px 4px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--input-bg); color:var(--text-color);">
+                  <option value="increase">%s</option>
+                  <option value="decrease">%s</option>
+                </select>',
+                ns("sched_recalc_operation"),
+                tr("sched_recalc_increase", lang()),
+                tr("sched_recalc_decrease", lang())
+              )),
+              htmltools::HTML(sprintf(
+                '<select id="%s" onchange="schedRecalcTargetChanged(this)" style="padding:3px 4px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--input-bg); color:var(--text-color);">
+                  <option value="runtime">%s</option>
+                  <option value="speed">%s</option>
+                </select>',
+                ns("sched_recalc_target"),
+                tr("sched_recalc_runtime", lang()),
+                tr("sched_recalc_speed", lang())
+              )),
+              tags$span(
+                style = "font-size: 11px;",
+                tr("sched_recalc_by", lang())
+              ),
+              tags$input(
+                type = "number",
+                id = ns("sched_recalc_value"),
+                value = "5",
+                min = "0.1",
+                step = "0.1",
+                style = "width: 60px; padding: 3px 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; background: var(--input-bg); color: var(--text-color);"
+              ),
+              htmltools::HTML(sprintf(
+                '<select id="%s" style="padding:3px 4px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--input-bg); color:var(--text-color);">
+                  <option value="percent">%%</option>
+                  <option value="raw">%s</option>
+                </select>',
+                ns("sched_recalc_unit"),
+                tr("sched_recalc_unit_minutes", lang())
+              )),
+              tags$span(
+                style = "font-size: 11px;",
+                tr("sched_recalc_from", lang())
+              ),
+              htmltools::HTML(sprintf(
+                '<select id="%s" onchange="schedRecalcStartChanged(this)" style="padding:3px 4px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--input-bg); color:var(--text-color);">%s</select>',
+                ns("sched_recalc_start_hour"),
+                paste0(
+                  sprintf(
+                    '<option value="%s">%s</option>',
+                    recalc_hour_choices,
+                    recalc_hour_choices
+                  ),
+                  collapse = ""
+                )
+              )),
+              tags$span(
+                style = "font-size: 11px;",
+                tr("sched_recalc_to", lang())
+              ),
+              htmltools::HTML(sprintf(
+                '<select id="%s" style="padding:3px 4px; border:1px solid var(--border-color); border-radius:4px; font-size:11px; background:var(--input-bg); color:var(--text-color);">%s</select>',
+                ns("sched_recalc_end_hour"),
+                paste0(
+                  sprintf(
+                    '<option value="%s"%s>%s</option>',
+                    recalc_hour_choices,
+                    ifelse(
+                      recalc_hour_choices ==
+                        recalc_hour_choices[length(recalc_hour_choices)],
+                      " selected",
+                      ""
+                    ),
+                    recalc_hour_choices
+                  ),
+                  collapse = ""
+                )
+              )),
+              tags$button(
+                class = "btn-save",
+                style = "margin-bottom: 0; padding: 3px 10px; font-size: 11px;",
+                onclick = sprintf(
+                  "schedApplySpeedRecalc('%s')",
+                  ns("")
+                ),
+                tr("btn_apply", lang())
+              )
+            )
+          )
+        },
 
         hr(),
         h5(tagList(
@@ -3093,6 +3205,86 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
           speed_value,
           length(match_idx),
           editing_itin
+        ),
+        type = "message"
+      )
+    })
+
+    # Apply speed recalculator
+    observeEvent(input$sched_recalc_apply, {
+      editing_itin <- sched_editing_itin_id()
+      service_id <- sched_edit_service_id()
+      req(editing_itin, service_id)
+
+      data <- input$sched_recalc_apply
+
+      recalc_value <- suppressWarnings(as.numeric(data$value))
+      if (is.na(recalc_value) || recalc_value <= 0) {
+        showNotification(
+          tr("notif_sched_recalc_invalid_value", lang()),
+          type = "error"
+        )
+        return()
+      }
+
+      current_data <- ssfs()
+
+      itin_row <- current_data$itin[
+        current_data$itin$itin_id == editing_itin,
+      ]
+      if (nrow(itin_row) == 0) {
+        return()
+      }
+
+      itin_len_km <- round(
+        as.numeric(st_length(itin_row$geometry)) / 1000,
+        1
+      )
+
+      result <- tryCatch(
+        sched_speed_recalculator(
+          current_ssfs = current_data,
+          selected_itin_id = editing_itin,
+          selected_service = service_id,
+          itin_len_km = itin_len_km,
+          operation = data$operation,
+          target = data$target,
+          value = recalc_value,
+          unit = data$unit,
+          start_hour = data$start_hour,
+          end_hour = data$end_hour
+        ),
+        error = function(e) e
+      )
+
+      if (inherits(result, "error")) {
+        showNotification(
+          sprintf(
+            tr("notif_sched_recalc_error", lang()),
+            conditionMessage(result)
+          ),
+          type = "error"
+        )
+        return()
+      }
+
+      ssfs(result)
+
+      showNotification(
+        sprintf(
+          tr("notif_sched_recalc_ok", lang()),
+          data$operation,
+          data$target,
+          recalc_value,
+          if (data$unit == "percent") {
+            "%"
+          } else if (data$target == "runtime") {
+            tr("sched_recalc_unit_minutes", lang())
+          } else {
+            tr("sched_recalc_unit_kmh", lang())
+          },
+          data$start_hour,
+          data$end_hour
         ),
         type = "message"
       )

@@ -233,3 +233,71 @@ function schedSpToggleFactors() {
     Shiny.setInputValue(schedNs + 'sched_sf_toggle', false, {priority: 'event'});
   }
 }
+
+// ---------- Speed recalculator ----------
+
+// When target dropdown changes (runtime <-> speed), swap the unit labels
+function schedRecalcTargetChanged(el) {
+  var ns = schedNs;
+  var unitSel = document.getElementById(ns + 'sched_recalc_unit');
+  if (!unitSel) return;
+  var rawOpt = unitSel.querySelector('option[value="raw"]');
+  if (!rawOpt) return;
+
+  if (el.value === 'speed') {
+    rawOpt.textContent = jsTr('sched_recalc_unit_kmh');
+  } else {
+    rawOpt.textContent = jsTr('sched_recalc_unit_minutes');
+  }
+}
+
+// When start hour changes, remove end-hour options that precede it
+function schedRecalcStartChanged(el) {
+  var ns = schedNs;
+  var endSel = document.getElementById(ns + 'sched_recalc_end_hour');
+  if (!endSel) return;
+
+  var startNum = parseInt(el.value.substring(0, 2), 10);
+  var opts = endSel.querySelectorAll('option');
+  var lastVisible = null;
+
+  opts.forEach(function(opt) {
+    var optNum = parseInt(opt.value.substring(0, 2), 10);
+    if (optNum < startNum) {
+      opt.style.display = 'none';
+      if (endSel.value === opt.value) {
+        endSel.value = '';
+      }
+    } else {
+      opt.style.display = '';
+      lastVisible = opt.value;
+    }
+  });
+
+  // if current selection was hidden, select the last visible option
+  if (!endSel.value && lastVisible) {
+    endSel.value = lastVisible;
+  }
+}
+
+// Gather all inputs and send to Shiny
+function schedApplySpeedRecalc(ns) {
+  var operation = document.getElementById(ns + 'sched_recalc_operation');
+  var target = document.getElementById(ns + 'sched_recalc_target');
+  var value = document.getElementById(ns + 'sched_recalc_value');
+  var unit = document.getElementById(ns + 'sched_recalc_unit');
+  var startH = document.getElementById(ns + 'sched_recalc_start_hour');
+  var endH = document.getElementById(ns + 'sched_recalc_end_hour');
+
+  if (!operation || !target || !value || !unit || !startH || !endH) return;
+
+  Shiny.setInputValue(ns + 'sched_recalc_apply', {
+    operation: operation.value,
+    target: target.value,
+    value: value.value,
+    unit: unit.value,
+    start_hour: startH.value,
+    end_hour: endH.value,
+    ts: Math.random()
+  }, {priority: 'event'});
+}

@@ -1556,15 +1556,85 @@ i18n_dict <- list(
     fr = "Appliquer la vitesse \u00e0 toutes les heures (km/h)",
     es = "Aplicar la velocidad a todas las horas (km/h)"
   ),
+  sched_recalc_title = c(
+    en = "Speed recalculator",
+    fr = "Recalculateur de vitesse",
+    es = "Recalculador de velocidad"
+  ),
+  pop_sched_recalc = c(
+    en = "Adjust speeds for a range of hours by modifying speed directly or by changing the runtime. Supports absolute values and percentages. Changes are applied to the selected itinerary and service only.",
+    fr = "Ajustez les vitesses pour une plage d'heures en modifiant directement la vitesse ou en modifiant le temps de parcours. Prend en charge les valeurs absolues et les pourcentages. Les modifications s'appliquent uniquement au parcours type et au service s\u00e9lectionn\u00e9s.",
+    es = "Ajuste las velocidades para un rango de horas modificando la velocidad directamente o cambiando la duraci\u00f3n del recorrido. Admite valores absolutos y porcentajes. Los cambios se aplican solo al itinerario y servicio seleccionados."
+  ),
+  sched_recalc_increase = c(
+    en = "Increase",
+    fr = "Augmenter",
+    es = "Aumentar"
+  ),
+  sched_recalc_decrease = c(
+    en = "Decrease",
+    fr = "Diminuer",
+    es = "Disminuir"
+  ),
+  sched_recalc_runtime = c(
+    en = "runtime",
+    fr = "temps de parcours",
+    es = "duraci\u00f3n"
+  ),
+  sched_recalc_speed = c(
+    en = "speed",
+    fr = "vitesse",
+    es = "velocidad"
+  ),
+  sched_recalc_by = c(
+    en = "by",
+    fr = "de",
+    es = "en"
+  ),
+  sched_recalc_from = c(
+    en = "from",
+    fr = "de",
+    es = "de"
+  ),
+  sched_recalc_to = c(
+    en = "to",
+    fr = "\u00e0",
+    es = "a"
+  ),
+  sched_recalc_unit_minutes = c(
+    en = "minutes",
+    fr = "minutes",
+    es = "minutos"
+  ),
+  sched_recalc_unit_kmh = c(
+    en = "km/h",
+    fr = "km/h",
+    es = "km/h"
+  ),
+  notif_sched_recalc_invalid_value = c(
+    en = "The recalculator value must be a positive number.",
+    fr = "La valeur du recalculateur doit \u00eatre un nombre positif.",
+    es = "El valor del recalculador debe ser un n\u00famero positivo."
+  ),
+  notif_sched_recalc_error = c(
+    en = "Speed recalculation failed: %s",
+    fr = "\u00c9chec du recalcul de vitesse\u00a0: %s",
+    es = "Error en el rec\u00e1lculo de velocidad: %s"
+  ),
+  notif_sched_recalc_ok = c(
+    en = "Applied: %s %s by %s %s from %s to %s",
+    fr = "Appliqu\u00e9\u00a0: %s %s de %s %s de %s \u00e0 %s",
+    es = "Aplicado: %s %s en %s %s de %s a %s"
+  ),
   sched_hsh_title = c(
     en = "Headways & speeds by hour",
     fr = "Intervalles et vitesses par heure",
     es = "Intervalos y velocidades por hora"
   ),
   pop_sched_hsh = c(
-    en = "A headway is the interval or duration between trips. Headways and speeds specified here are used to create trips and scheduled stop times based on distances between stops along the routes defined in the previous module.",
-    fr = "Un intervalle est la dur\u00e9e entre les voyages. Les intervalles et vitesses sp\u00e9cifi\u00e9s ici servent \u00e0 cr\u00e9er les voyages et les horaires d'arr\u00eats planifi\u00e9s bas\u00e9s sur les distances entre les arr\u00eats le long des lignes d\u00e9finies dans le module pr\u00e9c\u00e9dent.",
-    es = "Un intervalo es la duraci\u00f3n entre viajes. Los intervalos y velocidades especificados aqu\u00ed se usan para crear viajes y horarios de paradas programados basados en las distancias entre paradas a lo largo de las rutas definidas en el m\u00f3dulo anterior."
+    en = "A headway is the interval or duration between trips. Headways and speeds specified here are used to create trips and scheduled stop times based on distances between stops along the routes defined in the Routes module.",
+    fr = "Un intervalle est la dur\u00e9e entre les voyages. Les intervalles et vitesses sp\u00e9cifi\u00e9s ici servent \u00e0 cr\u00e9er les voyages et les horaires d'arr\u00eats planifi\u00e9s bas\u00e9s sur les distances entre les arr\u00eats le long des lignes d\u00e9finies dans le module Lignes.",
+    es = "Un intervalo es la duraci\u00f3n entre viajes. Los intervalos y velocidades especificados aqu\u00ed se usan para crear viajes y horarios de paradas programados basados en las distancias entre paradas a lo largo de las rutas definidas en el m\u00f3dulo Rutas."
   ),
   sched_hsh_runtime = c(
     en = "Runtime (mins)",

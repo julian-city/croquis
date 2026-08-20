@@ -253,6 +253,16 @@ en: 'Automatically generate stops within a drawn zone. Stops are placed at inter
     fr: 'Supprimer le profil \u00ab\u00a0{id}\u00a0\u00bb\u00a0?',
     es: '\u00bfEliminar el perfil "{id}"?'
   },
+  sched_recalc_unit_minutes: {
+  en: 'minutes',
+  fr: 'minutes',
+  es: 'minutos'
+},
+sched_recalc_unit_kmh: {
+  en: 'km/h',
+  fr: 'km/h',
+  es: 'km/h'
+},
 
   // -- Save / Export tab --
   export_title:           { en: 'export or save your project', fr: 'exporter ou sauvegarder votre projet', es: 'exportar o guardar su proyecto' },

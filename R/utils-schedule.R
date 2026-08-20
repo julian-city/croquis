@@ -67,3 +67,97 @@ sched_sp_normalize <- function(values, threshold = 0.1) {
   }
   round(values, 1)
 }
+
+# ---------------------------------------------------------------------------
+# Speed recalculator
+# Adjusts speeds in the hsh table for a given itinerary, service, and hour
+# range by modifying either speed directly or runtime (from which speed
+# is re-derived).
+# Returns the modified ssfs. Caller is responsible for assigning to the
+# reactive value.
+# ---------------------------------------------------------------------------
+sched_speed_recalculator <- function(
+  current_ssfs,
+  selected_itin_id,
+  selected_service,
+  itin_len_km,
+  operation = c("increase", "decrease"),
+  target = c("speed", "runtime"),
+  value,
+  unit = c("percent", "raw"),
+  start_hour,
+  end_hour
+) {
+  operation <- match.arg(operation)
+  target <- match.arg(target)
+  unit <- match.arg(unit)
+
+  # --- input validation ---------------------------------------------------
+  if (!is.numeric(value) || length(value) != 1 || is.na(value) || value <= 0) {
+    stop("value must be a single positive number", call. = FALSE)
+  }
+  if (unit == "percent" && value >= 100 && operation == "decrease") {
+    stop("cannot decrease by 100% or more", call. = FALSE)
+  }
+
+  start_hour_num <- as.numeric(substr(start_hour, 1, 2))
+  end_hour_num <- as.numeric(substr(end_hour, 1, 2))
+
+  if (start_hour_num > end_hour_num) {
+    stop("start hour must not be after end hour", call. = FALSE)
+  }
+
+  # --- select affected rows ------------------------------------------------
+  match_idx <- which(
+    current_ssfs$hsh$itin_id == selected_itin_id &
+      current_ssfs$hsh$service_id == selected_service &
+      as.numeric(substr(current_ssfs$hsh$hour_dep, 1, 2)) >= start_hour_num &
+      as.numeric(substr(current_ssfs$hsh$hour_dep, 1, 2)) <= end_hour_num
+  )
+
+  if (length(match_idx) == 0) {
+    return(current_ssfs)
+  }
+
+  old_speeds <- current_ssfs$hsh$speed[match_idx]
+
+  # --- compute new speeds --------------------------------------------------
+  sign <- if (operation == "increase") 1 else -1
+
+  if (target == "speed") {
+    if (unit == "raw") {
+      new_speeds <- round(old_speeds + sign * value, 1)
+    } else {
+      new_speeds <- round(old_speeds * (1 + sign * value / 100), 1)
+    }
+  } else {
+    # target == "runtime"
+    # runtime (min) = (itin_len_km / speed) * 60
+    old_runtimes <- (itin_len_km / old_speeds) * 60
+
+    if (unit == "raw") {
+      new_runtimes <- old_runtimes + sign * value
+    } else {
+      new_runtimes <- old_runtimes * (1 + sign * value / 100)
+    }
+
+    # guard against non-positive runtimes
+    if (any(new_runtimes <= 0, na.rm = TRUE)) {
+      stop("resulting runtime would be zero or negative", call. = FALSE)
+    }
+
+    new_speeds <- round((itin_len_km / (new_runtimes / 60)), 1)
+  }
+
+  # --- guard against non-positive speeds -----------------------------------
+  if (any(new_speeds <= 0, na.rm = TRUE)) {
+    stop("resulting speed would be zero or negative", call. = FALSE)
+  }
+
+  if (any(new_speeds > 431, na.rm = TRUE)) {
+    stop("resulting speed exceeds 431 km/h", call. = FALSE)
+  }
+
+  current_ssfs$hsh$speed[match_idx] <- new_speeds
+  current_ssfs
+}
