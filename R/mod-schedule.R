@@ -4913,20 +4913,30 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
         return()
       }
 
+      # Preserve current hour selection if still valid
+      current_hour <- isolate(input$sched_sp_hour)
+      selected_hour <- if (
+        !is.null(current_hour) && current_hour %in% hour_choices
+      ) {
+        current_hour
+      } else {
+        hour_choices[1]
+      }
+
       # Update hour select
       updateSelectInput(
         session,
         "sched_sp_hour",
         choices = hour_choices,
-        selected = hour_choices[1]
+        selected = selected_hour
       )
 
-      # Load base speed from first hour
+      # Load base speed from selected hour
       base_speed <- current_data$hsh |>
         filter(
           itin_id == editing_itin,
           service_id == curr_service_id,
-          hour_dep == hour_choices[1]
+          hour_dep == selected_hour
         ) |>
         pull(speed)
 
