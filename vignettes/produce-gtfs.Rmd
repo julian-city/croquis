@@ -1,0 +1,42 @@
+---
+title: "Produce a GTFS"
+output: rmarkdown::html_vignette
+abstract: "This vignette demonstrates producing GTFS using the croquis() Shiny app and functions including gtfs_to_ssfs() and ssfs_to_gtfs()"
+vignette: >
+  %\VignetteIndexEntry{Produce a GTFS}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(croquis)
+```
+
+## 1. Introduction
+
+**croquis** can be used to produce GTFS for planning and research purposes in minutes. This is possible thanks to the Simplified Speed and Frequency Specification (SSFS) data structure that **croquis** introduces.
+
+You can produce a GTFS from scratch or by uploading an existing one, either through the `croquis()` Shiny App or by in-package functions including `gtfs_to_ssfs()` and `ssfs_to_gtfs()`. This vignette outlines the key ways you can produce a GTFS with **croquis**.
+
+## 2. Producing a GTFS from scratch
+
+To launch the Croquis Shiny App, run:
+
+```r
+croquis()
+```
+
+Using the app, you can follow the steps below to create a GTFS from scratch. This vignette also demonstrates how to use the other functions in **croquis** to build a simple GTFS in your R console without the Shiny App.
+
+# 2.1. Getting started: setting agency details
+
+On the Home page of the Shiny App, set the project location by searching for a city or setting the coordinates manually. This will center the map in the other modules to make network modification easier. Provide agency details by clicking `+ Add new agency` in the Agencies panel. Fill out these details
+
+# 3. Producing a GTFS based on an existing 

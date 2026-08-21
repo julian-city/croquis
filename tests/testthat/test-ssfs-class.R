@@ -144,3 +144,18 @@ test_that("ssfs() rejects invalid input", {
     "must be an sf object"
   )
 })
+
+test_that("ssfs() with no arguments returns a valid empty skeleton", {
+  obj <- ssfs()
+  expect_s3_class(obj, "ssfs")
+  expect_equal(nrow(obj$agency), 0L)
+  expect_equal(nrow(obj$routes), 0L)
+  expect_equal(nrow(obj$stops), 0L)
+  expect_equal(nrow(obj$itin), 0L)
+  expect_equal(nrow(obj$stop_seq), 0L)
+  expect_equal(nrow(obj$span), 0L)
+  expect_equal(nrow(obj$hsh), 0L)
+  expect_equal(nrow(obj$calendar), 0L)
+  expect_s3_class(obj$stops, "sf")
+  expect_s3_class(obj$itin, "sf")
+})

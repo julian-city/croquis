@@ -176,20 +176,155 @@ validate_ssfs <- function(x, verbose = TRUE) {
 
 #' Create an ssfs object
 #'
-#' User-facing constructor that assembles the 8 component tables into a
-#' validated ssfs object. This is the recommended way to create an ssfs
-#' from scratch (as opposed to [gtfs_to_ssfs()], which converts from GTFS).
+#' User-facing constructor for SSFS objects. Called with no arguments, it
+#' returns a valid empty skeleton with the correct column types - the
+#' simplest way to start building a transit network programmatically.
+#' Called with one or more table arguments, it assembles and validates
+#' them into a complete ssfs object.
 #'
-#' @inheritParams new_ssfs
+#' @param agency A data.frame with columns: agency_id, agency_name,
+#'   agency_url, agency_timezone. Defaults to an empty data.frame with
+#'   these columns.
+#' @param routes A data.frame with columns: route_id, agency_id,
+#'   route_short_name, route_long_name, route_type, route_color,
+#'   route_text_color. Defaults to an empty data.frame with these columns.
+#' @param stops An sf data.frame (POINT, CRS 4326) with columns:
+#'   stop_id, stop_name, geometry. Defaults to an empty sf with these
+#'   columns.
+#' @param itin An sf data.frame (LINESTRING, CRS 4326) with columns:
+#'   itin_id, route_id, direction_id, trip_headsign, geometry. Defaults
+#'   to an empty sf with these columns.
+#' @param stop_seq A data.frame with columns: itin_id, stop_id,
+#'   stop_sequence, speed_factor. Defaults to an empty data.frame with
+#'   these columns.
+#' @param span A data.frame with columns: itin_id, service_id,
+#'   service_window, first_dep, last_dep. Defaults to an empty data.frame
+#'   with these columns.
+#' @param hsh A data.frame with columns: itin_id, service_id, hour_dep,
+#'   headway, speed. Defaults to an empty data.frame with these columns.
+#' @param calendar A data.frame with columns: service_id, monday, tuesday,
+#'   wednesday, thursday, friday, saturday, sunday, start_date, end_date.
+#'   Defaults to an empty data.frame with these columns.
 #'
 #' @return A validated object of class `"ssfs"`.
 #'
 #' @export
-ssfs <- function(agency, routes, stops, itin, stop_seq, span, hsh, calendar) {
-  # this is a user-facing constructor
-  #needs an example at some point
+#' @examples
+#' # Empty skeleton - start from scratch
+#' my_ssfs <- ssfs()
+#' my_ssfs
+#'
+#' # Assemble from pre-built tables
+#' my_ssfs <- ssfs(
+#'   agency = ligne_jaune$agency,
+#'   routes = ligne_jaune$routes,
+#'   stops = ligne_jaune$stops,
+#'   itin = ligne_jaune$itin,
+#'   stop_seq = ligne_jaune$stop_seq,
+#'   span = ligne_jaune$span,
+#'   hsh = ligne_jaune$hsh,
+#'   calendar = ligne_jaune$calendar
+#' )
+ssfs <- function(
+  agency = NULL,
+  routes = NULL,
+  stops = NULL,
+  itin = NULL,
+  stop_seq = NULL,
+  span = NULL,
+  hsh = NULL,
+  calendar = NULL
+) {
+  if (is.null(agency)) {
+    agency <- data.frame(
+      agency_id = character(),
+      agency_name = character(),
+      agency_url = character(),
+      agency_timezone = character(),
+      stringsAsFactors = FALSE
+    )
+  }
 
-  ssfs <- new_ssfs(
+  if (is.null(routes)) {
+    routes <- data.frame(
+      route_id = character(),
+      agency_id = character(),
+      route_short_name = character(),
+      route_long_name = character(),
+      route_type = integer(),
+      route_color = character(),
+      route_text_color = character(),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  if (is.null(stops)) {
+    stops <- sf::st_sf(
+      stop_id = character(),
+      stop_name = character(),
+      geometry = sf::st_sfc(crs = 4326)
+    )
+  }
+
+  if (is.null(itin)) {
+    itin <- sf::st_sf(
+      itin_id = character(),
+      route_id = character(),
+      direction_id = integer(),
+      trip_headsign = character(),
+      geometry = sf::st_sfc(crs = 4326)
+    )
+  }
+
+  if (is.null(stop_seq)) {
+    stop_seq <- data.frame(
+      itin_id = character(),
+      stop_id = character(),
+      stop_sequence = integer(),
+      speed_factor = double(),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  if (is.null(span)) {
+    span <- data.frame(
+      itin_id = character(),
+      service_id = character(),
+      service_window = integer(),
+      first_dep = character(),
+      last_dep = character(),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  if (is.null(hsh)) {
+    hsh <- data.frame(
+      itin_id = character(),
+      service_id = character(),
+      hour_dep = character(),
+      headway = integer(),
+      speed = double(),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  if (is.null(calendar)) {
+    calendar <- data.frame(
+      service_id = character(),
+      monday = integer(),
+      tuesday = integer(),
+      wednesday = integer(),
+      thursday = integer(),
+      friday = integer(),
+      saturday = integer(),
+      sunday = integer(),
+      start_date = character(),
+      end_date = character(),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  obj <- new_ssfs(
     agency = agency,
     routes = routes,
     stops = stops,
@@ -200,9 +335,9 @@ ssfs <- function(agency, routes, stops, itin, stop_seq, span, hsh, calendar) {
     calendar = calendar
   )
 
-  validate_ssfs(ssfs, verbose = FALSE)
+  validate_ssfs(obj, verbose = FALSE)
 
-  ssfs
+  obj
 }
 
 #' Print an ssfs object

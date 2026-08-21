@@ -11,3 +11,4 @@ setup.ico
 air.toml
 .vscode
 .lintr
+inst/doc
