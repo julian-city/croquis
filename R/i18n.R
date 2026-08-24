@@ -1031,8 +1031,8 @@ i18n_dict <- list(
     es = "Nombre completo de una ruta. Este nombre es generalmente m\u00e1s descriptivo que el nombre corto y suele incluir el destino o la parada terminal de la ruta."
   ),
   pop_route_type = c(
-    en = "Indicates the type of transportation used on a route.",
-    fr = "Indique le type de transport utilis\u00e9 sur une ligne.",
+    en = "Indicates the mode of transportation used on a route.",
+    fr = "Indique le mode de transport utilis\u00e9 sur une ligne.",
     es = "Indica el tipo de transporte utilizado en una ruta."
   ),
   pop_route_colour = c(

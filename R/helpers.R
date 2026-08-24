@@ -155,6 +155,19 @@ gtfs_parallel_workers <- function(workers, task_count) {
   min(workers, task_count)
 }
 
+# Check whether the current environment supports forked parallelism.
+# Returns FALSE on Windows and in IDEs that block fork() (e.g. Positron).
+# Kept as a standalone helper so the check list is easy to extend and test.
+croquis_can_fork <- function() {
+  if (.Platform$OS.type == "windows") {
+    return(FALSE)
+  }
+  if (nzchar(Sys.getenv("POSITRON"))) {
+    return(FALSE)
+  }
+  TRUE
+}
+
 croquis_parallel_lapply <- function(x, fun, workers) {
   workers <- gtfs_parallel_workers(workers, length(x))
 
@@ -162,18 +175,28 @@ croquis_parallel_lapply <- function(x, fun, workers) {
     return(lapply(x, fun))
   }
 
-  if (.Platform$OS.type == "windows") {
+  if (!croquis_can_fork()) {
     cli::cli_warn(
-      "Parallel GTFS conversion is not supported on Windows; falling back to a single worker."
+      "Forked parallelism is not available in this environment; falling back to a single worker."
     )
     return(lapply(x, fun))
   }
 
-  result <- parallel::mclapply(
-    x,
-    fun,
-    mc.cores = workers,
-    mc.preschedule = FALSE
+  # Safety net: catch fork failures from environments not yet listed
+  # in croquis_can_fork()
+  result <- tryCatch(
+    parallel::mclapply(
+      x,
+      fun,
+      mc.cores = workers,
+      mc.preschedule = FALSE
+    ),
+    error = function(e) {
+      cli::cli_warn(
+        "Parallel execution failed ({conditionMessage(e)}); falling back to a single worker."
+      )
+      lapply(x, fun)
+    }
   )
 
   error_result <- purrr::keep(result, inherits, "try-error")

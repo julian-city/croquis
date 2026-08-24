@@ -22,11 +22,18 @@ gtfs_retain_routes <- function(gtfs, retain_routes) {
     gtfs$routes |>
     filter(route_id %in% retain_routes)
 
-  #identify agency_ids to keep
-  filter_agency_id <-
-    gtfs$routes |>
-    pull(agency_id) |>
-    unique()
+  if ("agency_id" %in% colnames(gtfs$routes)) {
+    #identify agency_ids to keep
+    filter_agency_id <-
+      gtfs$routes |>
+      pull(agency_id) |>
+      unique()
+
+    #keep good agencies
+    gtfs$agency <-
+      gtfs$agency |>
+      filter(agency_id %in% filter_agency_id)
+  }
 
   #identify trip_ids to keep
   filter_trip_id <-
@@ -79,12 +86,6 @@ gtfs_retain_routes <- function(gtfs, retain_routes) {
     gtfs$calendar |>
     filter(service_id %in% filter_service_id)
 
-  #keep good agencies
-
-  gtfs$agency <-
-    gtfs$agency |>
-    filter(agency_id %in% filter_agency_id)
-
   #keep the good stops
 
   gtfs$stops <-
@@ -124,11 +125,18 @@ gtfs_remove_routes <- function(gtfs, remove_routes) {
     gtfs$routes |>
     filter(!route_id %in% remove_routes)
 
-  #identify agency_ids to keep
-  filter_agency_id <-
-    gtfs$routes |>
-    pull(agency_id) |>
-    unique()
+  if ("agency_id" %in% colnames(gtfs$routes)) {
+    #identify agency_ids to keep
+    filter_agency_id <-
+      gtfs$routes |>
+      pull(agency_id) |>
+      unique()
+
+    #keep good agencies
+    gtfs$agency <-
+      gtfs$agency |>
+      filter(agency_id %in% filter_agency_id)
+  }
 
   #identify trip_ids to keep
   filter_trip_id <-

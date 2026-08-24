@@ -59,12 +59,13 @@ croquis <- function(ssfs = NULL, lang = "en") {
 
   # Detect number of cores for parallel processing (used in conversion functions between gtfs and ssfs)
   detected_cores <- parallel::detectCores(logical = FALSE)
-  default_gtfs_workers <- if (is.na(detected_cores) || detected_cores < 1) {
+  default_gtfs_workers <- if (
+    !croquis_can_fork() || is.na(detected_cores) || detected_cores < 1
+  ) {
     1L
   } else {
     as.integer(min(4L, detected_cores))
   }
-
   #UI-----------------------------
 
   # UI Definition
@@ -867,6 +868,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
     # History-aware wrapper
     # Read:  ssfs()           -- returns current value, registers reactive dependency
     # Write: ssfs(new_value)  -- pushes previous state to undo stack, clears redo stack
+    # THIS MASKS THE ssfs() CONSTRUCTOR FUNCTION IN ssfs-class.R
     ssfs <- function(new_value) {
       if (missing(new_value)) {
         return(ssfs_raw())
