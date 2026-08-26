@@ -32,7 +32,7 @@ Schedule Validator](https://gtfs-validator.mobilitydata.org/) without
 errors or warnings.
 
 Croquis introduces a new data structure that faciliates GTFS creation
-and editing, called SSFS (Simple Speed and Frequency Structure).
+and editing, called SSFS (Simple Speed and Frequency Specification).
 Functions in this package help convert between GTFS and SSFS formats.
 
 Croquis also includes a calibration engine,
@@ -91,7 +91,7 @@ required tables of the GTFS file format, plus `calendar`.
 
 ## SSFS data structure
 
-Simplified Speed and Frequency Structure (SSFS) was created to
+Simplified Speed and Frequency Specification (SSFS) was created to
 facilitate GTFS creation and editing. In short, SSFS is a simplified
 representation of the information contained in a GTFS. Like GTFS, it is
 a list of tables (SSFS however contains two sf objects). Some of these

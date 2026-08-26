@@ -20,11 +20,11 @@ library(croquis)
 
 **croquis** can be used to produce GTFS (General Transit Feed Specification) for planning and research purposes within minutes. This is possible thanks to the Simplified Speed and Frequency Specification (SSFS) data structure that this package introduces.
 
-This vignette is a walkthough for producing a GTFS with the Croquis Shiny app. It introduces the basic functionalities of the app as well as how they work. It covers how to produce a GTFS from scratch or by uploading an existing one, either using the `croquis()` Shiny App or by using in-package functions including `gtfs_to_ssfs()`,`ssfs()` and `ssfs_to_gtfs()`. 
+This vignette is a walkthrough for producing a GTFS with the Croquis Shiny app. It introduces the basic functionalities of the app as well as how they work. It covers how to produce a GTFS from scratch or by uploading an existing one, either using the `croquis()` Shiny App or by using in-package functions including `gtfs_to_ssfs()`,`ssfs()` and `ssfs_to_gtfs()`. 
 
 ## Producing a GTFS from scratch
 
-To launch the croquis Shiny app, run:
+To launch the Croquis Shiny app, run:
 
 ```r
 croquis()
@@ -60,7 +60,7 @@ ssfs_tif$agency <- data.frame(
 
 The Toronto Island Ferries network consists of four stops: City (Jack Layton Ferry Terminal), Centre Island, Hanlan's Point and Ward's Island. In the app, go to the Stops module to create them by clicking `+ Add new stop` in the left hand panel, then clicking on the desired location and providing a stop name for each. The app automatically generates stop ids, which you can overwrite if you wish to provide your own.
 
-```{r, echo=FALSE, out.width="100%", fig.cap="Create stops in the Shiny app."}
+```{r, echo=FALSE, out.width="60%", fig.cap="Create stops in the Shiny app."}
 knitr::include_graphics("img/tif_stops.png")
 ```
 
@@ -223,7 +223,7 @@ ssfs_tif$hsh <- data.frame(
   hour_dep = sprintf("%02d:00:00", c(
     6:22, 7:23, 8:23, 8:23, 6:23, 6:23
   )),
-  headway = 30L, # This simplies trip departure intervals relative to reality. 
+  headway = 30L, # This simplifies trip departure intervals relative to reality. 
   # You can use a rep(c(headway,n),c(headway,n)...) pattern to be more precise
   speed = 10
 )
@@ -247,13 +247,13 @@ gtfstools::write_gtfs(gtfs_tif,"gtfs_tif.zip")
 
 Using the Croquis Shiny app, you can upload any GTFS on the home page (in `Load Network`) in order to edit routes and schedules and export a new GTFS. Uploading a GTFS into the app will convert the GTFS to an SSFS, using `gtfs_to_ssfs()`. The SSFS retains many critical details of the original GTFS, including how service levels vary throughout the day and how speed varies across route segments and time of day. It is important to be aware that other details, for example specific stop times and non-mandatory GTFS tables including fares, will be lost in the conversion.
 
-This section demonstrates how to modify an existing network and export a scenario GTFS in the croquis Shiny app with an example based on the Metro D Line extension in Los Angeles, planned for 2027. You can download a 2026 version of the LA Metro rail GTFS from the [MobilityDatabase](https://files.mobilitydatabase.org/mdb-30/mdb-30-202608230057/mdb-30-202608230057.zip).
+This section demonstrates how to modify an existing network and export a scenario GTFS in the Croquis Shiny app with an example based on the Metro D Line extension in Los Angeles, planned for 2027. You can download a 2026 version of the LA Metro rail GTFS from the [MobilityDatabase](https://files.mobilitydatabase.org/mdb-30/mdb-30-202608230057/mdb-30-202608230057.zip).
 
-It also demonstrates how to modify an existing schedule GTFS using croquis functions within the console.
+It also demonstrates how to modify an existing schedule GTFS using Croquis functions within the console.
 
 ### In the Croquis Shiny app
 
-Run the app with `croquis()` and upload the LA metro GTFS in the `Load Network` panel of the Home module. There are 4 new stations of the Metro D Line in the planned extension: Beverly Dr, Century City, Westwood / UCLA and Westood / VA Hospital. Our first step is to add them. Navigate to the Stops module. You will see that all the stations of the LA metro rail network are already loaded. Add the four new stations in the same way we would add stops if we were building the network from scratch (see the previous section).
+Run the app with `croquis()` and upload the LA metro GTFS in the `Load Network` panel of the Home module. There are 4 new stations of the Metro D Line in the planned extension: Beverly Dr, Century City, Westwood / UCLA and Westwood / VA Hospital. Our first step is to add them. Navigate to the Stops module. You will see that all the stations of the LA metro rail network are already loaded. Add the four new stations in the same way we would add stops if we were building the network from scratch (see the previous section).
 
 The only other thing we need to do is extend the route itineraries for Metro Line D to Westwood / VA Hospital. For the variant that starts at Union Station and ends at Wilshire / La Cienaga, this is straightforward: in the Routes module, click on Metro Line D in the left-hand routes panel to expand and view the itineraries. Click on the pencil icon associated with the itinerary that starts at Union Station and ends at Wilshire / La Cienaga. This will activate editing mode for this itinerary. Click on the map to extend the itinerary with waypoints along Wilshire Boulevard toward Beverly Drive. Click on the Beverly Dr station to add it to the itinerary stop sequence. Continue in this way until you have extended the line to Westwood / VA Hospital, adding the other new stations to the stop sequence along the way. Click `Save` in the left-hand routes panel to confirm your edits.
 
@@ -267,7 +267,7 @@ For this example, modifying the schedule details is optional if we want to prese
 
 ### In the R console
 
-Croquis includes several helper functions, like `gtfs_retain_routes()` and `ssfs_subset()`, that facilitate hybrid workflows with existing GTFS, scenario SSFS, and the croquis Shiny app. Below is one example with the LA Metro E Line. The goal of this demonstration will be to create a scenario GTFS for this line where speeds are increased by 30% to 40 km/h (they are currently at 32 km/h most of the day) and service frequency is increased to a 5-minute headway at peak.
+Croquis includes several helper functions, like `gtfs_retain_routes()` and `ssfs_subset()`, that facilitate hybrid workflows with existing GTFS, scenario SSFS, and the Croquis Shiny app. Below is one example with the LA Metro E Line. The goal of this demonstration will be to create a scenario GTFS for this line where speeds are increased by 30% to 40 km/h (they are currently at 32 km/h most of the day) and service frequency is increased to a 5-minute headway at peak.
 
 First, load the GTFS into the R environment using `gtfstools`:
 
@@ -291,7 +291,7 @@ gtfs_e_line_ref <-
 
 # Create a reference GTFS for the rest of the network
 gtfs_ref_no_e <- 
-  gtfs_retain_routes(gtfs = gtfs_lametro,remove_routes = route_id_e_line)
+  gtfs_remove_routes(gtfs = gtfs_lametro,remove_routes = route_id_e_line)
 ``` 
 
 Convert the subset GTFS for the E Line to an SSFS in order to then apply the operations to improve speeds and headways on weekdays and convert the modified SSFS to a GTFS. This GTFS can then be used as an input in various analyses that evaluate the costs and benefits of this change, including on travel times and accessibility which can be evaluated with [r5r](https://github.com/ipeaGIT/r5r).
@@ -300,7 +300,7 @@ Convert the subset GTFS for the E Line to an SSFS in order to then apply the ope
 # Convert E Line GTFS to SSFS
 ssfs_e_line <- gtfs_to_ssfs(gtfs = gtfs_e_line_ref)
 
-# Increase speeds by to 40 km/h
+# Increase speeds to 40 km/h
 ssfs_e_line$hsh$speed <- 40
 
 # Reduce headways to 5 minutes at peak on weekdays
@@ -317,7 +317,7 @@ ssfs_e_line$hsh$headway[mod_idx] <- 5
 # Convert modified E Line SSFS back to GTFS
 gtfs_e_line_prop <- ssfs_to_gtfs(ssfs_e_line)
 
-# Write new E Line GTFS and refernce GTFS without the E line using {gtfstools}
+# Write new E Line GTFS and reference GTFS without the E line using {gtfstools}
 gtfstools::write_gtfs(gtfs_e_line_prop,"gtfs_e_line_prop.zip")
 gtfstools::write_gtfs(gtfs_ref_no_e,"gtfs_ref_no_e.zip")
 ```

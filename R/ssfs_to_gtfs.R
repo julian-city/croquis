@@ -1,6 +1,6 @@
 #' Convert a SSFS to a GTFS
 #'
-#' Reads a SSFS (Simplified Speeds and Frequencies Structure) and
+#' Reads a SSFS (Simplified Speed and Frequency Specification) and
 #' converts it into a GTFS.
 #'
 #' @param ssfs An ssfs list

@@ -358,7 +358,7 @@ print.ssfs <- function(x, ...) {
   n_itin <- nrow(x$itin)
   n_services <- nrow(x$calendar)
 
-  cat("<ssfs> Simplified Speed and Frequency Structure\n")
+  cat("<ssfs> Simplified Speed and Frequency Specification\n")
   cat("  Agencies:     ", n_agencies, "\n")
   cat("  Routes:       ", n_routes, "\n")
   cat("  Itineraries:  ", n_itin, "\n")

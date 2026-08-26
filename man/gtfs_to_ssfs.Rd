@@ -27,8 +27,8 @@ gtfs_to_ssfs(
 An SSFS list
 }
 \description{
-Reads a GTFS object and transforms it into a Simplified Schedule
-and Frequency Structure (SSFS), extracting route geometries,
+Reads a GTFS object and transforms it into a Simplified Speed
+and Frequency Specification (SSFS), extracting route geometries,
 stop sequences, and service patterns into a more editable format
 for sketch planning workflows.
 }
