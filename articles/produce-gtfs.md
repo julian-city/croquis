@@ -8,7 +8,8 @@ library(croquis)
 **croquis** can be used to produce GTFS (General Transit Feed
 Specification) for planning and research purposes within minutes. This
 is possible thanks to the Simplified Speed and Frequency Specification
-(SSFS) data structure that this package introduces.
+(SSFS) data structure that this package introduces ([read more in the
+SSFS vignette](https://croquis.comotive.net/articles/SSFS.html)).
 
 This vignette is a walkthrough for producing a GTFS with the Croquis
 Shiny app. It introduces the basic functionalities of the app as well as
