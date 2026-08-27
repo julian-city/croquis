@@ -13,7 +13,7 @@ for sketch planning workflows."><meta property="og:image" content="https://croqu
 
     <a class="navbar-brand me-2" href="../index.html">croquis</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,7 @@ for sketch planning workflows."><meta property="og:image" content="https://croqu
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Convert a GTFS to a SSFS</h1>
-      <small class="dont-index">Source: <a href="https://github.com/julian-city/croquis/blob/v0.1.0/R/gtfs_to_ssfs.R" class="external-link"><code>R/gtfs_to_ssfs.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/julian-city/croquis/blob/main/R/gtfs_to_ssfs.R" class="external-link"><code>R/gtfs_to_ssfs.R</code></a></small>
       <div class="d-none name"><code>gtfs_to_ssfs.Rd</code></div>
     </div>
 
@@ -96,9 +96,9 @@ for sketch planning workflows.</p>
 <span class="r-in"><span><span class="co"># First, create a GTFS from the sample Ligne Jaune network</span></span></span>
 <span class="r-in"><span><span class="va">gtfs</span> <span class="op">&lt;-</span> <span class="fu"><a href="ssfs_to_gtfs.html">ssfs_to_gtfs</a></span><span class="op">(</span><span class="va">stm_metro</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 1 <span style="color: #00BB00;">■■■■                            </span>  11% | ETA:  9s</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 1 <span style="color: #00BB00;">■■■■■■                          </span>  18% | ETA: 10s</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 2 <span style="color: #00BB00;">■■■■■■■■■■■■■■■■                </span>  50% | ETA:  5s</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 4 <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■       </span>  79% | ETA:  2s</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 2 <span style="color: #00BB00;">■■■■■■■■■                       </span>  25% | ETA:  9s</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 2 <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■               </span>  54% | ETA:  5s</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 5 <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■     </span>  86% | ETA:  2s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating trips for route 5 <span style="color: #00BB00;">■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ </span> 100% | ETA:  0s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>repeating attributes for all sub-geometries for which they may not be constant</span>
@@ -115,9 +115,10 @@ for sketch planning workflows.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 2_1_1,service_id sun and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 2_1_2,service_id mon-fri and service_window …</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 4_0_1,service_id sun and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_0_1,service_id mon-fri and service_window …</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 4_1_1,service_id sun and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_0_1,service_id sat and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_0_1,service_id sun and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_1_1,service_id mon-fri and service_window …</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_1_1,service_id sat and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Calculating stop times for itin_id 5_1_1,service_id sun and service_window 1 <span style="color: #00BB00;">■■</span>…</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
