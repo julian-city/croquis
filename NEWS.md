@@ -19,9 +19,6 @@ Initial public beta release.
   processing on Unix-like systems, and both OSRM and Valhalla routing
   servers for shape generation.
 
-* Added `ssfs_subset()` for filtering SSFS objects by route or itinerary,
-  with retain or remove operations.
-
 ## Shiny application
 
 * Launched the Croquis interactive Shiny application via `croquis()`. The
