@@ -12,6 +12,7 @@ Tools for rapidly creating detailed and realistic transit networks and schedules
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://croquis.comotive.net}
   \item \url{https://github.com/julian-city/croquis}
   \item Report bugs at \url{https://github.com/julian-city/croquis/issues}
 }
