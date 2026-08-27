@@ -22,11 +22,11 @@ library(croquis)
 
 The Simplified Speed and Frequency Specification (SSFS) is the foundational data structure of Croquis. It consists of a simplified representation of a GTFS (General Transit Feed Specification) and contains the instructions for how to build one, which are read by `ssfs_to_gtfs()`.
 
-Like the GTFS, it contains a list of tables pertaining to a transit network and schedule. In fact, three of the tables are shared (agency, routes, and calendar) and are simply passed on from one data structure to the other. Unlike GTFS, SSFS does not contain stop_times or trips. Instead, it contains:
+Like the GTFS, it contains a list of tables pertaining to a transit network and schedule. In fact, three of the tables are shared (agency, routes, and calendar) and are simply passed on from one data structure to the other. The stops table is also carried over with a geometry transformation. Unlike GTFS, SSFS does not contain stop_times or trips. Instead, it contains:
 
 - A simple features (geospatial) table called **itin** which contains the geometry of the distinct itineraries (or variants) of the routes.
 - A data.frame table called **span** which contains the first and last departure time for each service window, for each service, and for each route itinerary. 
-- A data.frame called **hsh** which details the headway (interval between trips) and speed by hour of operation for each route itinerary and service.
+- A data.frame called **hsh** which details the headway (interval between trips) and speed (in km/h) by hour of operation for each route itinerary and service.
 - A data.frame called **stop_seq** which details the stop order for each route itinerary as well as the speed factor to apply to adjust speeds by route segment relative to the speed provided by hour in *hsh*. This is used to produce stop_times in conjunction with the distance between stops based on the geometry in *itin*. 
 
 SSFS was designed to facilitate production, editing and calibration of transit networks and schedules in a GTFS-compatible format. 
@@ -36,6 +36,8 @@ When you load a GTFS network into the Croquis Shiny app, it converts the GTFS to
 To convert a GTFS to an SSFS in the console, use `gtfs_to_ssfs()`. To produce an empty SSFS in the console, use `ssfs()`.
 
 The rest of this vignette covers each table of the SSFS, including the fields of each and data types. We will use `translink` data from Vancouver that is included in the croquis package.
+
+## SSFS tables
 
 ### agency
 
@@ -57,17 +59,17 @@ Field connections:
 - The `route_id` field connects this table to the *itin* table.
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$routes)
+glimpse(translink$routes)
 ```
 
 ### stops
 
-**stops** in the SSFS is a simple features table taht consists of the stop_id and stop_name fields that are passed on between the SSFS and GTFS, plus a `POINT` geometry field based on the stop_lat and stop_lon of the GTFS.
+**stops** in the SSFS is a simple features table that consists of the stop_id and stop_name fields that are passed on between the SSFS and GTFS, plus a `POINT` geometry field based on the stop_lat and stop_lon of the GTFS.
 
 The `stop_id` field connects this table to the *stop_seq* table.
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$stops)
+glimpse(translink$stops)
 ```
 
 ### itin
@@ -82,7 +84,7 @@ Field connections:
 - The `route_id` field connects this table to the *routes* table.
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$itin)
+glimpse(translink$itin)
 ```
 
 ### calendar
@@ -105,17 +107,17 @@ Field connections:
 - The `service_id` field connects to *calendar* and *hsh*.
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$span)
+glimpse(translink$span)
 ```
 
 ### hsh
 
-The **hsh** table details the headway (interval between trips) and speed by hour of operation for each route itinerary and service.
+The **hsh** table details the headway (interval between trips) and speed (in km/h) by hour of operation for each route itinerary and service.
 
-When importing a GTFS into Croquis or converting a GTFS to SSFS, `gtfs_to_ssfs()` calculates the average commercial speed of trips by route itinerary, service, and hour. This data is stored in the hsh table, to be used viewed and edited while in SSFS format, then converted into stop_times based on the hour-by-hour data.
+When importing a GTFS into Croquis or converting a GTFS to SSFS, `gtfs_to_ssfs()` calculates the average commercial speed of trips by route itinerary, service, and hour. This data is stored in the hsh table, to be viewed and edited while in SSFS format, then converted into stop_times based on the hour-by-hour data.
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$hsh)
+glimpse(translink$hsh)
 ```
 
 As mentioned, the SSFS allows us to view and modify how speeds and service levels vary throughout the day. Converting a GTFS to SSFS can be useful for gathering summary information about service levels and speeds. Below is an example for generating a visual for daily service level and speed variation for weekday service on the R4 eastbound in Vancouver.
@@ -124,26 +126,26 @@ As mentioned, the SSFS allows us to view and modify how speeds and service level
 # Fetch route ID for R4
 r4_route_id <- 
   translink$routes |> 
-  filter(route_short_name=="R4") |> 
+  filter(route_short_name == "R4") |> 
   pull(route_id)
 
 # Fetch itin ID for R4 bound for Joyce-Collingwood Station
 r4_e_itin_id <- 
   translink$itin |> 
-  filter(route_id==r4_route_id,stringr::str_detect(trip_headsign,"Joyce")) |> 
+  filter(route_id == r4_route_id, stringr::str_detect(trip_headsign,"Joyce")) |> 
   pull(itin_id)
 
 # Fetch headway and speeds by hour table for weekday service and R4 bound for Joyce-Collingwood
 r4_trips_ph_speed <- 
 translink$hsh |> 
-  filter(itin_id==r4_e_itin_id,service_id=="mon-fri") |> 
+  filter(itin_id == r4_e_itin_id, service_id == "mon-fri") |> 
   mutate(
     trips_per_hour=floor(60/headway),
     hour_dep = as.numeric(stringr::str_sub(hour_dep,1,2))) |> 
   select(hour_dep,trips_per_hour,speed)
 
 # Visualise trips per hour and speeds in a ggplot
-ggplot2::ggplot(r4_trips_ph_speed,aes(x = hour_dep))+
+ggplot(r4_trips_ph_speed,aes(x = hour_dep))+
   geom_col(aes(y = trips_per_hour), width = 0.8, alpha = 0.5)+
   geom_line(aes(y = speed)) +
   scale_y_continuous(
@@ -160,7 +162,7 @@ ggplot2::ggplot(r4_trips_ph_speed,aes(x = hour_dep))+
 The **stop_seq** table details the stop order for each route itinerary as well as the speed factor to apply to adjust speeds by route segment. When converting a GTFS to SSFS, speed_factors are calculated once per itinerary and per stop based on how the average interstop speed between that stop and the next one compares to the average speed of all trips of that itinerary. Speed factors are therefore not provided for the last stop in any stop sequence. 
 
 ```{r, message = FALSE}
-dplyr::glimpse(translink$stop_seq)
+glimpse(translink$stop_seq)
 ```
 
 The singular speed factor per stop is a heuristic approach that does not take into account how the relative speed of segments could vary throughout the day or depending on the service (weekday vs. weekend).
@@ -183,13 +185,15 @@ translink$stop_seq |>
 print(stop_seq_speeds_8am)
 
 # Visualise trips per hour and speeds in a ggplot
-ggplot2::ggplot(stop_seq_speeds_8am[1:nrow(stop_seq_speeds_8am)-1,],aes(x = stop_sequence))+
+ggplot(stop_seq_speeds_8am[1:(nrow(stop_seq_speeds_8am)-1),],aes(x = stop_sequence))+
   geom_line(aes(y = speed)) +
   scale_y_continuous(
     name = "Speed (km/h)")+
   scale_x_continuous(breaks = stop_seq_speeds_8am$stop_sequence)+
   labs(
-    title = "R4 Eastbound: 8AM weekday speeds by departure_stop",
+    title = "R4 Eastbound: 8AM weekday speeds by stop_sequence",
     x = "Stop sequence") +
   theme_minimal()
 ```
+
+Together, these 8 tables provide a compact and easily-editable representation of a transit network that readily converts to a GTFS. SSFS objects in croquis have a formal class "ssfs" which is assigned when creating a new SSFS using the `ssfs()` construtor function. The `validate_ssfs()` function is a useful companion when building SSFS data in programmed workflows and in the console. 
