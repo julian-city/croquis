@@ -136,7 +136,7 @@ scheduleUI <- function(id, lang = "en") {
   )
 }
 
-scheduleServer <- function(id, ssfs, map_center, lang) {
+scheduleServer <- function(id, ssfs, map_center, carto_key, lang) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -350,18 +350,11 @@ scheduleServer <- function(id, ssfs, map_center, lang) {
       leaflet::leaflet(
         options = leaflet::leafletOptions(zoomControl = TRUE)
       ) |>
-        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
-        leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
-        leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
+        addBaseMaps(carto_key = carto_key(), position = "bottomright") |>
         leaflet::addMapPane("sched_routes_pane", zIndex = 410) |>
         leaflet::addMapPane("sched_highlight_pane", zIndex = 420) |>
         leaflet::addMapPane("sched_stops_pane", zIndex = 430) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
-        leaflet::addLayersControl(
-          baseGroups = c("Positron", "Satellite", "OSM"),
-          position = "bottomright",
-          options = leaflet::layersControlOptions(collapsed = FALSE)
-        ) |>
         htmlwidgets::onRender(sprintf(
           "
           function(el, x) {

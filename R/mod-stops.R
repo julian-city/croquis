@@ -135,6 +135,7 @@ stopsServer <- function(
   current_zoom,
   min_stop_dist,
   osm_provider,
+  carto_key,
   lang
 ) {
   moduleServer(id, function(input, output, session) {
@@ -181,7 +182,7 @@ stopsServer <- function(
     output$stops_map <- leaflet::renderLeaflet({
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
-        addBaseMaps() |>
+        addBaseMaps(carto_key = carto_key()) |>
         leaflet::addMapPane("stops_shapes_pane", zIndex = 410) |>
         leaflet::addMapPane("stops_markers_pane", zIndex = 430) |>
         leaflet::addMapPane("stops_temp_pane", zIndex = 450) |>

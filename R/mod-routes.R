@@ -110,6 +110,7 @@ routesServer <- function(
   map_center,
   current_zoom,
   routing_server,
+  carto_key,
   lang
 ) {
   moduleServer(id, function(input, output, session) {
@@ -1406,9 +1407,7 @@ routesServer <- function(
     output$routes_map <- leaflet::renderLeaflet({
       center <- map_center()
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
-        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
-        leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
-        leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
+        addBaseMaps(carto_key = carto_key(), position = "bottomright") |>
         leaflet::addMapPane("routes_pane", zIndex = 410) |>
         leaflet::addMapPane("highlight_pane", zIndex = 420) |>
         leaflet::addMapPane("stops_pane", zIndex = 430) |>
@@ -1416,11 +1415,6 @@ routesServer <- function(
         leaflet::addMapPane("route_nodes_pane", zIndex = 450) |>
         leaflet::addMapPane("wp_drag_pane", zIndex = 460) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 12) |>
-        leaflet::addLayersControl(
-          baseGroups = c("Positron", "Satellite", "OSM"),
-          position = "bottomright",
-          options = leaflet::layersControlOptions(collapsed = FALSE)
-        ) |>
         leaflet::showGroup("stops") |>
         leaflet::showGroup("routes") |>
         leaflet::showGroup("current_route") |>

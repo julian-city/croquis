@@ -8,13 +8,56 @@ calculateMarkerSize <- function(zoom) {
 }
 
 # Add standard base map tile layers to a leaflet map
-addBaseMaps <- function(map) {
+#
+# When a CARTO API key is provided, the Positron basemap is loaded from
+# CARTO's raster tile service with the key appended. When no key is
+# available, the free Esri World Gray Canvas basemap is used as a
+# visual fallback. It requires no API key and provides a similar light
+# gray aesthetic suitable as a background for transit data overlays.
+#
+# Free CARTO API keys (5 M tiles/month) can be requested at
+# https://carto.com/basemaps/apikey/
+#
+# @param map A leaflet map object.
+# @param carto_key Character string. A CARTO basemap API key. When
+#   empty or NULL, falls back to Esri.WorldGrayCanvas.
+# @param position Character string. Position of the layers control
+#   widget on the map (default "topright").
+# @return The map object with basemap tiles and layer control added.
+addBaseMaps <- function(map, carto_key = "", position = "topright") {
+  use_carto <- !is.null(carto_key) && nzchar(carto_key)
+
+  if (use_carto) {
+    # ------ CARTO Positron with API key ------
+    positron_url <- paste0(
+      "https://{s}.basemaps.cartocdn.com/light_all/",
+      "{z}/{x}/{y}{r}.png",
+      "?key=",
+      carto_key
+    )
+    map <- map |>
+      leaflet::addTiles(
+        urlTemplate = positron_url,
+        attribution = paste0(
+          '&copy; <a href="https://www.openstreetmap.org/copyright">',
+          "OpenStreetMap</a>, ",
+          '&copy; <a href="https://carto.com/attributions">CARTO</a>'
+        ),
+        group = "Positron",
+        options = leaflet::tileOptions(subdomains = "abcd", maxZoom = 20)
+      )
+  } else {
+    # ------ Free fallback (no API key required) ------
+    map <- map |>
+      leaflet::addProviderTiles("Esri.WorldGrayCanvas", group = "Positron")
+  }
+
   map |>
-    leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
     leaflet::addProviderTiles("Esri.WorldImagery", group = "Satellite") |>
     leaflet::addProviderTiles("OpenStreetMap.HOT", group = "OSM") |>
     leaflet::addLayersControl(
       baseGroups = c("Positron", "Satellite", "OSM"),
+      position = position,
       options = leaflet::layersControlOptions(collapsed = FALSE)
     )
 }

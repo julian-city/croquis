@@ -2352,6 +2352,16 @@ i18n_dict <- list(
     en = "OpenStreetMap data provider used when generating stops from road network data. Different providers have different regional coverage.",
     fr = "Fournisseur de donn\u00e9es OpenStreetMap utilis\u00e9 lors de la g\u00e9n\u00e9ration d'arr\u00eats \u00e0 partir des donn\u00e9es du r\u00e9seau routier. Les fournisseurs offrent des couvertures r\u00e9gionales diff\u00e9rentes.",
     es = "Proveedor de datos OpenStreetMap usado al generar paradas a partir de datos de la red vial. Diferentes proveedores tienen diferente cobertura regional."
+  ),
+  lbl_carto_key = c(
+    en = "CARTO basemap API key",
+    fr = "Cl\u00e9 API CARTO (fonds de carte)",
+    es = "Clave API de CARTO (mapas base)"
+  ),
+  pop_carto_key = c(
+    en = "Optional API key for CARTO Positron basemap tiles. Free keys (5 million tiles/month) can be requested at carto.com/basemaps/apikey. When empty, a free alternative basemap is used.",
+    fr = "Cl\u00e9 API optionnelle pour les tuiles du fond de carte CARTO Positron. Des cl\u00e9s gratuites (5 millions de tuiles/mois) peuvent \u00eatre demand\u00e9es sur carto.com/basemaps/apikey. Si vide, un fond de carte alternatif gratuit est utilis\u00e9.",
+    es = "Clave API opcional para las teselas del mapa base CARTO Positron. Se pueden solicitar claves gratuitas (5 millones de teselas/mes) en carto.com/basemaps/apikey. Si se deja vac\u00edo, se usa un mapa base alternativo gratuito."
   )
 )
 

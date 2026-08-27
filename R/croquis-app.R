@@ -684,6 +684,22 @@ croquis <- function(ssfs = NULL, lang = "en") {
               choices = c("OSRM", "Valhalla"),
               selected = "OSRM"
             ),
+            textInput(
+              "settings_carto_key",
+              label = tagList(
+                span(
+                  tr("lbl_carto_key", lang_init),
+                  `data-i18n` = "lbl_carto_key"
+                ),
+                info_popover(
+                  tr("pop_carto_key", lang_init),
+                  "https://carto.com/basemaps/apikey/",
+                  key = "pop_carto_key",
+                  lang = lang_init
+                )
+              ),
+              value = Sys.getenv("CROQUIS_CARTO_API_KEY", unset = "")
+            ),
             numericInput(
               "settings_gtfs_workers",
               label = tagList(
@@ -1895,8 +1911,9 @@ croquis <- function(ssfs = NULL, lang = "en") {
     # Agency map initialization
     output$agency_map <- leaflet::renderLeaflet({
       center <- map_center()
+      carto_key_val <- input$settings_carto_key
       leaflet::leaflet(options = leaflet::leafletOptions(zoomControl = TRUE)) |>
-        leaflet::addProviderTiles("CartoDB.Positron", group = "Positron") |>
+        addBaseMaps(carto_key = carto_key_val) |>
         leaflet::setView(lng = center$lng, lat = center$lat, zoom = 10)
     })
 
@@ -1981,6 +1998,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
       current_zoom,
       reactive(input$settings_min_stop_dist),
       reactive(input$settings_osm_provider),
+      reactive(input$settings_carto_key),
       lang
     )
 
@@ -1996,16 +2014,23 @@ croquis <- function(ssfs = NULL, lang = "en") {
       map_center,
       current_zoom,
       reactive(input$settings_routing_server),
+      reactive(input$settings_carto_key),
       lang
     )
 
     #   #   #
     #
-    ## SCHEDULE MODULE---------
+    ## SCHEDULE MODULE-------
     #
     #   #   #
 
-    scheduleServer("schedule", ssfs, map_center, lang)
+    scheduleServer(
+      "schedule",
+      ssfs,
+      map_center,
+      reactive(input$settings_carto_key),
+      lang
+    )
 
     ###
     #
