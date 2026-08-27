@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/julian-city/croquis/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/julian-city/croquis/blob/v0.1.0/DESCRIPTION)
 
 Villafuerte Diaz J (2026). *croquis: Transit Sketch Planning with GTFS*.
 R package version 0.1.0, <https://croquis.comotive.net>.

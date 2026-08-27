@@ -30,11 +30,6 @@ Initial public beta release.
   Unix-like systems, and both OSRM and Valhalla routing servers for
   shape generation.
 
-- Added
-  [`ssfs_subset()`](https://croquis.comotive.net/reference/ssfs_subset.md)
-  for filtering SSFS objects by route or itinerary, with retain or
-  remove operations.
-
 ### Shiny application
 
 - Launched the Croquis interactive Shiny application via

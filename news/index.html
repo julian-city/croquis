@@ -33,7 +33,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/julian-city/croquis/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/julian-city/croquis/blob/v0.1.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
@@ -44,7 +44,6 @@
 <ul><li><p>Introduced the Simplified Speed and Frequency Specification (SSFS), a data structure for simplified transit network creation and editing. SSFS objects contain 8 component tables (agency, routes, stops, itin, stop_seq, span, hsh, calendar) and can be constructed with <code><a href="../reference/ssfs.html">ssfs()</a></code>, validated with <code><a href="../reference/validate_ssfs.html">validate_ssfs()</a></code>, and printed with a compact <code><a href="../reference/print.ssfs.html">print.ssfs()</a></code> summary.</p></li>
 <li><p>Added <code><a href="../reference/ssfs_to_gtfs.html">ssfs_to_gtfs()</a></code> for converting SSFS objects to valid GTFS feeds, with optional <code>shape_dist_traveled</code> output. Output is compatible with downstream analysis tools such as r5r and gtfstools.</p></li>
 <li><p>Added <code><a href="../reference/gtfs_to_ssfs.html">gtfs_to_ssfs()</a></code> for converting existing GTFS feeds into SSFS format for editing. Supports route filtering, date windowing, parallel processing on Unix-like systems, and both OSRM and Valhalla routing servers for shape generation.</p></li>
-<li><p>Added <code><a href="../reference/ssfs_subset.html">ssfs_subset()</a></code> for filtering SSFS objects by route or itinerary, with retain or remove operations.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="shiny-application-0-1-0">Shiny application<a class="anchor" aria-label="anchor" href="#shiny-application-0-1-0"></a></h3>
