@@ -13,6 +13,8 @@ accessibility analysis tools such as r5r.
 
 Useful links:
 
+- <https://croquis.comotive.net>
+
 - <https://github.com/julian-city/croquis>
 
 - Report bugs at <https://github.com/julian-city/croquis/issues>

@@ -30,10 +30,16 @@ an object of class 'gtfs'
 # Convert the sample Ligne Jaune SSFS to GTFS
 gtfs <- ssfs_to_gtfs(ligne_jaune)
 #> Warning: repeating attributes for all sub-geometries for which they may not be constant
+#> Calculating stop times for itin_id 4_0_1,service_id sun and service_window 1 ■■…
+#> Calculating stop times for itin_id 4_1_1,service_id sun and service_window 1 ■■…
+#> 
 
 # \donttest{
 # Include shape_dist_traveled (increases processing time)
 gtfs_with_dist <- ssfs_to_gtfs(ligne_jaune, dist_traveled = TRUE)
 #> Warning: repeating attributes for all sub-geometries for which they may not be constant
+#> Calculating stop times for itin_id 4_0_1,service_id sun and service_window 1 ■■…
+#> Calculating stop times for itin_id 4_1_1,service_id sun and service_window 1 ■■…
+#> 
 # }
 ```
