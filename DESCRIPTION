@@ -1,6 +1,6 @@
 Package: croquis
 Title: Transit Sketch Planning with GTFS
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: 
     person("Julian", "Villafuerte Diaz", , "contact@julian.city", role = c("aut", "cre"),
     comment=c(ORCID="0000-0001-6543-7105"))
