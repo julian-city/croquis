@@ -96,15 +96,15 @@ Field connections:
 ``` r
 
 glimpse(translink$routes)
-#> Rows: 241
+#> Rows: 244
 #> Columns: 7
-#> $ route_id         <chr> "10232", "11201", "11202", "11692", "11693", "11696",…
+#> $ route_id         <chr> "37807", "30051", "30050", "30053", "30052", "30055",…
 #> $ agency_id        <chr> "TL", "TL", "TL", "TL", "TL", "TL", "TL", "TL", "TL",…
-#> $ route_short_name <chr> "256", "033", "042", "364", "388", "609", "595", "414…
-#> $ route_long_name  <chr> "Whitby Estate/Park Royal/Spuraway", "16 & 33rd Avenu…
-#> $ route_type       <int> 3, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3,…
-#> $ route_color      <chr> "92C5DE", "92C5DE", "92C5DE", "92C5DE", "92C5DE", "92…
-#> $ route_text_color <chr> "000000", "000000", "000000", "000000", "000000", "00…
+#> $ route_short_name <chr> "R5", "189", "187", "", "", "023", "560", "119", "402…
+#> $ route_long_name  <chr> "Hastings St", "Coquitlam Central Station/Lafarge Par…
+#> $ route_type       <int> 3, 3, 3, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,…
+#> $ route_color      <chr> "008522", "92C5DE", "92C5DE", "0033a0", "ffcd00", "92…
+#> $ route_text_color <chr> "FFFFFF", "000000", "000000", "FFFFFF", "333333", "00…
 ```
 
 ### stops
@@ -119,11 +119,11 @@ The `stop_id` field connects this table to the *stop_seq* table.
 ``` r
 
 glimpse(translink$stops)
-#> Rows: 8,669
+#> Rows: 8,647
 #> Columns: 3
-#> $ stop_id   <chr> "1", "10000", "10001", "10002", "10003", "10004", "10005", "…
-#> $ stop_name <chr> "Westbound Davie St @ Bidwell St", "Northbound No. 5 Rd @ Mc…
-#> $ geometry  <POINT [°]> POINT (-123.1407 49.28659), POINT (-123.0915 49.17996)…
+#> $ stop_id   <chr> "11542", "11543", "11540", "11541", "11546", "11547", "11544…
+#> $ stop_name <chr> "Southbound Howe St @ Davie St", "Northbound Laurentian Cres…
+#> $ geometry  <POINT [°]> POINT (-123.1271 49.27799), POINT (-122.844 49.24858),…
 ```
 
 ### itin
@@ -154,9 +154,9 @@ Field connections:
 ``` r
 
 glimpse(translink$itin)
-#> Rows: 904
+#> Rows: 918
 #> Columns: 5
-#> Groups: itin_id [904]
+#> Groups: itin_id [918]
 #> $ itin_id       <chr> "10232_0_1", "10232_1_1", "11201_0_1", "11201_1_1", "116…
 #> $ route_id      <chr> "10232", "10232", "11201", "11201", "11692", "11692", "1…
 #> $ direction_id  <int> 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0,…
@@ -180,9 +180,9 @@ head(translink$calendar)
 #> 2        sat      0       0         0        0      0        1      0
 #> 3        sun      0       0         0        0      0        0      1
 #>   start_date   end_date
-#> 1 2026-04-20 2026-06-07
-#> 2 2026-04-20 2026-06-07
-#> 3 2026-04-20 2026-06-07
+#> 1 2026-09-07 2027-01-03
+#> 2 2026-09-07 2027-01-03
+#> 3 2026-09-07 2027-01-03
 ```
 
 ### span
@@ -201,7 +201,7 @@ Field connections:
 ``` r
 
 glimpse(translink$span)
-#> Rows: 2,410
+#> Rows: 2,454
 #> Columns: 5
 #> $ itin_id        <chr> "10232_0_1", "10232_0_1", "10232_0_1", "10232_1_1", "10…
 #> $ service_id     <chr> "mon-fri", "sat", "sun", "mon-fri", "sat", "sun", "mon-…
@@ -225,7 +225,7 @@ the hour-by-hour data.
 ``` r
 
 glimpse(translink$hsh)
-#> Rows: 23,529
+#> Rows: 23,390
 #> Columns: 5
 #> $ itin_id    <chr> "10232_0_1", "10232_0_1", "10232_0_1", "10232_0_1", "10232_…
 #> $ service_id <chr> "mon-fri", "mon-fri", "mon-fri", "mon-fri", "mon-fri", "mon…
@@ -294,12 +294,12 @@ stop in any stop sequence.
 ``` r
 
 glimpse(translink$stop_seq)
-#> Rows: 27,309
+#> Rows: 27,757
 #> Columns: 4
 #> $ itin_id       <chr> "10232_0_1", "10232_0_1", "10232_0_1", "10232_0_1", "102…
-#> $ stop_id       <chr> "10947", "4782", "12883", "11118", "4491", "4661", "4662…
+#> $ stop_id       <chr> "10947", "4782", "12883", "13169", "11118", "4829", "866…
 #> $ stop_sequence <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1…
-#> $ speed_factor  <dbl> 0.9, 1.2, 1.0, 0.7, 1.2, 0.4, 0.9, 1.0, 1.0, 1.1, 0.9, 1…
+#> $ speed_factor  <dbl> 0.9, 1.2, 1.0, 1.0, 0.7, 0.7, 0.7, 1.2, 0.4, 0.9, 1.0, 1…
 ```
 
 The singular speed factor per stop is a heuristic approach that does not
@@ -331,22 +331,22 @@ translink$stop_seq |>
 
 print(stop_seq_speeds_8am)
 #>    stop_sequence                              stop_name speed
-#> 1              1                   UBC Exchange @ Bay 4  31.3
-#> 2              2 Southbound Wesbrook Mall @ Agronomy Rd  28.9
-#> 3              3     Westbound W 16 Ave @ Wesbrook Mall  26.5
-#> 4              4                    Dunbar Loop @ Bay 7  28.9
-#> 5              5      Eastbound W 41 Ave @ Carnarvon St  28.9
-#> 6              6          Eastbound W 41 Ave @ Maple St  26.5
-#> 7              7      Eastbound W 41 Ave @ Granville St  26.5
-#> 8              8            Eastbound W 41 Ave @ Oak St  19.3
-#> 9              9      Oakridge-41st Ave Station @ Bay 3  21.7
-#> 10            10           Eastbound E 41 Ave @ Main St  19.3
-#> 11            11         Eastbound E 41 Ave @ Fraser St  16.9
-#> 12            12         Eastbound E 41 Ave @ Knight St  21.7
-#> 13            13       Eastbound E 41 Ave @ Victoria Dr  19.3
-#> 14            14      Eastbound E 41 Ave @ Clarendon St  19.3
-#> 15            15         Eastbound E 41 Ave @ Rupert St  19.3
-#> 16            16         Northbound Joyce St @ Kingsway  19.3
+#> 1              1                   UBC Exchange @ Bay 4  30.8
+#> 2              2 Southbound Wesbrook Mall @ Agronomy Rd  28.4
+#> 3              3     Westbound W 16 Ave @ Wesbrook Mall  26.1
+#> 4              4                    Dunbar Loop @ Bay 7  28.4
+#> 5              5      Eastbound W 41 Ave @ Carnarvon St  26.1
+#> 6              6         Eastbound W 41 Ave @ East Blvd  28.4
+#> 7              7      Eastbound W 41 Ave @ Granville St  26.1
+#> 8              8            Eastbound W 41 Ave @ Oak St  19.0
+#> 9              9      Oakridge-41st Ave Station @ Bay 3  21.3
+#> 10            10           Eastbound E 41 Ave @ Main St  19.0
+#> 11            11         Eastbound E 41 Ave @ Fraser St  16.6
+#> 12            12         Eastbound E 41 Ave @ Knight St  19.0
+#> 13            13       Eastbound E 41 Ave @ Victoria Dr  19.0
+#> 14            14      Eastbound E 41 Ave @ Clarendon St  19.0
+#> 15            15         Eastbound E 41 Ave @ Rupert St  19.0
+#> 16            16         Northbound Joyce St @ Kingsway  19.0
 #> 17            17      Joyce Station @ Bay 1 Unload Only    NA
 
 # Visualise trips per hour and speeds in a ggplot

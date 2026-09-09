@@ -40,5 +40,5 @@ generate_service_cost(ssfs=translink,id_type="route_id",id=b_line_route_id,servi
 #> # A tibble: 1 × 3
 #>   agency_id total_km total_h
 #>   <chr>        <dbl>   <dbl>
-#> 1 TL           7352.    393.
+#> 1 TL           7041.    386.
 ```

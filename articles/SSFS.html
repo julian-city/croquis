@@ -158,15 +158,15 @@ required fields, <code><a href="../reference/gtfs_to_ssfs.html">gtfs_to_ssfs()</
 </ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">routes</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 241</span></span>
+<span><span class="co">#&gt; Rows: 244</span></span>
 <span><span class="co">#&gt; Columns: 7</span></span>
-<span><span class="co">#&gt; $ route_id         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232"<span style="color: #949494;">, </span>"11201"<span style="color: #949494;">, </span>"11202"<span style="color: #949494;">, </span>"11692"<span style="color: #949494;">, </span>"11693"<span style="color: #949494;">, </span>"11696"<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ route_id         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "37807"<span style="color: #949494;">, </span>"30051"<span style="color: #949494;">, </span>"30050"<span style="color: #949494;">, </span>"30053"<span style="color: #949494;">, </span>"30052"<span style="color: #949494;">, </span>"30055"<span style="color: #949494;">,</span>…</span></span>
 <span><span class="co">#&gt; $ agency_id        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">, </span>"TL"<span style="color: #949494;">,</span>…</span></span>
-<span><span class="co">#&gt; $ route_short_name <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "256"<span style="color: #949494;">, </span>"033"<span style="color: #949494;">, </span>"042"<span style="color: #949494;">, </span>"364"<span style="color: #949494;">, </span>"388"<span style="color: #949494;">, </span>"609"<span style="color: #949494;">, </span>"595"<span style="color: #949494;">, </span>"414…</span></span>
-<span><span class="co">#&gt; $ route_long_name  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Whitby Estate/Park Royal/Spuraway"<span style="color: #949494;">, </span>"16 &amp; 33rd Avenu…</span></span>
-<span><span class="co">#&gt; $ route_type       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">,</span>…</span></span>
-<span><span class="co">#&gt; $ route_color      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "92C5DE"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"92…</span></span>
-<span><span class="co">#&gt; $ route_text_color <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "000000"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"00…</span></span></code></pre></div>
+<span><span class="co">#&gt; $ route_short_name <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "R5"<span style="color: #949494;">, </span>"189"<span style="color: #949494;">, </span>"187"<span style="color: #949494;">, </span>""<span style="color: #949494;">, </span>""<span style="color: #949494;">, </span>"023"<span style="color: #949494;">, </span>"560"<span style="color: #949494;">, </span>"119"<span style="color: #949494;">, </span>"402…</span></span>
+<span><span class="co">#&gt; $ route_long_name  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Hastings St"<span style="color: #949494;">, </span>"Coquitlam Central Station/Lafarge Par…</span></span>
+<span><span class="co">#&gt; $ route_type       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ route_color      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "008522"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"92C5DE"<span style="color: #949494;">, </span>"0033a0"<span style="color: #949494;">, </span>"ffcd00"<span style="color: #949494;">, </span>"92…</span></span>
+<span><span class="co">#&gt; $ route_text_color <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "FFFFFF"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"000000"<span style="color: #949494;">, </span>"FFFFFF"<span style="color: #949494;">, </span>"333333"<span style="color: #949494;">, </span>"00…</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="stops">stops<a class="anchor" aria-label="anchor" href="#stops"></a>
@@ -179,11 +179,11 @@ stop_lat and stop_lon of the GTFS.</p>
 <em>stop_seq</em> table.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">stops</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 8,669</span></span>
+<span><span class="co">#&gt; Rows: 8,647</span></span>
 <span><span class="co">#&gt; Columns: 3</span></span>
-<span><span class="co">#&gt; $ stop_id   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "1"<span style="color: #949494;">, </span>"10000"<span style="color: #949494;">, </span>"10001"<span style="color: #949494;">, </span>"10002"<span style="color: #949494;">, </span>"10003"<span style="color: #949494;">, </span>"10004"<span style="color: #949494;">, </span>"10005"<span style="color: #949494;">, </span>"…</span></span>
-<span><span class="co">#&gt; $ stop_name <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Westbound Davie St @ Bidwell St"<span style="color: #949494;">, </span>"Northbound No. 5 Rd @ Mc…</span></span>
-<span><span class="co">#&gt; $ geometry  <span style="color: #949494; font-style: italic;">&lt;POINT [°]&gt;</span> POINT (-123.1407 49.28659)<span style="color: #949494;">, </span>POINT (-123.0915 49.17996)…</span></span></code></pre></div>
+<span><span class="co">#&gt; $ stop_id   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "11542"<span style="color: #949494;">, </span>"11543"<span style="color: #949494;">, </span>"11540"<span style="color: #949494;">, </span>"11541"<span style="color: #949494;">, </span>"11546"<span style="color: #949494;">, </span>"11547"<span style="color: #949494;">, </span>"11544…</span></span>
+<span><span class="co">#&gt; $ stop_name <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Southbound Howe St @ Davie St"<span style="color: #949494;">, </span>"Northbound Laurentian Cres…</span></span>
+<span><span class="co">#&gt; $ geometry  <span style="color: #949494; font-style: italic;">&lt;POINT [°]&gt;</span> POINT (-123.1271 49.27799)<span style="color: #949494;">, </span>POINT (-122.844 49.24858)<span style="color: #949494;">,</span>…</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="itin">itin<a class="anchor" aria-label="anchor" href="#itin"></a>
@@ -212,9 +212,9 @@ the SSFS with <code><a href="../reference/ssfs_to_gtfs.html">ssfs_to_gtfs()</a><
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">itin</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 904</span></span>
+<span><span class="co">#&gt; Rows: 918</span></span>
 <span><span class="co">#&gt; Columns: 5</span></span>
-<span><span class="co">#&gt; Groups: itin_id [904]</span></span>
+<span><span class="co">#&gt; Groups: itin_id [918]</span></span>
 <span><span class="co">#&gt; $ itin_id       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232_0_1"<span style="color: #949494;">, </span>"10232_1_1"<span style="color: #949494;">, </span>"11201_0_1"<span style="color: #949494;">, </span>"11201_1_1"<span style="color: #949494;">, </span>"116…</span></span>
 <span><span class="co">#&gt; $ route_id      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232"<span style="color: #949494;">, </span>"10232"<span style="color: #949494;">, </span>"11201"<span style="color: #949494;">, </span>"11201"<span style="color: #949494;">, </span>"11692"<span style="color: #949494;">, </span>"11692"<span style="color: #949494;">, </span>"1…</span></span>
 <span><span class="co">#&gt; $ direction_id  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">,</span>…</span></span>
@@ -236,9 +236,9 @@ defines the operating dates of each service.</p>
 <span><span class="co">#&gt; 2        sat      0       0         0        0      0        1      0</span></span>
 <span><span class="co">#&gt; 3        sun      0       0         0        0      0        0      1</span></span>
 <span><span class="co">#&gt;   start_date   end_date</span></span>
-<span><span class="co">#&gt; 1 2026-04-20 2026-06-07</span></span>
-<span><span class="co">#&gt; 2 2026-04-20 2026-06-07</span></span>
-<span><span class="co">#&gt; 3 2026-04-20 2026-06-07</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 2026-09-07 2027-01-03</span></span>
+<span><span class="co">#&gt; 2 2026-09-07 2027-01-03</span></span>
+<span><span class="co">#&gt; 3 2026-09-07 2027-01-03</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="span">span<a class="anchor" aria-label="anchor" href="#span"></a>
@@ -257,7 +257,7 @@ table.</p>
 </ul>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">span</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 2,410</span></span>
+<span><span class="co">#&gt; Rows: 2,454</span></span>
 <span><span class="co">#&gt; Columns: 5</span></span>
 <span><span class="co">#&gt; $ itin_id        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_1_1"<span style="color: #949494;">, </span>"10…</span></span>
 <span><span class="co">#&gt; $ service_id     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "mon-fri"<span style="color: #949494;">, </span>"sat"<span style="color: #949494;">, </span>"sun"<span style="color: #949494;">, </span>"mon-fri"<span style="color: #949494;">, </span>"sat"<span style="color: #949494;">, </span>"sun"<span style="color: #949494;">, </span>"mon-…</span></span>
@@ -278,7 +278,7 @@ hsh table, to be viewed and edited while in SSFS format, then converted
 into stop_times based on the hour-by-hour data.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">hsh</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 23,529</span></span>
+<span><span class="co">#&gt; Rows: 23,390</span></span>
 <span><span class="co">#&gt; Columns: 5</span></span>
 <span><span class="co">#&gt; $ itin_id    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_…</span></span>
 <span><span class="co">#&gt; $ service_id <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "mon-fri"<span style="color: #949494;">, </span>"mon-fri"<span style="color: #949494;">, </span>"mon-fri"<span style="color: #949494;">, </span>"mon-fri"<span style="color: #949494;">, </span>"mon-fri"<span style="color: #949494;">, </span>"mon…</span></span>
@@ -340,12 +340,12 @@ average speed of all trips of that itinerary. Speed factors are
 therefore not provided for the last stop in any stop sequence.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">translink</span><span class="op">$</span><span class="va">stop_seq</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Rows: 27,309</span></span>
+<span><span class="co">#&gt; Rows: 27,757</span></span>
 <span><span class="co">#&gt; Columns: 4</span></span>
 <span><span class="co">#&gt; $ itin_id       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"10232_0_1"<span style="color: #949494;">, </span>"102…</span></span>
-<span><span class="co">#&gt; $ stop_id       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10947"<span style="color: #949494;">, </span>"4782"<span style="color: #949494;">, </span>"12883"<span style="color: #949494;">, </span>"11118"<span style="color: #949494;">, </span>"4491"<span style="color: #949494;">, </span>"4661"<span style="color: #949494;">, </span>"4662…</span></span>
+<span><span class="co">#&gt; $ stop_id       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10947"<span style="color: #949494;">, </span>"4782"<span style="color: #949494;">, </span>"12883"<span style="color: #949494;">, </span>"13169"<span style="color: #949494;">, </span>"11118"<span style="color: #949494;">, </span>"4829"<span style="color: #949494;">, </span>"866…</span></span>
 <span><span class="co">#&gt; $ stop_sequence <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>6<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>9<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>16<span style="color: #949494;">, </span>1…</span></span>
-<span><span class="co">#&gt; $ speed_factor  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0.9<span style="color: #949494;">, </span>1.2<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>0.7<span style="color: #949494;">, </span>1.2<span style="color: #949494;">, </span>0.4<span style="color: #949494;">, </span>0.9<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>1.1<span style="color: #949494;">, </span>0.9<span style="color: #949494;">, </span>1…</span></span></code></pre></div>
+<span><span class="co">#&gt; $ speed_factor  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0.9<span style="color: #949494;">, </span>1.2<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>0.7<span style="color: #949494;">, </span>0.7<span style="color: #949494;">, </span>0.7<span style="color: #949494;">, </span>1.2<span style="color: #949494;">, </span>0.4<span style="color: #949494;">, </span>0.9<span style="color: #949494;">, </span>1.0<span style="color: #949494;">, </span>1…</span></span></code></pre></div>
 <p>The singular speed factor per stop is a heuristic approach that does
 not take into account how the relative speed of segments could vary
 throughout the day or depending on the service (weekday
@@ -373,22 +373,22 @@ passes through denser and more congested segments of W 41st Avenue.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">stop_seq_speeds_8am</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    stop_sequence                              stop_name speed</span></span>
-<span><span class="co">#&gt; 1              1                   UBC Exchange @ Bay 4  31.3</span></span>
-<span><span class="co">#&gt; 2              2 Southbound Wesbrook Mall @ Agronomy Rd  28.9</span></span>
-<span><span class="co">#&gt; 3              3     Westbound W 16 Ave @ Wesbrook Mall  26.5</span></span>
-<span><span class="co">#&gt; 4              4                    Dunbar Loop @ Bay 7  28.9</span></span>
-<span><span class="co">#&gt; 5              5      Eastbound W 41 Ave @ Carnarvon St  28.9</span></span>
-<span><span class="co">#&gt; 6              6          Eastbound W 41 Ave @ Maple St  26.5</span></span>
-<span><span class="co">#&gt; 7              7      Eastbound W 41 Ave @ Granville St  26.5</span></span>
-<span><span class="co">#&gt; 8              8            Eastbound W 41 Ave @ Oak St  19.3</span></span>
-<span><span class="co">#&gt; 9              9      Oakridge-41st Ave Station @ Bay 3  21.7</span></span>
-<span><span class="co">#&gt; 10            10           Eastbound E 41 Ave @ Main St  19.3</span></span>
-<span><span class="co">#&gt; 11            11         Eastbound E 41 Ave @ Fraser St  16.9</span></span>
-<span><span class="co">#&gt; 12            12         Eastbound E 41 Ave @ Knight St  21.7</span></span>
-<span><span class="co">#&gt; 13            13       Eastbound E 41 Ave @ Victoria Dr  19.3</span></span>
-<span><span class="co">#&gt; 14            14      Eastbound E 41 Ave @ Clarendon St  19.3</span></span>
-<span><span class="co">#&gt; 15            15         Eastbound E 41 Ave @ Rupert St  19.3</span></span>
-<span><span class="co">#&gt; 16            16         Northbound Joyce St @ Kingsway  19.3</span></span>
+<span><span class="co">#&gt; 1              1                   UBC Exchange @ Bay 4  30.8</span></span>
+<span><span class="co">#&gt; 2              2 Southbound Wesbrook Mall @ Agronomy Rd  28.4</span></span>
+<span><span class="co">#&gt; 3              3     Westbound W 16 Ave @ Wesbrook Mall  26.1</span></span>
+<span><span class="co">#&gt; 4              4                    Dunbar Loop @ Bay 7  28.4</span></span>
+<span><span class="co">#&gt; 5              5      Eastbound W 41 Ave @ Carnarvon St  26.1</span></span>
+<span><span class="co">#&gt; 6              6         Eastbound W 41 Ave @ East Blvd  28.4</span></span>
+<span><span class="co">#&gt; 7              7      Eastbound W 41 Ave @ Granville St  26.1</span></span>
+<span><span class="co">#&gt; 8              8            Eastbound W 41 Ave @ Oak St  19.0</span></span>
+<span><span class="co">#&gt; 9              9      Oakridge-41st Ave Station @ Bay 3  21.3</span></span>
+<span><span class="co">#&gt; 10            10           Eastbound E 41 Ave @ Main St  19.0</span></span>
+<span><span class="co">#&gt; 11            11         Eastbound E 41 Ave @ Fraser St  16.6</span></span>
+<span><span class="co">#&gt; 12            12         Eastbound E 41 Ave @ Knight St  19.0</span></span>
+<span><span class="co">#&gt; 13            13       Eastbound E 41 Ave @ Victoria Dr  19.0</span></span>
+<span><span class="co">#&gt; 14            14      Eastbound E 41 Ave @ Clarendon St  19.0</span></span>
+<span><span class="co">#&gt; 15            15         Eastbound E 41 Ave @ Rupert St  19.0</span></span>
+<span><span class="co">#&gt; 16            16         Northbound Joyce St @ Kingsway  19.0</span></span>
 <span><span class="co">#&gt; 17            17      Joyce Station @ Bay 1 Unload Only    NA</span></span>
 <span></span>
 <span><span class="co"># Visualise trips per hour and speeds in a ggplot</span></span>
