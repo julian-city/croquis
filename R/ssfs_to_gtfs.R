@@ -17,7 +17,10 @@
 #' # Include shape_dist_traveled (increases processing time)
 #' gtfs_with_dist <- ssfs_to_gtfs(ligne_jaune, dist_traveled = TRUE)
 #' }
-ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
+ssfs_to_gtfs <- function(
+  ssfs,
+  dist_traveled = FALSE
+) {
   #agency and routes can simply be carried over to the final GTFS
 
   #TRIPS and trip start times-----------
@@ -33,6 +36,8 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       direction_id = as.integer(),
       trip_dep = as.character()
     )
+
+  trip_parts <- vector("list", nrow(ssfs$span))
 
   # initialize progress bar
   cli::cli_progress_bar(
@@ -108,8 +113,10 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
         )
       )
 
-    trips <- bind_rows(trips, trips_i)
+    trip_parts[[i]] <- trips_i
   }
+
+  trips <- bind_rows(c(list(trips), trip_parts))
 
   #STOP TIMES-----------------------
 
@@ -119,7 +126,6 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
     ssfs$itin |>
     select(itin_id, geometry) |>
     st_cast("POINT") |>
-    distinct() |>
     group_by(itin_id) |>
     mutate(shape_pt_sequence = row_number(), .before = geometry) |>
     ungroup()
@@ -214,6 +220,9 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       )
   }
 
+  stop_time_parts <- vector("list", nrow(trips))
+  stop_time_index <- 0L
+
   #use $span for the loop as each row represents a unique itin_id * service id * service window combo
 
   #initialize progress bar
@@ -295,35 +304,43 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       stop_times_i$departure_time[1] <- trip_dep_i
       #NB IN BRACKETS IS ALWAYS 1 NEVER i because it's for initializing
 
-      for (i in 2:nrow(stop_times_i)) {
-        # Convert previous departure time to POSIXct
-        prev_dep <- as.duration(hms(stop_times_i$departure_time[i - 1]))
-        #and the speed factor associated with the previous stop (within the template)
-        speed_factor <- stop_times_i$speed_factor[i - 1]
-        #adjust the speed based on the speed factor
-        speed <- speed_i * speed_factor
-        #speed in meters per second
-        speed_ms <- speed * (1000 / 3600)
+      n_stops <- nrow(stop_times_i)
 
-        dist_to_next_stop <- stop_times_i$interstop_dist[i - 1]
+      if (n_stops > 1L) {
+        # Each segment uses the distance and speed factor of its starting stop.
+        segment_rows <- seq_len(n_stops - 1L)
 
-        current_dep_dur <- prev_dep +
-          as.duration(seconds(dist_to_next_stop / speed_ms))
+        segment_speed_ms <-
+          speed_i *
+          stop_times_i$speed_factor[segment_rows] *
+          (1000 / 3600)
 
-        current_dep_h <- as.numeric(floor(as.numeric(current_dep_dur) / 3600)) #REMOVED the %% that was here previously
-        current_dep_m <- as.numeric(floor(as.numeric(current_dep_dur) / 60)) %%
-          60
-        current_dep_s <- round(
-          as.numeric(floor(as.numeric(current_dep_dur) %% 60)),
-          0
-        ) #necessary to add rounding to have sprintf work
+        segment_seconds <-
+          stop_times_i$interstop_dist[segment_rows] / segment_speed_ms
 
-        # Convert current departure time to "hh:mm:ss" format
-        stop_times_i$departure_time[i] <- sprintf(
+        # Discard fractional seconds for each segment
+        stop_offsets <- c(0, cumsum(floor(segment_seconds)))
+
+        # trip_dep_dur was already parsed once earlier in this trip's loop.
+        departure_seconds <- numeric(n_stops)
+        departure_seconds[1L] <- as.numeric(trip_dep_dur)
+
+        for (stop_index in seq.int(2L, n_stops)) {
+          departure_seconds[stop_index] <- floor(
+            departure_seconds[stop_index - 1L] +
+              segment_seconds[stop_index - 1L]
+          )
+        }
+
+        # Keep the original first departure string. Format all remaining
+        # stop times together, allowing hours beyond 23.
+        remaining_seconds <- departure_seconds[-1L]
+
+        stop_times_i$departure_time[-1L] <- sprintf(
           "%02d:%02d:%02d",
-          current_dep_h,
-          current_dep_m,
-          current_dep_s
+          as.integer(floor(remaining_seconds / 3600)),
+          as.integer(floor(remaining_seconds / 60) %% 60),
+          as.integer(floor(remaining_seconds %% 60))
         )
       }
 
@@ -343,13 +360,12 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
           select(trip_id, departure_time, stop_id, stop_sequence)
       }
 
-      stop_times <-
-        bind_rows(
-          stop_times,
-          stop_times_i
-        )
+      stop_time_index <- stop_time_index + 1L
+      stop_time_parts[[stop_time_index]] <- stop_times_i
     }
   }
+
+  stop_times <- bind_rows(c(list(stop_times), stop_time_parts))
 
   #modifications to gtfs_to_ssfs:
 

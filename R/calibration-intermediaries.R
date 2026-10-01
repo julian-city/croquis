@@ -680,7 +680,6 @@ apply_interstop_matrix_to_ssfs <- function(
     ssfs$itin |>
     select(itin_id, geometry) |>
     st_cast("POINT") |>
-    distinct() |>
     group_by(itin_id) |>
     mutate(shape_pt_sequence = row_number(), .before = geometry) |>
     ungroup()
