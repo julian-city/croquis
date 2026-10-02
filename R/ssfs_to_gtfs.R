@@ -126,9 +126,22 @@ ssfs_to_gtfs <- function(
     ssfs$itin |>
     select(itin_id, geometry) |>
     st_cast("POINT") |>
+    mutate(
+      .x = st_coordinates(geometry)[, "X"],
+      .y = st_coordinates(geometry)[, "Y"]
+    ) |>
     group_by(itin_id) |>
-    mutate(shape_pt_sequence = row_number(), .before = geometry) |>
-    ungroup()
+    filter(
+      row_number() == 1L |
+        .x != lag(.x) |
+        .y != lag(.y)
+    ) |>
+    mutate(
+      shape_pt_sequence = row_number(),
+      .before = geometry
+    ) |>
+    ungroup() |>
+    select(-.x, -.y)
 
   stop_seq <-
     ssfs$stop_seq |>
@@ -183,15 +196,33 @@ ssfs_to_gtfs <- function(
 
     # calculate shape_dist_traveled for stop_seq using shapes_points (instead of interstop_dist)
 
-    stop_seq <-
-      stop_seq |>
+    stop_seq <- stop_seq |>
       group_by(itin_id) |>
       mutate(
         shape_dist_traveled = {
-          sp_itin <- shapes_points[shapes_points$itin_id == itin_id[1], ]
-          stop_pts <- ssfs$stops[match(stop_id, ssfs$stops$stop_id), ]
-          nearest_idx <- st_nearest_feature(stop_pts, sp_itin)
-          sp_itin$shape_dist_traveled[nearest_idx]
+          sp_itin <- shapes_points[
+            shapes_points$itin_id == itin_id[1],
+            ,
+            drop = FALSE
+          ]
+
+          # sort in travel order
+          ord <- order(stop_sequence)
+
+          stop_pts <- ssfs$stops[
+            match(stop_id[ord], ssfs$stops$stop_id),
+            ,
+            drop = FALSE
+          ]
+
+          distances <- .stop_shape_distances(
+            shape_points = sp_itin,
+            stop_points = stop_pts,
+            itin_id = itin_id[1]
+          )
+
+          # back to original row order
+          distances[order(ord)]
         }
       ) |>
       ungroup()

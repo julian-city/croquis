@@ -472,3 +472,223 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
 
   stop_times_revised
 }
+
+.stop_shape_distances <- function(shape_points, stop_points, itin_id) {
+  fail <- function(message) {
+    stop(
+      sprintf("Itinerary %s: %s", itin_id, message),
+      call. = FALSE
+    )
+  }
+
+  shape_points <- shape_points[
+    order(shape_points$shape_pt_sequence),
+    ,
+    drop = FALSE
+  ]
+
+  if (!nrow(stop_points)) {
+    return(numeric())
+  }
+
+  if (nrow(shape_points) < 2L) {
+    fail("fewer than two shape points.")
+  }
+
+  # Choose a local UTM projection for matching.
+  ll <- sf::st_coordinates(
+    sf::st_transform(shape_points, 4326)
+  )
+  centre <- colMeans(ll[, c("X", "Y"), drop = FALSE])
+
+  if (centre[2] < -80 || centre[2] > 84) {
+    fail("automatic UTM selection does not cover this latitude.")
+  }
+
+  zone <- max(
+    1L,
+    min(60L, floor((centre[1] + 180) / 6) + 1L)
+  )
+  crs <- (if (centre[2] >= 0) 32600L else 32700L) + zone
+
+  xy <- sf::st_coordinates(
+    sf::st_transform(shape_points, crs)
+  )[, 1:2, drop = FALSE]
+
+  p <- sf::st_coordinates(
+    sf::st_transform(stop_points, crs)
+  )[, 1:2, drop = FALSE]
+
+  d <- shape_points$shape_dist_traveled
+
+  if (
+    nrow(p) != nrow(stop_points) ||
+      any(!is.finite(c(xy, p, d))) ||
+      any(diff(d) < 0)
+  ) {
+    fail("missing coordinates or invalid shape distances.")
+  }
+
+  # Segment start coordinates, vectors, and squared lengths.
+  a <- xy[-nrow(xy), , drop = FALSE]
+  v <- xy[-1L, , drop = FALSE] - a
+  len2 <- rowSums(v * v)
+  along <- c(0, cumsum(sqrt(len2)))
+
+  # Skip zero-length segments while retaining original vertex indexes.
+  seg <- which(len2 > 0)
+
+  if (!length(seg)) {
+    fail("shape has no nonzero segments.")
+  }
+
+  a <- a[seg, , drop = FALSE]
+  v <- v[seg, , drop = FALSE]
+  len2 <- len2[seg]
+
+  # Each segment supplies one candidate position for each stop.
+  candidates <- lapply(seq_len(nrow(p)), function(i) {
+    w <- matrix(p[i, ], nrow(a), 2L, byrow = TRUE) - a
+    f <- pmin(1, pmax(0, rowSums(w * v) / len2))
+
+    s <- along[seg] +
+      f * (along[seg + 1L] - along[seg])
+
+    # Shared endpoints must have exactly the same position.
+    s[f == 0] <- along[seg[f == 0]]
+    s[f == 1] <- along[seg[f == 1] + 1L]
+
+    x <- data.frame(
+      seg,
+      f,
+      s,
+      error2 = rowSums((w - v * f)^2)
+    )
+
+    x <- x[order(x$s, x$error2), , drop = FALSE]
+    x[!duplicated(x$s), , drop = FALSE]
+  })
+
+  # Dynamic programming: minimize total snapping error while
+  # requiring positions to follow the shape in travel order.
+  cost <- candidates[[1L]]$error2
+  ways <- rep(1L, length(cost))
+  parents <- vector("list", length(candidates))
+
+  if (length(candidates) > 1L) {
+    for (i in seq.int(2L, length(candidates))) {
+      best <- cummin(cost)
+      parent <- match(best, cost)
+
+      # Count tied optimal paths, capped at two.
+      counts <- integer(length(cost))
+      count <- 0L
+      previous <- Inf
+
+      for (j in seq_along(cost)) {
+        if (is.finite(cost[j])) {
+          if (cost[j] < previous) {
+            previous <- cost[j]
+            count <- ways[j]
+          } else if (cost[j] == previous) {
+            count <- min(2L, count + ways[j])
+          }
+        }
+
+        counts[j] <- count
+      }
+
+      k <- findInterval(
+        candidates[[i]]$s,
+        candidates[[i - 1L]]$s
+      )
+      ok <- which(k > 0L)
+
+      next_cost <- rep(Inf, length(k))
+      next_ways <- integer(length(k))
+      parents[[i]] <- rep(NA_integer_, length(k))
+
+      next_cost[ok] <-
+        candidates[[i]]$error2[ok] + best[k[ok]]
+
+      next_ways[ok] <- counts[k[ok]]
+      parents[[i]][ok] <- parent[k[ok]]
+
+      if (!any(is.finite(next_cost))) {
+        fail("no ordered stop-to-shape match.")
+      }
+
+      cost <- next_cost
+      ways <- next_ways
+    }
+  }
+
+  endings <- which(cost == min(cost))
+
+  if (sum(ways[endings]) > 1L) {
+    warning(
+      sprintf(
+        paste0(
+          "Itinerary %s: ambiguous repeated shape traversal; ",
+          "review match."
+        ),
+        itin_id
+      ),
+      call. = FALSE
+    )
+  }
+
+  # Trace back through the selected candidate path.
+  selected <- integer(length(candidates))
+  selected[length(selected)] <- endings[1L]
+
+  if (length(selected) > 1L) {
+    for (i in seq.int(length(selected), 2L)) {
+      selected[i - 1L] <- parents[[i]][selected[i]]
+    }
+  }
+
+  chosen <- do.call(
+    rbind,
+    lapply(seq_along(selected), function(i) {
+      candidates[[i]][selected[i], , drop = FALSE]
+    })
+  )
+
+  # Interpolate using the distances exported in shapes.txt,
+  # keeping stop_times.txt on the same distance scale.
+  result <- d[chosen$seg] +
+    chosen$f * (d[chosen$seg + 1L] - d[chosen$seg])
+
+  result[chosen$f == 0] <-
+    d[chosen$seg[chosen$f == 0]]
+
+  result[chosen$f == 1] <-
+    d[chosen$seg[chosen$f == 1] + 1L]
+
+  bad <- which(diff(result) <= 0)
+
+  if (length(bad)) {
+    pairs <- paste(
+      stop_points$stop_id[bad],
+      stop_points$stop_id[bad + 1L],
+      sep = " -> "
+    )
+
+    warning(
+      sprintf(
+        paste0(
+          "Itinerary %s: unresolved stop pairs (%s). ",
+          "Leaving shape_dist_traveled blank for this itinerary."
+        ),
+        itin_id,
+        paste(pairs, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+
+    return(rep(NA_real_, length(result)))
+  }
+
+  result
+}

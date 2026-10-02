@@ -640,9 +640,22 @@ apply_gtfs_speeds_to_ssfs <- function(
     ssfs$itin |>
     select(itin_id, geometry) |>
     st_cast("POINT") |>
+    mutate(
+      .x = st_coordinates(geometry)[, "X"],
+      .y = st_coordinates(geometry)[, "Y"]
+    ) |>
     group_by(itin_id) |>
-    mutate(shape_pt_sequence = row_number(), .before = geometry) |>
-    ungroup()
+    filter(
+      row_number() == 1L |
+        .x != lag(.x) |
+        .y != lag(.y)
+    ) |>
+    mutate(
+      shape_pt_sequence = row_number(),
+      .before = geometry
+    ) |>
+    ungroup() |>
+    select(-.x, -.y)
 
   # prepare stop_seq_proto with stop_seq_id (mirroring ssfs_to_gtfs pattern)
   ssfs_stop_seq <-
