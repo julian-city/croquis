@@ -142,7 +142,7 @@ ssfs_to_gtfs <- function(ssfs, dist_traveled = FALSE) {
       compute_interstop_distances_for_itin(
         itin_id = itin_id_i,
         stop_seq_proto = stop_seq,
-        shapes_points = shapes_points,
+        itin = ssfs$itin,
         stops = ssfs$stops
       )
     }

@@ -668,7 +668,7 @@ apply_gtfs_speeds_to_ssfs <- function(
       compute_interstop_distances_for_itin(
         itin_id = itin_id_i,
         stop_seq_proto = ssfs_stop_seq,
-        shapes_points = shapes_points,
+        itin = ssfs$itin,
         stops = ssfs$stops
       )
     }
