@@ -64,7 +64,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
   ) {
     1L
   } else {
-    as.integer(min(4L, detected_cores))
+    as.integer(min(1L, detected_cores)) #NOTE: MODIFIED TO 1 TO PREVENT ROUTING API ERRORS WHEN UPLOADING GTFS IN APP
   }
   #UI-----------------------------
 
