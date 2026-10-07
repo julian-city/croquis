@@ -616,7 +616,7 @@ gtfs_to_ssfs <- function(
     select(stop_id, stop_name, stop_lat, stop_lon) |>
     st_as_sf(
       coords = c("stop_lon", "stop_lat"),
-      crs = 4269
+      crs = 4326
     )
 
   #3. Identify unique route itineraries (itin)---------------------------------
@@ -930,7 +930,7 @@ gtfs_to_ssfs <- function(
     filter(shape_id %in% unique_shape_id) |>
     st_as_sf(
       coords = c("shape_pt_lon", "shape_pt_lat"),
-      crs = 4269
+      crs = 4326
     ) |>
     #arrange(shape_id,shape_pt_sequence) |> #already arranged above
     group_by(shape_id) |>
@@ -992,7 +992,7 @@ gtfs_to_ssfs <- function(
     ) |>
     st_as_sf(
       coords = c("shape_pt_lon", "shape_pt_lat"),
-      crs = 4269
+      crs = 4326
     ) |>
     arrange(shape_id, shape_pt_sequence) |>
     select(itin_id, shape_pt_sequence, geometry) #INCLUDE shape_dist_traveled eventually
