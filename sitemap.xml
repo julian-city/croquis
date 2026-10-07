@@ -8,10 +8,12 @@
 <url><loc>https://croquis.comotive.net/authors.html</loc></url>
 <url><loc>https://croquis.comotive.net/index.html</loc></url>
 <url><loc>https://croquis.comotive.net/news/index.html</loc></url>
+<url><loc>https://croquis.comotive.net/reference/anchor_stops_to_itin.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/apply_gtfs_speeds_to_ssfs.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/apply_interstop_matrix_to_ssfs.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/croquis-package.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/croquis.html</loc></url>
+<url><loc>https://croquis.comotive.net/reference/densify_line_with_stops.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/generate_service_cost.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/generate_tdrh.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/gtfs_rct.html</loc></url>
@@ -21,6 +23,8 @@
 <url><loc>https://croquis.comotive.net/reference/gtfs_to_ssfs.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/index.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/ligne_jaune.html</loc></url>
+<url><loc>https://croquis.comotive.net/reference/local_metric_crs.html</loc></url>
+<url><loc>https://croquis.comotive.net/reference/locate_stops_on_line.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/mileend.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/new_ssfs.html</loc></url>
 <url><loc>https://croquis.comotive.net/reference/print.ssfs.html</loc></url>
