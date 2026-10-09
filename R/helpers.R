@@ -718,20 +718,7 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
   }
 
   # Choose a local UTM projection for matching.
-  ll <- sf::st_coordinates(
-    sf::st_transform(shape_points, 4326)
-  )
-  centre <- colMeans(ll[, c("X", "Y"), drop = FALSE])
-
-  if (centre[2] < -80 || centre[2] > 84) {
-    fail("automatic UTM selection does not cover this latitude.")
-  }
-
-  zone <- max(
-    1L,
-    min(60L, floor((centre[1] + 180) / 6) + 1L)
-  )
-  crs <- (if (centre[2] >= 0) 32600L else 32700L) + zone
+  crs <- local_metric_crs(shape_points)
 
   xy <- sf::st_coordinates(
     sf::st_transform(shape_points, crs)
@@ -791,34 +778,15 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
     x[!duplicated(x$s), , drop = FALSE]
   })
 
-  # Dynamic programming: minimize total snapping error while
+  # Minimize total snapping error while
   # requiring positions to follow the shape in travel order.
   cost <- candidates[[1L]]$error2
-  ways <- rep(1L, length(cost))
   parents <- vector("list", length(candidates))
 
   if (length(candidates) > 1L) {
     for (i in seq.int(2L, length(candidates))) {
       best <- cummin(cost)
       parent <- match(best, cost)
-
-      # Count tied optimal paths, capped at two.
-      counts <- integer(length(cost))
-      count <- 0L
-      previous <- Inf
-
-      for (j in seq_along(cost)) {
-        if (is.finite(cost[j])) {
-          if (cost[j] < previous) {
-            previous <- cost[j]
-            count <- ways[j]
-          } else if (cost[j] == previous) {
-            count <- min(2L, count + ways[j])
-          }
-        }
-
-        counts[j] <- count
-      }
 
       k <- findInterval(
         candidates[[i]]$s,
@@ -827,13 +795,11 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
       ok <- which(k > 0L)
 
       next_cost <- rep(Inf, length(k))
-      next_ways <- integer(length(k))
       parents[[i]] <- rep(NA_integer_, length(k))
 
       next_cost[ok] <-
         candidates[[i]]$error2[ok] + best[k[ok]]
 
-      next_ways[ok] <- counts[k[ok]]
       parents[[i]][ok] <- parent[k[ok]]
 
       if (!any(is.finite(next_cost))) {
@@ -841,28 +807,12 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
       }
 
       cost <- next_cost
-      ways <- next_ways
     }
-  }
-
-  endings <- which(cost == min(cost))
-
-  if (sum(ways[endings]) > 1L) {
-    warning(
-      sprintf(
-        paste0(
-          "Itinerary %s: ambiguous repeated shape traversal; ",
-          "review match."
-        ),
-        itin_id
-      ),
-      call. = FALSE
-    )
   }
 
   # Trace back through the selected candidate path.
   selected <- integer(length(candidates))
-  selected[length(selected)] <- endings[1L]
+  selected[length(selected)] <- which.min(cost)
 
   if (length(selected) > 1L) {
     for (i in seq.int(length(selected), 2L)) {
