@@ -196,36 +196,41 @@ ssfs_to_gtfs <- function(
 
     # calculate shape_dist_traveled for stop_seq using shapes_points (instead of interstop_dist)
 
-    stop_seq <- stop_seq |>
-      group_by(itin_id) |>
-      mutate(
-        shape_dist_traveled = {
-          sp_itin <- shapes_points[
-            shapes_points$itin_id == itin_id[1],
-            ,
-            drop = FALSE
-          ]
+    stop_seq <- local({
+      # Print warnings immediately; restore the previous setting on exit.
+      previous_options <- options(warn = 1)
+      on.exit(options(previous_options), add = TRUE)
 
-          # sort in travel order
-          ord <- order(stop_sequence)
+      stop_seq <- ungroup(stop_seq)
+      stop_seq$shape_dist_traveled <- NA_real_
 
-          stop_pts <- ssfs$stops[
-            match(stop_id[ord], ssfs$stops$stop_id),
-            ,
-            drop = FALSE
-          ]
+      for (itin_id_i in unique(stop_seq$itin_id)) {
+        rows <- which(stop_seq$itin_id == itin_id_i)
 
-          distances <- .stop_shape_distances(
-            shape_points = sp_itin,
-            stop_points = stop_pts,
-            itin_id = itin_id[1]
-          )
+        # Process stops in travel order.
+        rows <- rows[order(stop_seq$stop_sequence[rows])]
 
-          # back to original row order
-          distances[order(ord)]
-        }
-      ) |>
-      ungroup()
+        sp_itin <- shapes_points[
+          shapes_points$itin_id == itin_id_i,
+          ,
+          drop = FALSE
+        ]
+
+        stop_pts <- ssfs$stops[
+          match(stop_seq$stop_id[rows], ssfs$stops$stop_id),
+          ,
+          drop = FALSE
+        ]
+
+        stop_seq$shape_dist_traveled[rows] <- .stop_shape_distances(
+          shape_points = sp_itin,
+          stop_points = stop_pts,
+          itin_id = itin_id_i
+        )
+      }
+
+      stop_seq
+    })
   }
 
   #write stop times

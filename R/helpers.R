@@ -847,17 +847,10 @@ revise_stop_times <- function(stop_times, trips, stop_seq_proto) {
       sep = " -> "
     )
 
-    warning(
-      sprintf(
-        paste0(
-          "Itinerary %s: unresolved stop pairs (%s). ",
-          "Leaving shape_dist_traveled blank for this itinerary."
-        ),
-        itin_id,
-        paste(pairs, collapse = ", ")
-      ),
-      call. = FALSE
-    )
+    cli::cli_warn(c(
+      "Itinerary {itin_id}: unresolved stop pairs ({paste(pairs, collapse = ', ')}).",
+      "i" = "Leaving {.field shape_dist_traveled} blank for this itinerary."
+    ))
 
     return(rep(NA_real_, length(result)))
   }
