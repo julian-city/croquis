@@ -682,6 +682,14 @@ croquis <- function(ssfs = NULL, lang = "en") {
               ),
               value = "croquis.rds"
             ),
+            checkboxInput(
+              "exportssfs_remove_unused_stops",
+              label = span(
+                tr("export_remove_unused_stops", lang_init),
+                `data-i18n` = "export_remove_unused_stops"
+              ),
+              value = TRUE
+            ),
             downloadButton(
               "download_ssfs",
               span(
@@ -2133,12 +2141,16 @@ croquis <- function(ssfs = NULL, lang = "en") {
           current_ssfs$stop_seq |>
           select(-stop_name)
 
-        unique_stop_ids <-
-          current_ssfs$stop_seq$stop_id |> unique()
+        # Optionally drop stops not used by any itinerary
+        # (Export tab, "Remove unused stops" checkbox).
+        if (isTRUE(input$exportssfs_remove_unused_stops)) {
+          unique_stop_ids <-
+            current_ssfs$stop_seq$stop_id |> unique()
 
-        current_ssfs$stops <-
-          current_ssfs$stops |>
-          filter(stop_id %in% unique_stop_ids)
+          current_ssfs$stops <-
+            current_ssfs$stops |>
+            filter(stop_id %in% unique_stop_ids)
+        }
 
         current_ssfs$calendar <-
           current_ssfs$calendar |>

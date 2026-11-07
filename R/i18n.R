@@ -2302,6 +2302,11 @@ i18n_dict <- list(
     fr = "Votre r\u00e9seau de transport sera sauvegard\u00e9 sous forme de fichier .rds que vous pourrez recharger plus tard.",
     es = "Su red de transporte se guardar\u00e1 como un archivo .rds que puede recargar m\u00e1s tarde."
   ),
+  export_remove_unused_stops = c(
+    en = "Remove unused stops",
+    fr = "Supprimer les arr\u00eats inutilis\u00e9s",
+    es = "Eliminar las paradas no utilizadas"
+  ),
 
   # ========================================================================
   # Settings tab

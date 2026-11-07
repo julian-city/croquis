@@ -277,6 +277,7 @@ sched_recalc_unit_kmh: {
   export_save_desc:       { en: 'This saves the raw Croquis (SSFS) file as a .rds:', fr: 'Ceci sauvegarde le fichier brut Croquis (SSFS) au format .rds\u00a0:', es: 'Esto guarda el archivo bruto Croquis (SSFS) como .rds:' },
   export_download_croquis:{ en: 'Download Croquis file', fr: 'T\u00e9l\u00e9charger le fichier Croquis', es: 'Descargar archivo Croquis' },
   export_save_note:       { en: 'Your transit system will be saved as an .rds file that you can reload later.', fr: 'Votre r\u00e9seau de transport sera sauvegard\u00e9 sous forme de fichier .rds que vous pourrez recharger plus tard.', es: 'Su red de transporte se guardar\u00e1 como un archivo .rds que puede recargar m\u00e1s tarde.' },
+  export_remove_unused_stops: { en: 'Remove unused stops', fr: 'Supprimer les arr\u00eats inutilis\u00e9s', es: 'Eliminar las paradas no utilizadas' },
 
   // -- Settings tab --
   settings_title:         { en: 'settings', fr: 'param\u00e8tres', es: 'configuraci\u00f3n' },
