@@ -328,7 +328,7 @@ clicking `Download GTFS`.
 Exporting a GTFS works by calling the
 [`ssfs_to_gtfs()`](https://croquis.comotive.net/reference/ssfs_to_gtfs.md)
 function and using
-[`gtfstools::write_gtfs()`](https://rdrr.io/pkg/gtfstools/man/write_gtfs.html).
+[`gtfstools::write_gtfs()`](https://ipea.github.io/gtfstools/reference/write_gtfs.html).
 In workflows that don’t involve the Shiny App, you can create a GTFS
 using this function as follows:
 
