@@ -143,6 +143,16 @@ i18n_dict <- list(
     fr = "Le t\u00e9l\u00e9versement d'un GTFS le convertira en un format modifiable dans Croquis",
     es = "Al subir un GTFS, se convertir\u00e1 a un formato editable en Croquis"
   ),
+  chk_load_feed_info = c(
+    en = "Import feed_info data from this GTFS, if available",
+    fr = "Importer les donn\u00e9es feed_info de ce GTFS, si disponible",
+    es = "Importar los datos feed_info de este GTFS, si disponible"
+  ),
+  chk_load_feed_info_note = c(
+    en = "(if you are the original author of this GTFS and are maintaining it with Croquis)",
+    fr = "(si vous \u00eates l'auteur d'origine de ce GTFS et vous le maintenez avec Croquis)",
+    es = "(si usted es el autor original de este GTFS y lo mantiene con Croquis)"
+  ),
 
   # Descriptive text - Load your croquis
   load_croquis_desc = c(
@@ -414,6 +424,68 @@ i18n_dict <- list(
     en = "Cannot delete agency '%s'. It is referenced by one or more routes. Delete or reassign the routes first.",
     fr = "Impossible de supprimer l'agence \u00ab\u00a0%s\u00a0\u00bb. Une ou plusieurs lignes y font r\u00e9f\u00e9rence. Supprimez ou r\u00e9assignez d'abord les lignes.",
     es = "No se puede eliminar la agencia '%s'. Una o m\u00e1s rutas la referencian. Elimine o reasigne las rutas primero."
+  ),
+
+  # -- Feed info ----------------------------------------------------------
+  feed_info_title = c(
+    en = "Feed info",
+    fr = "Informations du flux",
+    es = "Informaci\u00f3n del feed"
+  ),
+  pop_feed_info = c(
+    en = "Contact information for the organization that publishes this feed, so that anyone who finds a problem with the data knows who to reach. Required to export a GTFS feed with no errors or warnings in the canonical GTFS validator.",
+    fr = "Coordonn\u00e9es de l'organisme qui publie ce flux, afin que toute personne qui constate un probl\u00e8me dans les donn\u00e9es sache qui joindre. Requises pour exporter un flux GTFS sans erreur ni avertissement dans le validateur GTFS canonique.",
+    es = "Datos de contacto de la organizaci\u00f3n que publica este feed, para que cualquier persona que encuentre un problema en los datos sepa a qui\u00e9n dirigirse. Necesarios para exportar un feed GTFS sin errores ni advertencias en el validador GTFS can\u00f3nico."
+  ),
+  lbl_publisher_name = c(
+    en = "Publisher name",
+    fr = "Nom de l'\u00e9diteur",
+    es = "Nombre del editor"
+  ),
+  pop_publisher_name = c(
+    en = "Full name of the organization that publishes the feed.",
+    fr = "Nom complet de l'organisme qui publie le flux.",
+    es = "Nombre completo de la organizaci\u00f3n que publica el feed."
+  ),
+  lbl_publisher_url = c(
+    en = "Publisher URL",
+    fr = "URL de l'\u00e9diteur",
+    es = "URL del editor"
+  ),
+  pop_publisher_url = c(
+    en = "URL of the feed publishing organization's website.",
+    fr = "URL du site web de l'organisme publiant le flux.",
+    es = "URL del sitio web de la organizaci\u00f3n que publica el feed."
+  ),
+  lbl_feed_lang = c(
+    en = "Feed language",
+    fr = "Langue du flux",
+    es = "Idioma del feed"
+  ),
+  pop_feed_lang = c(
+    en = "Default language used for text in this dataset (IETF BCP 47 language code).",
+    fr = "Langue par d\u00e9faut utilis\u00e9e pour le texte dans ce jeu de donn\u00e9es (code IETF BCP 47).",
+    es = "Idioma predeterminado usado para el texto en este conjunto de datos (c\u00f3digo de idioma IETF BCP 47)."
+  ),
+  lbl_contact_email = c(
+    en = "Contact email",
+    fr = "Courriel de contact",
+    es = "Correo de contacto"
+  ),
+  pop_contact_email = c(
+    en = "Email address for communication regarding the GTFS dataset and data publishing practices.",
+    fr = "Adresse courriel pour les communications concernant le jeu de donn\u00e9es GTFS et les pratiques de publication.",
+    es = "Direcci\u00f3n de correo para comunicaciones sobre el conjunto de datos GTFS y las pr\u00e1cticas de publicaci\u00f3n."
+  ),
+  lbl_feed_version = c(
+    en = "Version",
+    fr = "Version",
+    es = "Versi\u00f3n"
+  ),
+  pop_feed_version = c(
+    en = "String that indicates the current version of their GTFS dataset.",
+    fr = "Cha\u00eene indiquant la version actuelle du jeu de donn\u00e9es GTFS.",
+    es = "Cadena que indica la versi\u00f3n actual del conjunto de datos GTFS."
   ),
 
   # -- Instructions panel -------------------------------------------------
@@ -705,8 +777,8 @@ i18n_dict <- list(
     es = "Las pesta\u00f1as paradas, rutas y horarios de arriba permiten gestionar todos estos aspectos de su modelo de red de transporte."
   ),
   intro_get_started = c(
-    en = "Get started on this page by loading an existing network, or by creating the agency details and project location if starting from scratch.",
-    fr = "Commencez sur cette page en chargeant un r\u00e9seau existant, ou en cr\u00e9ant les d\u00e9tails de l'agence et l'emplacement du projet si vous partez de z\u00e9ro.",
+    en = "Get started on this page by loading an existing network, or by providing agency details and project location below, if starting from scratch.",
+    fr = "Commencez sur cette page en chargeant un r\u00e9seau existant, ou en renseignant les d\u00e9tails de l'agence et l'emplacement du projet ci-dessous, si vous partez de z\u00e9ro.",
     es = "Comience en esta p\u00e1gina cargando una red existente, o creando los detalles de la agencia y la ubicaci\u00f3n del proyecto si empieza desde cero."
   ),
   # Split pair. Full sentence (en): "This open-source software was developed
@@ -2238,63 +2310,6 @@ i18n_dict <- list(
     en = "settings",
     fr = "param\u00e8tres",
     es = "configuraci\u00f3n"
-  ),
-
-  # -- Feed info ----------------------------------------------------------
-  settings_feed_info = c(
-    en = "Feed info",
-    fr = "Informations du flux",
-    es = "Informaci\u00f3n del feed"
-  ),
-  lbl_publisher_name = c(
-    en = "Publisher name",
-    fr = "Nom de l'\u00e9diteur",
-    es = "Nombre del editor"
-  ),
-  pop_publisher_name = c(
-    en = "Full name of the organization that publishes the feed.",
-    fr = "Nom complet de l'organisme qui publie le flux.",
-    es = "Nombre completo de la organizaci\u00f3n que publica el feed."
-  ),
-  lbl_publisher_url = c(
-    en = "Publisher URL",
-    fr = "URL de l'\u00e9diteur",
-    es = "URL del editor"
-  ),
-  pop_publisher_url = c(
-    en = "URL of the feed publishing organization's website.",
-    fr = "URL du site web de l'organisme publiant le flux.",
-    es = "URL del sitio web de la organizaci\u00f3n que publica el feed."
-  ),
-  lbl_feed_lang = c(
-    en = "Feed language",
-    fr = "Langue du flux",
-    es = "Idioma del feed"
-  ),
-  pop_feed_lang = c(
-    en = "Default language used for text in this dataset (IETF BCP 47 language code).",
-    fr = "Langue par d\u00e9faut utilis\u00e9e pour le texte dans ce jeu de donn\u00e9es (code IETF BCP 47).",
-    es = "Idioma predeterminado usado para el texto en este conjunto de datos (c\u00f3digo de idioma IETF BCP 47)."
-  ),
-  lbl_contact_email = c(
-    en = "Contact email",
-    fr = "Courriel de contact",
-    es = "Correo de contacto"
-  ),
-  pop_contact_email = c(
-    en = "Email address for communication regarding the GTFS dataset and data publishing practices.",
-    fr = "Adresse courriel pour les communications concernant le jeu de donn\u00e9es GTFS et les pratiques de publication.",
-    es = "Direcci\u00f3n de correo para comunicaciones sobre el conjunto de datos GTFS y las pr\u00e1cticas de publicaci\u00f3n."
-  ),
-  lbl_feed_version = c(
-    en = "Version",
-    fr = "Version",
-    es = "Versi\u00f3n"
-  ),
-  pop_feed_version = c(
-    en = "String that indicates the current version of their GTFS dataset.",
-    fr = "Cha\u00eene indiquant la version actuelle du jeu de donn\u00e9es GTFS.",
-    es = "Cadena que indica la versi\u00f3n actual del conjunto de datos GTFS."
   ),
 
   # -- Advanced settings --------------------------------------------------

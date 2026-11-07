@@ -78,7 +78,7 @@ NULL
 #
 # htmlwidgets: onRender()
 #
-# gtfstools:   read_gtfs(), get_trip_speed(), write_gtfs()
+# gtfstools:   read_gtfs(), get_trip_speed(), write_gtfs(), frequencies_to_stop_times()
 #
 # osrm:        osrmRoute()
 #

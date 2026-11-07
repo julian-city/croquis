@@ -247,6 +247,24 @@ croquis <- function(ssfs = NULL, lang = "en") {
                       ),
                       "file_placeholder"
                     ),
+                    checkboxInput(
+                      "load_gtfs_feed_info",
+                      label = tagList(
+                        span(
+                          tr("chk_load_feed_info", lang_init),
+                          `data-i18n` = "chk_load_feed_info"
+                        ),
+                        " ",
+                        tags$small(
+                          class = "text-muted",
+                          span(
+                            tr("chk_load_feed_info_note", lang_init),
+                            `data-i18n` = "chk_load_feed_info_note"
+                          )
+                        )
+                      ),
+                      value = FALSE
+                    ),
                     tags$small(
                       span(
                         tr("load_gtfs_note", lang_init),
@@ -458,6 +476,130 @@ croquis <- function(ssfs = NULL, lang = "en") {
             )
           ),
 
+          # -- Feed info (collapsible, collapsed by default) --
+          div(
+            id = "feed-info-panel",
+            class = "collapsible-section collapsed",
+            div(
+              class = "collapsible-section-header",
+              onclick = "togglePanel('feed-info-panel')",
+              h4(
+                span(
+                  tr("feed_info_title", lang_init),
+                  `data-i18n` = "feed_info_title"
+                ),
+                # Stop the click from bubbling up to the header, so opening
+                # the popover does not also expand/collapse the panel.
+                tags$span(
+                  onclick = "event.stopPropagation();",
+                  info_popover(
+                    tr("pop_feed_info", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_feed_info",
+                    lang = lang_init
+                  )
+                )
+              ),
+              tags$button(
+                class = "floating-panel-toggle",
+                htmltools::HTML("+")
+              )
+            ),
+            div(
+              class = "floating-panel-content",
+              textInput(
+                "fi_feed_publisher_name",
+                label = tagList(
+                  span(
+                    tr("lbl_publisher_name", lang_init),
+                    `data-i18n` = "lbl_publisher_name"
+                  ),
+                  info_popover(
+                    tr("pop_publisher_name", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_publisher_name",
+                    lang = lang_init
+                  )
+                ),
+                value = ""
+              ),
+              textInput(
+                "fi_feed_publisher_url",
+                label = tagList(
+                  span(
+                    tr("lbl_publisher_url", lang_init),
+                    `data-i18n` = "lbl_publisher_url"
+                  ),
+                  info_popover(
+                    tr("pop_publisher_url", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_publisher_url",
+                    lang = lang_init
+                  )
+                ),
+                value = ""
+              ),
+              selectInput(
+                "fi_feed_lang",
+                label = tagList(
+                  span(
+                    tr("lbl_feed_lang", lang_init),
+                    `data-i18n` = "lbl_feed_lang"
+                  ),
+                  info_popover(
+                    tr("pop_feed_lang", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_feed_lang",
+                    lang = lang_init
+                  )
+                ),
+                choices = local({
+                  lc <- ISOcodes::ISO_639_2[
+                    !is.na(ISOcodes::ISO_639_2$Alpha_2),
+                  ]
+                  ch <- stats::setNames(
+                    lc$Alpha_2,
+                    paste0(lc$Name, " (", lc$Alpha_2, ")")
+                  )
+                  ch[order(names(ch))]
+                }),
+                selected = "en"
+              ),
+              textInput(
+                "fi_feed_contact_email",
+                label = tagList(
+                  span(
+                    tr("lbl_contact_email", lang_init),
+                    `data-i18n` = "lbl_contact_email"
+                  ),
+                  info_popover(
+                    tr("pop_contact_email", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_contact_email",
+                    lang = lang_init
+                  )
+                ),
+                value = ""
+              ),
+              textInput(
+                "fi_feed_version",
+                label = tagList(
+                  span(
+                    tr("lbl_feed_version", lang_init),
+                    `data-i18n` = "lbl_feed_version"
+                  ),
+                  info_popover(
+                    tr("pop_feed_version", lang_init),
+                    "https://gtfs.org/schedule/reference/#feed_infotxt",
+                    key = "pop_feed_version",
+                    lang = lang_init
+                  )
+                ),
+                value = paste0("v", Sys.Date())
+              )
+            )
+          ),
+
           # -- Instructions --
           wellPanel(
             uiOutput("home_instructions_ui")
@@ -567,100 +709,6 @@ croquis <- function(ssfs = NULL, lang = "en") {
             tr("settings_title", lang_init),
             `data-i18n` = "settings_title"
           )),
-          wellPanel(
-            h3(span(
-              tr("settings_feed_info", lang_init),
-              `data-i18n` = "settings_feed_info"
-            )),
-            textInput(
-              "fi_feed_publisher_name",
-              label = tagList(
-                span(
-                  tr("lbl_publisher_name", lang_init),
-                  `data-i18n` = "lbl_publisher_name"
-                ),
-                info_popover(
-                  tr("pop_publisher_name", lang_init),
-                  "https://gtfs.org/schedule/reference/#feed_infotxt",
-                  key = "pop_publisher_name",
-                  lang = lang_init
-                )
-              ),
-              value = "Comotive"
-            ),
-            textInput(
-              "fi_feed_publisher_url",
-              label = tagList(
-                span(
-                  tr("lbl_publisher_url", lang_init),
-                  `data-i18n` = "lbl_publisher_url"
-                ),
-                info_popover(
-                  tr("pop_publisher_url", lang_init),
-                  "https://gtfs.org/schedule/reference/#feed_infotxt",
-                  key = "pop_publisher_url",
-                  lang = lang_init
-                )
-              ),
-              value = "https://www.comotive.net"
-            ),
-            selectInput(
-              "fi_feed_lang",
-              label = tagList(
-                span(
-                  tr("lbl_feed_lang", lang_init),
-                  `data-i18n` = "lbl_feed_lang"
-                ),
-                info_popover(
-                  tr("pop_feed_lang", lang_init),
-                  "https://gtfs.org/schedule/reference/#feed_infotxt",
-                  key = "pop_feed_lang",
-                  lang = lang_init
-                )
-              ),
-              choices = local({
-                lc <- ISOcodes::ISO_639_2[!is.na(ISOcodes::ISO_639_2$Alpha_2), ]
-                ch <- stats::setNames(
-                  lc$Alpha_2,
-                  paste0(lc$Name, " (", lc$Alpha_2, ")")
-                )
-                ch[order(names(ch))]
-              }),
-              selected = "en"
-            ),
-            textInput(
-              "fi_feed_contact_email",
-              label = tagList(
-                span(
-                  tr("lbl_contact_email", lang_init),
-                  `data-i18n` = "lbl_contact_email"
-                ),
-                info_popover(
-                  tr("pop_contact_email", lang_init),
-                  "https://gtfs.org/schedule/reference/#feed_infotxt",
-                  key = "pop_contact_email",
-                  lang = lang_init
-                )
-              ),
-              value = "julian@comotive.net"
-            ),
-            textInput(
-              "fi_feed_version",
-              label = tagList(
-                span(
-                  tr("lbl_feed_version", lang_init),
-                  `data-i18n` = "lbl_feed_version"
-                ),
-                info_popover(
-                  tr("pop_feed_version", lang_init),
-                  "https://gtfs.org/schedule/reference/#feed_infotxt",
-                  key = "pop_feed_version",
-                  lang = lang_init
-                )
-              ),
-              value = paste0("v", Sys.Date())
-            )
-          ),
 
           # Advanced settings panel
           wellPanel(
@@ -1069,6 +1117,29 @@ croquis <- function(ssfs = NULL, lang = "en") {
       tryCatch(
         {
           loaded_gtfs <- gtfstools::read_gtfs(input$load_gtfs$datapath)
+
+          # Update the Feed info inputs (Home tab) from the loaded GTFS's
+          # feed_info table, if it has one. Only publisher name, publisher
+          # URL and contact email are taken, and only when non-empty;
+          # other inputs keep their current value.
+          fi <- loaded_gtfs$feed_info
+          if (
+            isTRUE(input$load_gtfs_feed_info) &&
+              is.data.frame(fi) &&
+              nrow(fi) > 0
+          ) {
+            fi_fields <- c(
+              feed_publisher_name = "fi_feed_publisher_name",
+              feed_publisher_url = "fi_feed_publisher_url",
+              feed_contact_email = "fi_feed_contact_email"
+            )
+            for (field in intersect(names(fi_fields), names(fi))) {
+              value <- trimws(as.character(fi[[field]][1]))
+              if (!is.na(value) && nzchar(value)) {
+                updateTextInput(session, fi_fields[[field]], value = value)
+              }
+            }
+          }
 
           gtfs_max_date <- if (isTRUE(input$settings_gtfs_max_date_enable)) {
             input$settings_gtfs_max_date
@@ -2117,7 +2188,7 @@ croquis <- function(ssfs = NULL, lang = "en") {
           dist_traveled = input$include_dist_traveled
         )
 
-        # Add feed info details that are specified in the Settings tab.
+        # Add feed info details that are specified in the home tab
         current_gtfs$feed_info <- data.table(
           feed_publisher_name = input$fi_feed_publisher_name,
           feed_publisher_url = input$fi_feed_publisher_url,

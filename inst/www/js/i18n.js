@@ -47,6 +47,8 @@ var jsI18n = {
   load_gtfs_desc:    { en: 'You can load an existing GTFS here.', fr: 'Chargez un GTFS existant ici.', es: 'Se puede cargar un GTFS existente aqu\u00ed.' },
   load_gtfs_size:    { en: 'Larger files may take several minutes (maximum size: 100MB).', fr: 'Les fichiers volumineux peuvent prendre plusieurs minutes (taille maximale\u00a0: 100\u00a0Mo).', es: 'Los archivos grandes pueden tardar varios minutos (tama\u00f1o m\u00e1ximo: 100\u00a0MB).' },
   load_gtfs_note:    { en: 'Uploading a GTFS here will convert it to an editable format in Croquis', fr: 'Le t\u00e9l\u00e9versement d\u2019un GTFS le convertira en un format modifiable dans Croquis', es: 'Al subir un GTFS, se convertir\u00e1 a un formato editable en Croquis' },
+  chk_load_feed_info:      { en: 'Import feed info data from this GTFS, if available', fr: 'Importer les donn\u00e9es feed_info de ce GTFS, si disponible', es: 'Importar los datos feed_info de este GTFS, si disponible' },
+  chk_load_feed_info_note: { en: '(if you are the original author of this GTFS and are maintaining it with Croquis)', fr: '(si vous \u00eates l\'auteur d\'origine de ce GTFS et vous le maintenez avec Croquis)', es: '(si usted es el autor original de este GTFS y lo mantiene con Croquis)' },
   load_croquis_desc: { en: 'To continue working on a previous croquis, upload your .rds file:', fr: 'Pour continuer \u00e0 travailler sur un croquis pr\u00e9c\u00e9dent, t\u00e9l\u00e9versez votre fichier .rds\u00a0:', es: 'Para continuar trabajando en un croquis anterior, suba su archivo .rds:' },
   load_croquis_note: { en: 'Upload a transit model .rds file previously created with Croquis', fr: 'T\u00e9l\u00e9versez un fichier .rds de mod\u00e8le de transport cr\u00e9\u00e9 pr\u00e9c\u00e9demment avec Croquis', es: 'Suba un archivo .rds de modelo de transporte creado previamente con Croquis' },
   load_sample_desc:  { en: 'To explore this tool, you can get started by loading a sample network. The Ligne Jaune model is the simplest and will help you familiarize yourself with how Croquis works.', fr: 'Pour d\u00e9couvrir cet outil, vous pouvez commencer en chargeant un r\u00e9seau de d\u00e9monstration. Le mod\u00e8le Ligne Jaune est le plus simple et vous aidera \u00e0 vous familiariser avec le fonctionnement de Croquis.', es: 'Para explorar esta herramienta, puede comenzar cargando una red de ejemplo. El modelo Ligne Jaune es el m\u00e1s sencillo y le ayudar\u00e1 a familiarizarse con el funcionamiento de Croquis.' },
@@ -66,8 +68,8 @@ var jsI18n = {
     es: 'Las pesta\u00f1as paradas, rutas y horarios de arriba permiten gestionar todos estos aspectos de su modelo de red de transporte.'
   },
   intro_get_started: {
-    en: 'Get started on this page by loading an existing network, or by creating the agency details and project location if starting from scratch.',
-    fr: 'Commencez sur cette page en chargeant un r\u00e9seau existant, ou en cr\u00e9ant les d\u00e9tails de l\'agence et l\'emplacement du projet si vous partez de z\u00e9ro.',
+    en: 'Get started on this page by loading an existing network, or by providing agency details and project location below, if starting from scratch.',
+    fr: 'Commencez sur cette page en chargeant un r\u00e9seau existant, ou en renseignant les d\u00e9tails de l\'agence et l\'emplacement du projet ci-dessous, si vous partez de z\u00e9ro.',
     es: 'Comience en esta p\u00e1gina cargando una red existente, o creando los detalles de la agencia y la ubicaci\u00f3n del proyecto si empieza desde cero.'
   },
   intro_save_pre: {
@@ -278,7 +280,8 @@ sched_recalc_unit_kmh: {
 
   // -- Settings tab --
   settings_title:         { en: 'settings', fr: 'param\u00e8tres', es: 'configuraci\u00f3n' },
-  settings_feed_info:     { en: 'Feed info', fr: 'Informations du flux', es: 'Informaci\u00f3n del feed' },
+  feed_info_title:        { en: 'Feed info', fr: 'Informations du flux', es: 'Informaci\u00f3n del feed' },
+  pop_feed_info:          { en: 'Contact information for the organization that publishes this feed, so that anyone who finds a problem with the data knows who to reach. Required to export a GTFS feed with no errors or warnings in the canonical GTFS validator.', fr: 'Coordonn\u00e9es de l\u2019organisme qui publie ce flux, afin que toute personne qui constate un probl\u00e8me dans les donn\u00e9es sache qui joindre. Requises pour exporter un flux GTFS sans erreur ni avertissement dans le validateur GTFS canonique.', es: 'Datos de contacto de la organizaci\u00f3n que publica este feed, para que cualquier persona que encuentre un problema en los datos sepa a qui\u00e9n dirigirse. Necesarios para exportar un feed GTFS sin errores ni advertencias en el validador GTFS can\u00f3nico.' },
   lbl_publisher_name:     { en: 'Publisher name', fr: 'Nom de l\u2019\u00e9diteur', es: 'Nombre del editor' },
   pop_publisher_name:     { en: 'Full name of the organization that publishes the feed.', fr: 'Nom complet de l\u2019organisme qui publie le flux.', es: 'Nombre completo de la organizaci\u00f3n que publica el feed.' },
   lbl_publisher_url:      { en: 'Publisher URL', fr: 'URL de l\u2019\u00e9diteur', es: 'URL del editor' },
